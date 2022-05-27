@@ -3,7 +3,7 @@
 # target_link_libraries(example gtest_main)
 # add_test(NAME example_test COMMAND example)
 
-
+include_directories(../Engine)
 set(BINARY ${CMAKE_PROJECT_NAME}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.hpp *.cpp)
 set(SOURCES ${TEST_SOURCES})

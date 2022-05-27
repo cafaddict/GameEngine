@@ -29,4 +29,5 @@ add_subdirectory(Core)
 
 add_library(ENGINE Engine.hpp Engine.cpp)
 target_link_libraries(ENGINE CORE)
+target_include_directories(ENGINE PUBLIC Core Events Physics Rendering)
 

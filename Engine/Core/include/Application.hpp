@@ -8,4 +8,6 @@ public:
 
   void run();
 };
+
+Application *CreateApplication();
 } // namespace Engine

@@ -43,7 +43,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(Engine)
 # add_subdirectory(EngineShell)
-# add_subdirectory(SandBox)
+add_subdirectory(SandBox)
 # add_subdirectory(ScriptingLanguage)
 
 # Download and unpack googletest at configure time
