@@ -21,6 +21,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES Darwin)
 endif ()
 
 
+add_subdirectory("external/glfw-3.3.4")
+add_subdirectory("external/glm")
 add_subdirectory(Core)
 # add_subdirectory(Physics)
 # add_subdirectory(Events)
@@ -29,5 +31,5 @@ add_subdirectory(Core)
 
 add_library(ENGINE Engine.hpp Engine.cpp)
 target_link_libraries(ENGINE CORE)
-target_include_directories(ENGINE PUBLIC Core Events Physics Rendering)
+target_include_directories(ENGINE PUBLIC Core Events Physics Rendering external)
 

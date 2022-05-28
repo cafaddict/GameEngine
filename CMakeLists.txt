@@ -82,4 +82,4 @@ include_directories(Engine)
 include_directories(EngineShell)
 include_directories(SandBox)
 
-add_subdirectory(test)
+
