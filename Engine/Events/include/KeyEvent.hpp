@@ -1,21 +1,21 @@
 #pragma once
-#include "Event.hpp"
-
 #include <sstream>
+
+#include "Event.hpp"
 
 namespace Engine {
 class KeyEvent : public Event {
-public:
+ public:
   inline int GetKeyCode() const { return m_KeyCode; }
   EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput);
 
-protected:
+ protected:
   KeyEvent(int keycode) : m_KeyCode(keycode) {}
   int m_KeyCode;
 };
 
 class KeyPressedEvent : public KeyEvent {
-public:
+ public:
   KeyPressedEvent(int keycode, int repeatCount)
       : KeyEvent(keycode), m_RepeatCount(repeatCount) {}
   inline int GetRepeatCount() const { return m_RepeatCount; }
@@ -28,12 +28,12 @@ public:
   }
   EVENT_CLASS_TYPE(KeyPressed)
 
-private:
+ private:
   int m_RepeatCount;
 };
 
 class KeyReleasedEvent : public KeyEvent {
-public:
+ public:
   KeyReleasedEvent(int keycode) : KeyEvent(keycode) {}
 
   std::string ToString() const override {
@@ -43,6 +43,6 @@ public:
   }
   EVENT_CLASS_TYPE(KeyReleased)
 
-private:
+ private:
 };
-} // namespace Engine
+}  // namespace Engine

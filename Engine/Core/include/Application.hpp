@@ -1,21 +1,25 @@
 #pragma once
 
+#include <GLFW/glfw3.h>
+
+#include <ApplicationEvent.hpp>
+
 #include "Log.hpp"
 #include "Window.hpp"
-#include <ApplicationEvent.hpp>
-#include <GLFW/glfw3.h>
 namespace Engine {
 class Application {
-public:
+ public:
   Application();
   virtual ~Application();
 
   void run();
 
-private:
+  void OnEvent(Event& e);
+
+ private:
   std::unique_ptr<Window> m_Window;
   bool m_Running = true;
 };
 
-Application *CreateApplication();
-} // namespace Engine
+Application* CreateApplication();
+}  // namespace Engine
