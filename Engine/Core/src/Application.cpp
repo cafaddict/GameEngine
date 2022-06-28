@@ -9,12 +9,28 @@ Application::Application() {
 
 Application::~Application() {}
 
-void Application::OnEvent(Event& e) { ENGINE_INFO("{0}", e); }
+void Application::OnEvent(Event& e) {
+  EventDispatcher dispatcher(e);
+  dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+  dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(OnESC));
+  ENGINE_INFO("{0}", e);
+}
 
 void Application::run() {
   while (m_Running) {
     m_Window->OnUpdate();
   }
+}
+
+bool Application::OnWindowClose(WindowCloseEvent& e) {
+  m_Running = false;
+  return true;
+}
+bool Application::OnESC(KeyPressedEvent& e) {
+  if (e.GetKeyCode() == 256) {
+    m_Running = false;
+  }
+  return true;
 }
 
 }  // namespace Engine

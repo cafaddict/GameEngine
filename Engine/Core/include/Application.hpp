@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include <ApplicationEvent.hpp>
+#include <KeyEvent.hpp>
 
 #include "Log.hpp"
 #include "Window.hpp"
@@ -19,6 +20,8 @@ class Application {
  private:
   std::unique_ptr<Window> m_Window;
   bool m_Running = true;
+  bool OnWindowClose(WindowCloseEvent& e);
+  bool OnESC(KeyPressedEvent& e);
 };
 
 Application* CreateApplication();
