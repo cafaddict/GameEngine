@@ -40,9 +40,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 
 
-
+add_subdirectory("external/glfw-3.3.4")
+add_subdirectory("external/glm")
 add_subdirectory(Engine)
-# add_subdirectory(EngineShell)
+add_subdirectory(EngineEditor)
 add_subdirectory(SandBox)
 # add_subdirectory(ScriptingLanguage)
 
@@ -78,6 +79,7 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
+include_directories(external)
 include_directories(Engine)
 include_directories(EngineShell)
 include_directories(SandBox)
