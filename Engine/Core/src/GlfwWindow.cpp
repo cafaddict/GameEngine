@@ -26,7 +26,10 @@ void GlfwWindow::Init(const WindowProps &props) {
               props.Height);
   if (!s_GLFWInitialized) {
     int success = glfwInit();
-    ENGINE_ASSERT(success, "Could not initiazlie GLFW!");
+    if (!success) {
+      ENGINE_ASSERT(success, "Could not initiazlie GLFW!");
+    }
+
     // glfwSetErrorCallback(GLFWErrorCallback);
     s_GLFWInitialized = true;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -37,6 +40,8 @@ void GlfwWindow::Init(const WindowProps &props) {
   m_Window = glfwCreateWindow((int)props.Width, (int)props.Height,
                               m_Data.Title.c_str(), nullptr, nullptr);
   glfwMakeContextCurrent(m_Window);
+  int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  ENGINE_ASSERT(status, "Failed to initialize Glad!");
   glfwSetWindowUserPointer(m_Window, &m_Data);
   SetVSync(true);
 

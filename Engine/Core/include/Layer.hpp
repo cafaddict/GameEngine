@@ -1,5 +1,6 @@
 #pragma once
 #include "Event.hpp"
+#include "Log.hpp"
 
 namespace Engine {
 class Layer {
@@ -11,7 +12,7 @@ class Layer {
   virtual void OnDetach() {}
   virtual void OnUpdate() {}
   virtual void OnWait() {}
-  virtual void OnEvent(Event &event) {}
+  virtual void OnEvent(Event &event) { ENGINE_TRACE("{0}", event); }
 
   inline const std::string &GetName() const { return m_DebugName; }
 

@@ -1,4 +1,5 @@
 #include <Engine.hpp>
+#include <ImGuiLayer.hpp>
 
 class ExampleLayer : public Engine::Layer {
  public:
@@ -11,7 +12,10 @@ class ExampleLayer : public Engine::Layer {
 
 class Sandbox : public Engine::Application {
  public:
-  Sandbox() { PushLayer(new ExampleLayer()); }
+  Sandbox() {
+    PushLayer(new ExampleLayer());
+    PushOverlay(new Editor::ImGuiLayer());
+  }
   ~Sandbox() {}
 };
 

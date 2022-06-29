@@ -1,10 +1,13 @@
 #pragma once
-#include "Window.hpp"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
+#include "Window.hpp"
 
 namespace Engine {
 class GlfwWindow : public Window {
-public:
+ public:
   GlfwWindow(const WindowProps &props);
   virtual ~GlfwWindow();
 
@@ -21,7 +24,7 @@ public:
   void SetVSync(bool enabled) override;
   bool IsVSync() const override;
 
-private:
+ private:
   GLFWwindow *m_Window;
 
   struct WindowData {
@@ -37,4 +40,4 @@ private:
   virtual void Init(const WindowProps &props);
   virtual void Shutdown();
 };
-} // namespace Engine
+}  // namespace Engine

@@ -22,11 +22,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   set(ARCH "x86_64")
 endif()
 
-
-
 add_subdirectory(UI)
-
 
 add_library(EDITOR Editor.hpp Editor.cpp)
 target_link_libraries(EDITOR UI)
-target_include_directories(EDITOR PUBLIC UI ../Engine/external)
+target_include_directories(EDITOR PUBLIC UI ../external)
