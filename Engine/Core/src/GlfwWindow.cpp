@@ -32,15 +32,20 @@ void GlfwWindow::Init(const WindowProps &props) {
 
     // glfwSetErrorCallback(GLFWErrorCallback);
     s_GLFWInitialized = true;
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    // glfwSetErrorCallback(GLFWErrorCallback);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwSetErrorCallback(GLFWErrorCallback);
   }
 
   m_Window = glfwCreateWindow((int)props.Width, (int)props.Height,
                               m_Data.Title.c_str(), nullptr, nullptr);
   glfwMakeContextCurrent(m_Window);
   int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  // int status = gladLoadGL(glfwGetProcAddress);
+
   ENGINE_ASSERT(status, "Failed to initialize Glad!");
   glfwSetWindowUserPointer(m_Window, &m_Data);
   SetVSync(true);

@@ -767,14 +767,12 @@ static int parse_version(void) {
   if (!glGetIntegerv) return GL3W_ERROR_INIT;
   glGetIntegerv(GL_MAJOR_VERSION, &version.major);
   glGetIntegerv(GL_MINOR_VERSION, &version.minor);
-  printf("version major: %d\n", version.major);
-  printf("version minor: %d\n", version.minor);
   if (version.major < 3) return GL3W_ERROR_OPENGL_VERSION;
   return GL3W_OK;
 }
 
 static void load_procs(GL3WGetProcAddressProc proc);
-#include <stdio.h>
+
 int imgl3wInit(void) {
   int res = open_libgl();
   if (res) return res;

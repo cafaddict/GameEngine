@@ -286,7 +286,6 @@ struct ImGui_ImplOpenGL3_VtxAttribState {
 #include <Log.hpp>
 // Functions
 bool ImGui_ImplOpenGL3_Init(const char* glsl_version) {
-  ENGINE_CRITICAL("INIT");
   ImGuiIO& io = ImGui::GetIO();
   IM_ASSERT(io.BackendRendererUserData == NULL &&
             "Already initialized a renderer backend!");
@@ -295,7 +294,6 @@ bool ImGui_ImplOpenGL3_Init(const char* glsl_version) {
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && \
     !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
   if (imgl3wInit() != 0) {
-    ENGINE_CRITICAL("FUCK");
     fprintf(stderr, "Failed to initialize OpenGL loader!\n");
     return false;
   }

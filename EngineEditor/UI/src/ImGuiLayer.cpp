@@ -19,9 +19,8 @@ void ImGuiLayer::OnAttach() {
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
   ImGui::StyleColorsDark();
-  ENGINE_INFO("INIT IS CALLED");
 
-  ImGui_ImplOpenGL3_Init("#version 430");
+  ImGui_ImplOpenGL3_Init("#version 140");
 }
 void ImGuiLayer::OnDetach() {}
 void ImGuiLayer::OnUpdate() {
