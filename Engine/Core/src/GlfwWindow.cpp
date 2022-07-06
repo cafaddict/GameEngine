@@ -71,19 +71,19 @@ void GlfwWindow::Init(const WindowProps &props) {
     WindowData &data = *(WindowData *)glfwGetWindowUserPointer(window);
     switch (action) {
       case GLFW_PRESS: {
-        KeyPressedEvent event(key, 0);
+        KeyPressedEvent event(key, mods, 0);
         data.EventCallback(event);
         break;
       }
 
       case GLFW_RELEASE: {
-        KeyReleasedEvent event(key);
+        KeyReleasedEvent event(key, mods);
         data.EventCallback(event);
         break;
       }
 
       case GLFW_REPEAT: {
-        KeyPressedEvent event(key, 1);
+        KeyPressedEvent event(key, mods, 1);
         data.EventCallback(event);
         break;
       }
@@ -118,11 +118,18 @@ void GlfwWindow::Init(const WindowProps &props) {
         MouseMovedEvent event((float)xPos, (float)yPos);
         data.EventCallback(event);
       });
+  glfwSetCharCallback(m_Window, [](GLFWwindow *window, unsigned int character) {
+    WindowData &data = *(WindowData *)glfwGetWindowUserPointer(window);
+    KeyTypedEvent event(character);
+    data.EventCallback(event);
+  });
 }
 
 void GlfwWindow::Shutdown() { glfwDestroyWindow(m_Window); }
 
 void GlfwWindow::OnUpdate() {
+  // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  // glClear(GL_COLOR_BUFFER_BIT);
   glfwPollEvents();
   glfwSwapBuffers(m_Window);
 }

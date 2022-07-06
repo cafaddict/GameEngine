@@ -187,7 +187,7 @@ static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text) {
   glfwSetClipboardString((GLFWwindow*)user_data, text);
 }
 
-static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key) {
+ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key) {
   switch (key) {
     case GLFW_KEY_TAB:
       return ImGuiKey_Tab;
@@ -404,7 +404,7 @@ static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key) {
   }
 }
 
-static int ImGui_ImplGlfw_KeyToModifier(int key) {
+int ImGui_ImplGlfw_KeyToModifier(int key) {
   if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
     return GLFW_MOD_CONTROL;
   if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
@@ -416,7 +416,7 @@ static int ImGui_ImplGlfw_KeyToModifier(int key) {
   return 0;
 }
 
-static void ImGui_ImplGlfw_UpdateKeyModifiers(int mods) {
+void ImGui_ImplGlfw_UpdateKeyModifiers(int mods) {
   ImGuiIO& io = ImGui::GetIO();
   io.AddKeyEvent(ImGuiKey_ModCtrl, (mods & GLFW_MOD_CONTROL) != 0);
   io.AddKeyEvent(ImGuiKey_ModShift, (mods & GLFW_MOD_SHIFT) != 0);

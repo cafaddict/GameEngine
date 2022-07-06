@@ -72,3 +72,8 @@ IMGUI_IMPL_API void ImGui_ImplGlfw_CharCallback(GLFWwindow* window,
                                                 unsigned int c);
 IMGUI_IMPL_API void ImGui_ImplGlfw_MonitorCallback(GLFWmonitor* monitor,
                                                    int event);
+
+IMGUI_IMPL_API ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key);
+
+IMGUI_IMPL_API int ImGui_ImplGlfw_KeyToModifier(int key);
+IMGUI_IMPL_API void ImGui_ImplGlfw_UpdateKeyModifiers(int mods);
