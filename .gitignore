@@ -36,3 +36,4 @@ build/
 
 #window project
 *.vcxproj
+*.vcxproj.filters
