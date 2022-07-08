@@ -1,5 +1,6 @@
 include_directories(../include)
-
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 file(GLOB SRC "*.hpp" "*.cpp")
 file(GLOB_RECURSE GLAD "../../../external/glad/*")
 add_library(CORE ${SRC} ${GLAD})

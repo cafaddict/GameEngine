@@ -5,6 +5,7 @@
 #include "Log.hpp"
 #include "MouseEvent.hpp"
 namespace Engine {
+
 static bool s_GLFWInitialized = false;
 static void GLFWErrorCallback(int error, const char *description) {
   ENGINE_ERROR("GLFW Error ({0}): {1}", error, description);

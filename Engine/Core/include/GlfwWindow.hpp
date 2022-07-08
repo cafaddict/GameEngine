@@ -10,18 +10,23 @@ class GlfwWindow : public Window {
   GlfwWindow(const WindowProps &props);
   virtual ~GlfwWindow();
 
-  void OnUpdate() override;
-  void OnWait() override;
+  virtual void OnUpdate() override;
+  virtual void OnWait() override;
 
-  inline unsigned int GetWidth() const override { return m_Data.Width; }
-  inline unsigned int GetHeight() const override { return m_Data.Height; }
+  inline virtual unsigned int GetWidth() const override { return m_Data.Width; }
+  inline virtual unsigned int GetHeight() const override {
+    return m_Data.Height;
+  }
 
   // Window attributes
-  inline void SetEventCallback(const EventCallbackFn &callback) override {
+  inline virtual void SetEventCallback(
+      const EventCallbackFn &callback) override {
     m_Data.EventCallback = callback;
   }
-  void SetVSync(bool enabled) override;
-  bool IsVSync() const override;
+  void virtual SetVSync(bool enabled) override;
+  bool virtual IsVSync() const override;
+
+  inline virtual void *GetNativeWindow() const override { return m_Window; };
 
  private:
   GLFWwindow *m_Window;

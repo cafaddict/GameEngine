@@ -1,4 +1,5 @@
 #include "Application.hpp"
+#include "Input.hpp"
 
 namespace Engine {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
@@ -28,6 +29,10 @@ void Application::run() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     for (Layer* layer : m_LayerStack) layer->OnUpdate();
+
+    auto [x, y] = Input::GetMousePosition();
+    ENGINE_TRACE("{0}, {1}", x, y);
+
     m_Window->OnUpdate();
   }
 }
