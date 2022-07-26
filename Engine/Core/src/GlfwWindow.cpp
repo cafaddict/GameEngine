@@ -36,7 +36,8 @@ void GlfwWindow::Init(const WindowProps &props) {
     // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwSetErrorCallback(GLFWErrorCallback);
   }
@@ -44,10 +45,10 @@ void GlfwWindow::Init(const WindowProps &props) {
   m_Window = glfwCreateWindow((int)props.Width, (int)props.Height,
                               m_Data.Title.c_str(), nullptr, nullptr);
   glfwMakeContextCurrent(m_Window);
-  int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  // int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
   // int status = gladLoadGL(glfwGetProcAddress);
 
-  ENGINE_ASSERT(status, "Failed to initialize Glad!");
+  // ENGINE_ASSERT(status, "Failed to initialize Glad!");
   glfwSetWindowUserPointer(m_Window, &m_Data);
   SetVSync(true);
 
@@ -126,13 +127,16 @@ void GlfwWindow::Init(const WindowProps &props) {
   });
 }
 
-void GlfwWindow::Shutdown() { glfwDestroyWindow(m_Window); }
+void GlfwWindow::Shutdown() {
+  glfwDestroyWindow(m_Window);
+  glfwTerminate();
+}
 
 void GlfwWindow::OnUpdate() {
   // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   // glClear(GL_COLOR_BUFFER_BIT);
   glfwPollEvents();
-  glfwSwapBuffers(m_Window);
+  // glfwSwapBuffers(m_Window);
 }
 
 void GlfwWindow::OnWait() {}

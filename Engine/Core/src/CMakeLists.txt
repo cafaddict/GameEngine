@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 file(GLOB SRC "*.hpp" "*.cpp")
 file(GLOB_RECURSE GLAD "../../../external/glad/*")
 add_library(CORE ${SRC} ${GLAD})
-target_link_libraries(CORE glfw EVENTS)
+target_link_libraries(CORE glfw UTILS EVENTS RENDERING)
 target_include_directories(CORE PUBLIC ../include ../../../external ../../../external/glad/include)
 
 # target_compile_options(CORE PRIVATE -Wall -Wextra -Wpedantic -Werror)

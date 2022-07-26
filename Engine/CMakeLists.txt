@@ -22,16 +22,13 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   set(ARCH "x86_64")
 endif()
 
-
-
-
+add_subdirectory(Utils)
 add_subdirectory(Rendering)
 add_subdirectory(Events)
 add_subdirectory(Core)
 
 # add_subdirectory(Physics)
 # add_subdirectory(Events)
-
 add_library(ENGINE Engine.hpp Engine.cpp)
-target_link_libraries(ENGINE RENDERING EVENTS CORE)
-target_include_directories(ENGINE PUBLIC Core Events Physics Rendering ../external)
+target_link_libraries(ENGINE UTILS RENDERING EVENTS CORE)
+target_include_directories(ENGINE PUBLIC Core Events Physics Rendering Utils ../external)

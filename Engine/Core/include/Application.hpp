@@ -1,6 +1,7 @@
 #pragma once
 
-#include <glad/glad.h>
+// #include <glad/glad.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <ApplicationEvent.hpp>
@@ -9,6 +10,7 @@
 #include "LayerStack.hpp"
 #include "Log.hpp"
 #include "Window.hpp"
+#include <Rendering.hpp>
 namespace Engine {
 class Application {
  public:
@@ -35,6 +37,9 @@ class Application {
   bool OnESC(KeyPressedEvent& e);
 
   static Application* s_Instance;
+
+  // Renderer
+  std::unique_ptr<Renderer> m_Renderer;
 };
 
 Application* CreateApplication();

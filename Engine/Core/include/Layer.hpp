@@ -1,6 +1,6 @@
 #pragma once
 #include "Event.hpp"
-#include "Log.hpp"
+#include <Log.hpp>
 
 namespace Engine {
 class Layer {
