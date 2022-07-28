@@ -40,7 +40,10 @@ namespace Engine {
 
   VulkanRenderer::VulkanRenderer() { Init(); }
   VulkanRenderer::~VulkanRenderer() { Shutdown(); }
-  void VulkanRenderer::Init() { createInstance(); }
+  void VulkanRenderer::Init() {
+    createInstance();
+    setupDebugMessenger();
+    }
   void VulkanRenderer::createInstance() {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
       throw std::runtime_error("validation layers requested, but not available!");
