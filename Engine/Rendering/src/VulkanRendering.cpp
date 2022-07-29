@@ -32,7 +32,21 @@ debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
               void* pUserData) {
   // std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-  ENGINE_ERROR("validation layer: {0}", pCallbackData->pMessage);
+  switch (messageSeverity) {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+      ENGINE_TRACE("validation layer: {0}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+      ENGINE_INFO("validation layer: {0}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+      ENGINE_WARN("validation layer: {0}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+      ENGINE_ERROR("validation layer: {0}", pCallbackData->pMessage);
+      break;
+  }
+  // ENGINE_ERROR("validation layer: {0}", pCallbackData->pMessage)/;
   return VK_FALSE;
 }
 
