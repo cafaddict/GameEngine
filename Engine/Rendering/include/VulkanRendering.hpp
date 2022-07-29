@@ -11,38 +11,40 @@
 #include <vector>
 #include <optional>
 namespace Engine {
-  class VulkanRenderer : public Renderer {
-    public:
-    VulkanRenderer();
-    virtual ~VulkanRenderer();
+class VulkanRenderer : public Renderer {
+ public:
+  VulkanRenderer();
+  virtual ~VulkanRenderer();
 
-    virtual void Draw() override;
+  virtual void Draw() override;
 
-    private:
-    virtual void Init() override;
-    void createInstance();
-    void setupDebugMessenger();
-    void pickPhysicalDevice();
+ private:
+  virtual void Init() override;
+  void createInstance();
+  void setupDebugMessenger();
+  void pickPhysicalDevice();
+  void createLogicalDevice();
 
-    bool checkValidationLayerSupport();
-    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+  bool checkValidationLayerSupport();
+  void populateDebugMessengerCreateInfo(
+      VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
-    void Shutdown();
+  void Shutdown();
 
-    struct VulkanData {
-      VkInstance instance;
-      const std::vector<const char*> validationLayers = {
-          "VK_LAYER_KHRONOS_validation" };
-      VkDebugUtilsMessengerEXT debugMessenger;
-      };
-    VulkanData m_VulkanData;
-    struct QueueFamilyIndices {
-      std::optional<uint32_t> graphicsFamily;
-      bool isComplete() {
-        return graphicsFamily.has_value();
-        }
-      };
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-
-    };
-  }  // namespace Engine
+  struct VulkanData {
+    VkInstance instance;
+    const std::vector<const char*> validationLayers = {
+        "VK_LAYER_KHRONOS_validation"};
+    VkDebugUtilsMessengerEXT debugMessenger;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice device;
+    VkQueue graphicsQueue;
+  };
+  VulkanData m_VulkanData;
+  struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+    bool isComplete() { return graphicsFamily.has_value(); }
+  };
+  QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+};
+}  // namespace Engine
