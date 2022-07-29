@@ -57,6 +57,7 @@ class VulkanRenderer : public Renderer {
     std::vector<VkImage> swapChainImages;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+    std::vector<VkImageView> swapChainImageViews;
   };
 
   struct QueueFamilyIndices {
@@ -86,6 +87,7 @@ class VulkanRenderer : public Renderer {
   void pickPhysicalDevice();
   void createLogicalDevice();
   void createSwapChain();
+  void createImageViews();
 
  private:
   // Helper functions
