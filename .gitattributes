@@ -1,2 +1,2 @@
 external/glslc/linux/glslc filter=lfs diff=lfs merge=lfs -text
-external/glslc/windows/glslc.exe filter=lfs diff=lfs merge=lfs -text
+external/glslc/win/glslc.exe filter=lfs diff=lfs merge=lfs -text
