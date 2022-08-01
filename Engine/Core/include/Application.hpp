@@ -12,35 +12,35 @@
 #include "Window.hpp"
 #include <Rendering.hpp>
 namespace Engine {
-class Application {
- public:
-  Application();
-  virtual ~Application();
+  class Application {
+    public:
+    Application();
+    virtual ~Application();
 
-  void run();
+    void run();
 
-  void OnEvent(Event& e);
+    void OnEvent(Event& e);
 
-  void PushLayer(Layer* layer);
-  void PushOverlay(Layer* overlay);
+    void PushLayer(Layer* layer);
+    void PushOverlay(Layer* overlay);
 
-  inline static Application& Get() { return *s_Instance; }
-  inline Window& GetWindow() { return *m_Window; }
+    inline static Application& Get() { return *s_Instance; }
+    inline Window& GetWindow() const { return *m_Window; }
 
- private:
-  std::unique_ptr<Window> m_Window;
-  bool m_Running = true;
+    private:
+    std::unique_ptr<Window> m_Window;
+    bool m_Running = true;
 
-  LayerStack m_LayerStack;
+    LayerStack m_LayerStack;
 
-  bool OnWindowClose(WindowCloseEvent& e);
-  bool OnESC(KeyPressedEvent& e);
+    bool OnWindowClose(WindowCloseEvent& e);
+    bool OnESC(KeyPressedEvent& e);
 
-  static Application* s_Instance;
+    static Application* s_Instance;
 
-  // Renderer
-  std::unique_ptr<Renderer> m_Renderer;
-};
+    // Renderer
+    std::unique_ptr<Renderer> m_Renderer;
+    };
 
-Application* CreateApplication();
-}  // namespace Engine
+  Application* CreateApplication();
+  }  // namespace Engine
