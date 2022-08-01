@@ -20,6 +20,8 @@
 #include <limits>     // Necessary for std::numeric_limits
 #include <algorithm>  // Necessary for std::clamp
 
+#include <fstream>
+
 namespace Engine {
 class VulkanRenderer : public Renderer {
  public:
@@ -88,6 +90,7 @@ class VulkanRenderer : public Renderer {
   void createLogicalDevice();
   void createSwapChain();
   void createImageViews();
+  void createGraphicsPipeline();
 
  private:
   // Helper functions
@@ -104,5 +107,7 @@ class VulkanRenderer : public Renderer {
   VkPresentModeKHR chooseSwapPresentMode(
       const std::vector<VkPresentModeKHR>& availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+  static std::vector<char> readFile(const std::string& filename);
+  VkShaderModule createShaderModule(const std::vector<char>& code);
 };
 }  // namespace Engine
