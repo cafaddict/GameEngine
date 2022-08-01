@@ -34,6 +34,8 @@ class VulkanRenderer : public Renderer {
     m_VulkanData.window = window;
   }
 
+  virtual void WaitIdle() override { vkDeviceWaitIdle(m_VulkanData.device); }
+
  private:
   // Main functions
   virtual void Init() override;
@@ -60,6 +62,16 @@ class VulkanRenderer : public Renderer {
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+    VkCommandPool commandPool;
+    std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    uint32_t currentFrame = 0;
   };
 
   struct QueueFamilyIndices {
@@ -81,6 +93,8 @@ class VulkanRenderer : public Renderer {
   // Vulkan Init Data
   VulkanData m_VulkanData;
 
+  const int MAX_FRAMES_IN_FLIGHT = 2;
+
  private:
   // Init functions
   void createInstance();
@@ -90,7 +104,12 @@ class VulkanRenderer : public Renderer {
   void createLogicalDevice();
   void createSwapChain();
   void createImageViews();
+  void createRenderPass();
   void createGraphicsPipeline();
+  void createFramebuffer();
+  void createCommandPool();
+  void createCommandBuffer();
+  void createSyncObjects();
 
  private:
   // Helper functions
@@ -109,5 +128,6 @@ class VulkanRenderer : public Renderer {
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
   static std::vector<char> readFile(const std::string& filename);
   VkShaderModule createShaderModule(const std::vector<char>& code);
+  void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 };
 }  // namespace Engine

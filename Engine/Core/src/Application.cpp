@@ -39,7 +39,10 @@ void Application::run() {
     // ENGINE_TRACE("{0}, {1}", x, y);
 
     m_Window->OnUpdate();
+    m_Renderer->Draw();
   }
+
+  m_Renderer->WaitIdle();
 }
 
 void Application::PushLayer(Layer* layer) {

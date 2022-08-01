@@ -12,5 +12,8 @@ class Renderer {
   virtual void SetWindow(GLFWwindow* window) = 0;
   static Renderer* Create();
   static Renderer* Create(GLFWwindow* window);
+
+  // for vulkan
+  virtual void WaitIdle() = 0;
 };
 }  // namespace Engine
