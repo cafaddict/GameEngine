@@ -126,8 +126,9 @@ class VulkanRenderer : public Renderer {
   VkPresentModeKHR chooseSwapPresentMode(
       const std::vector<VkPresentModeKHR>& availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-  static std::vector<char> readFile(const std::string& filename);
+  static std::vector<char> readFile(const std::string_view filename);
   VkShaderModule createShaderModule(const std::vector<char>& code);
+
   void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 };
 }  // namespace Engine

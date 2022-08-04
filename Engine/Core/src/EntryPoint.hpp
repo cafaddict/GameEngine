@@ -7,6 +7,13 @@ extern Engine::Application *Engine::CreateApplication();
 int main(int argc, char **argv) {
   Engine::Log::Init();
   ENGINE_WARN("Initialized Log-Engine");
+#ifdef _WIN32
+  system("../../resources/shaders/compile.bat");
+#else
+  system("bash ../../resources/shaders/compile.sh");
+#endif
+  ENGINE_WARN("Compiling shaders");
+
   auto app = Engine::CreateApplication();
   try {
     app->run();
