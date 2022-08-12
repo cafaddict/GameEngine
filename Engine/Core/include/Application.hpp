@@ -35,6 +35,7 @@ class Application {
 
   bool OnWindowClose(WindowCloseEvent& e);
   bool OnESC(KeyPressedEvent& e);
+  bool OnWindowResize(WindowResizeEvent& e);
 
   static Application* s_Instance;
 

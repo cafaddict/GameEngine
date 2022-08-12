@@ -63,6 +63,21 @@ void VulkanRenderer::Init() {
   createSyncObjects();
 }
 
+void VulkanRenderer::recreateSwapChain() {
+  ENGINE_CRITICAL("RECREATION");
+  while (m_VulkanData.minimized) {
+    ENGINE_CRITICAL("MINIMIZED");
+  }
+
+  vkDeviceWaitIdle(m_VulkanData.device);
+
+  cleanupSwapChain();
+
+  createSwapChain();
+  createImageViews();
+  createFramebuffer();
+}
+
 void VulkanRenderer::Draw() {
   vkWaitForFences(m_VulkanData.device, 1,
                   &m_VulkanData.inFlightFences[m_VulkanData.currentFrame],
@@ -71,10 +86,23 @@ void VulkanRenderer::Draw() {
                 &m_VulkanData.inFlightFences[m_VulkanData.currentFrame]);
 
   uint32_t imageIndex;
-  vkAcquireNextImageKHR(
+  VkResult result = vkAcquireNextImageKHR(
       m_VulkanData.device, m_VulkanData.swapChain, UINT64_MAX,
       m_VulkanData.imageAvailableSemaphores[m_VulkanData.currentFrame],
       VK_NULL_HANDLE, &imageIndex);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+      m_VulkanData.framebufferResized) {
+    m_VulkanData.framebufferResized = false;
+    recreateSwapChain();
+    return;
+  } else if (result != VK_SUCCESS) {
+    throw std::runtime_error("failed to acquire swap chain image!");
+  }
+
+  // Only reset the fence if we are submitting work
+  vkResetFences(m_VulkanData.device, 1,
+                &m_VulkanData.inFlightFences[m_VulkanData.currentFrame]);
 
   vkResetCommandBuffer(m_VulkanData.commandBuffers[m_VulkanData.currentFrame],
                        /*VkCommandBufferResetFlagBits*/ 0);
@@ -116,15 +144,29 @@ void VulkanRenderer::Draw() {
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = swapChains;
   presentInfo.pImageIndices = &imageIndex;
-
   presentInfo.pResults = nullptr;  // Optional
-  vkQueuePresentKHR(m_VulkanData.presentQueue, &presentInfo);
+
+  result = vkQueuePresentKHR(m_VulkanData.presentQueue, &presentInfo);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+    recreateSwapChain();
+  } else if (result != VK_SUCCESS) {
+    throw std::runtime_error("failed to present swap chain image!");
+  }
 
   m_VulkanData.currentFrame =
       (m_VulkanData.currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void VulkanRenderer::Shutdown() {
+  cleanupSwapChain();
+
+  vkDestroyPipeline(m_VulkanData.device, m_VulkanData.graphicsPipeline,
+                    nullptr);
+  vkDestroyPipelineLayout(m_VulkanData.device, m_VulkanData.pipelineLayout,
+                          nullptr);
+  vkDestroyRenderPass(m_VulkanData.device, m_VulkanData.renderPass, nullptr);
+
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     vkDestroySemaphore(m_VulkanData.device,
                        m_VulkanData.renderFinishedSemaphores[i], nullptr);
@@ -133,21 +175,9 @@ void VulkanRenderer::Shutdown() {
     vkDestroyFence(m_VulkanData.device, m_VulkanData.inFlightFences[i],
                    nullptr);
   }
+
   vkDestroyCommandPool(m_VulkanData.device, m_VulkanData.commandPool, nullptr);
 
-  for (auto framebuffer : m_VulkanData.swapChainFramebuffers) {
-    vkDestroyFramebuffer(m_VulkanData.device, framebuffer, nullptr);
-  }
-  vkDestroyPipeline(m_VulkanData.device, m_VulkanData.graphicsPipeline,
-                    nullptr);
-  vkDestroyPipelineLayout(m_VulkanData.device, m_VulkanData.pipelineLayout,
-                          nullptr);
-  vkDestroyRenderPass(m_VulkanData.device, m_VulkanData.renderPass, nullptr);
-
-  for (auto imageView : m_VulkanData.swapChainImageViews) {
-    vkDestroyImageView(m_VulkanData.device, imageView, nullptr);
-  }
-  vkDestroySwapchainKHR(m_VulkanData.device, m_VulkanData.swapChain, nullptr);
   vkDestroyDevice(m_VulkanData.device, nullptr);
 
   if (enableValidationLayers) {
@@ -706,6 +736,18 @@ void VulkanRenderer::createSyncObjects() {
           "failed to create synchronization objects for a frame!");
     }
   }
+}
+
+void VulkanRenderer::cleanupSwapChain() {
+  for (auto swapChainFramebuffer : m_VulkanData.swapChainFramebuffers) {
+    vkDestroyFramebuffer(m_VulkanData.device, swapChainFramebuffer, nullptr);
+  }
+
+  for (auto swapChainImageView : m_VulkanData.swapChainImageViews) {
+    vkDestroyImageView(m_VulkanData.device, swapChainImageView, nullptr);
+  }
+
+  vkDestroySwapchainKHR(m_VulkanData.device, m_VulkanData.swapChain, nullptr);
 }
 
 /*

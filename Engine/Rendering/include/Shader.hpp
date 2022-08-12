@@ -9,5 +9,6 @@ class Shader {
   virtual void UnBind() const = 0;
 
  private:
+  uint64_t m_Shader;
 };
 }  // namespace Engine

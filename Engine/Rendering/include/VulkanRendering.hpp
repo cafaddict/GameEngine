@@ -22,6 +22,8 @@
 
 #include <fstream>
 
+#include <VulkanShader.hpp>
+
 namespace Engine {
 class VulkanRenderer : public Renderer {
  public:
@@ -33,12 +35,19 @@ class VulkanRenderer : public Renderer {
   virtual void SetWindow(GLFWwindow* window) override {
     m_VulkanData.window = window;
   }
+  virtual void SetWindowResized(bool resized) override {
+    m_VulkanData.framebufferResized = resized;
+  }
+  virtual void SetWindowMinimized(bool minimized) override {
+    m_VulkanData.minimized = minimized;
+  }
 
   virtual void WaitIdle() override { vkDeviceWaitIdle(m_VulkanData.device); }
 
  private:
   // Main functions
   virtual void Init() override;
+  void recreateSwapChain();
   void Shutdown();
 
  private:
@@ -72,6 +81,8 @@ class VulkanRenderer : public Renderer {
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
+    bool framebufferResized = false;
+    bool minimized = false;
   };
 
   struct QueueFamilyIndices {
@@ -111,6 +122,8 @@ class VulkanRenderer : public Renderer {
   void createCommandBuffer();
   void createSyncObjects();
 
+  void cleanupSwapChain();
+
  private:
   // Helper functions
   std::vector<const char*> getRequiredExtensions();
@@ -126,9 +139,12 @@ class VulkanRenderer : public Renderer {
   VkPresentModeKHR chooseSwapPresentMode(
       const std::vector<VkPresentModeKHR>& availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-  static std::vector<char> readFile(const std::string_view filename);
+
   VkShaderModule createShaderModule(const std::vector<char>& code);
 
   void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+ public:
+  static std::vector<char> readFile(const std::string_view filename);
 };
 }  // namespace Engine

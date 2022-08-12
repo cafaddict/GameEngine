@@ -60,8 +60,29 @@ bool Application::OnWindowClose(WindowCloseEvent& e) {
   return true;
 }
 bool Application::OnESC(KeyPressedEvent& e) {
+  bool Handled = e.IsHandled();
+  if (Handled) {
+    ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
+  }
   if ((e.GetKeyCode() == 256) && (e.GetRepeatCount() == 1)) {
     m_Running = false;
+  }
+  return true;
+}
+
+bool Application::OnWindowResize(WindowResizeEvent& e) {
+  bool Handled = e.IsHandled();
+  if (Handled) {
+    ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
+  }
+  m_Renderer->SetWindowResized(true);
+  // int width, height = 0;
+  // width = e.GetWidth();
+  // height = e.GetHeight();
+  if (e.GetWidth() == 0 || e.GetHeight() == 0) {
+    m_Renderer->SetWindowMinimized(true);
+  } else {
+    m_Renderer->SetWindowMinimized(false);
   }
   return true;
 }

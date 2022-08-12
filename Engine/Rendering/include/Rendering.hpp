@@ -10,6 +10,8 @@ class Renderer {
   virtual void Init() = 0;
   virtual void Draw() = 0;
   virtual void SetWindow(GLFWwindow* window) = 0;
+  virtual void SetWindowResized(bool resized) = 0;
+  virtual void SetWindowMinimized(bool minimized) = 0;
   static Renderer* Create();
   static Renderer* Create(GLFWwindow* window);
 

@@ -34,7 +34,7 @@ void GlfwWindow::Init(const WindowProps& props) {
     s_GLFWInitialized = true;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwSetErrorCallback(GLFWErrorCallback);
   }
 
@@ -45,6 +45,7 @@ void GlfwWindow::Init(const WindowProps& props) {
   // int status = gladLoadGL(glfwGetProcAddress);
 
   // ENGINE_ASSERT(status, "Failed to initialize Glad!");
+
   glfwSetWindowUserPointer(m_Window, &m_Data);
   // SetVSync(true); //for opengl
 
