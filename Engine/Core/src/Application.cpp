@@ -22,7 +22,8 @@ void Application::OnEvent(Event& e) {
   EventDispatcher dispatcher(e);
   dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
   dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(OnESC));
-  ENGINE_INFO("{0}", e);
+  dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
+  // ENGINE_INFO("{0}", e);
   for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();) {
     (*--it)->OnEvent(e);
     if (e.IsHandled()) break;
@@ -34,7 +35,9 @@ void Application::run() {
     for (Layer* layer : m_LayerStack) layer->OnUpdate();
 
     m_Window->OnUpdate();
+
     m_Renderer->Draw();
+    ;
   }
 
   m_Renderer->WaitIdle();
@@ -75,10 +78,9 @@ bool Application::OnWindowResize(WindowResizeEvent& e) {
   if (Handled) {
     ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
   }
+  ENGINE_INFO("{0}", e);
   m_Renderer->SetWindowResized(true);
-  // int width, height = 0;
-  // width = e.GetWidth();
-  // height = e.GetHeight();
+
   if (e.GetWidth() == 0 || e.GetHeight() == 0) {
     m_Renderer->SetWindowMinimized(true);
   } else {

@@ -64,9 +64,8 @@ void VulkanRenderer::Init() {
 }
 
 void VulkanRenderer::recreateSwapChain() {
-  ENGINE_CRITICAL("RECREATION");
   while (m_VulkanData.minimized) {
-    ENGINE_CRITICAL("MINIMIZED");
+    glfwWaitEvents();
   }
 
   vkDeviceWaitIdle(m_VulkanData.device);
@@ -82,8 +81,6 @@ void VulkanRenderer::Draw() {
   vkWaitForFences(m_VulkanData.device, 1,
                   &m_VulkanData.inFlightFences[m_VulkanData.currentFrame],
                   VK_TRUE, UINT64_MAX);
-  vkResetFences(m_VulkanData.device, 1,
-                &m_VulkanData.inFlightFences[m_VulkanData.currentFrame]);
 
   uint32_t imageIndex;
   VkResult result = vkAcquireNextImageKHR(
