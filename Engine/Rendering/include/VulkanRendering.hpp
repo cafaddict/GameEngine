@@ -21,8 +21,11 @@
 #include <algorithm>  // Necessary for std::clamp
 
 #include <fstream>
+#include <memory>
 
 #include <VulkanShader.hpp>
+#include <VulkanBuffer.hpp>
+#include <VertexArray.hpp>
 
 namespace Engine {
 class VulkanRenderer : public Renderer {
@@ -103,6 +106,7 @@ class VulkanRenderer : public Renderer {
  private:
   // Vulkan Init Data
   VulkanData m_VulkanData;
+  std::unique_ptr<VulkanVertexBuffer> m_VertexBuffer;
 
   const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -119,6 +123,7 @@ class VulkanRenderer : public Renderer {
   void createGraphicsPipeline();
   void createFramebuffer();
   void createCommandPool();
+  void createVertexBuffer();
   void createCommandBuffer();
   void createSyncObjects();
 
