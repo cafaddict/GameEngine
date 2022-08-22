@@ -166,6 +166,8 @@ void VulkanRenderer::Draw() {
 void VulkanRenderer::Shutdown() {
   cleanupSwapChain();
 
+  m_VertexBuffer->Destroy();
+
   vkDestroyPipeline(m_VulkanData.device, m_VulkanData.graphicsPipeline,
                     nullptr);
   vkDestroyPipelineLayout(m_VulkanData.device, m_VulkanData.pipelineLayout,
@@ -708,8 +710,10 @@ void VulkanRenderer::createCommandPool() {
 }
 
 void VulkanRenderer::createVertexBuffer() {
-  m_VertexBuffer = std::unique_ptr<VulkanVertexBuffer>(
-      VulkanVertexBuffer::Create(&m_VulkanData.device, vertices));
+  m_VertexBuffer =
+      std::unique_ptr<VulkanVertexBuffer>(VulkanVertexBuffer::Create(
+          &m_VulkanData.device, &m_VulkanData.physicalDevice, vertices));
+  m_VertexBuffer->Bind();
 }
 
 void VulkanRenderer::createCommandBuffer() {
@@ -998,6 +1002,12 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer,
   scissor.extent = m_VulkanData.swapChainExtent;
   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+  VkBuffer vertexBuffers[] = {m_VertexBuffer->GetVertexBuffer()};
+  VkDeviceSize offsets[] = {0};
+  vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+  vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+
   vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
   vkCmdEndRenderPass(commandBuffer);
@@ -1005,6 +1015,6 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer,
   if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
     throw std::runtime_error("failed to record command buffer!");
   }
-}
+}  // namespace Engine
 
 }  // namespace Engine
