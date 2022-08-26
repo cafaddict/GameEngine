@@ -76,9 +76,6 @@ void VulkanRenderer::recreateSwapChain() {
   vkDeviceWaitIdle(m_VulkanData.device);
 
   cleanupSwapChain();
-
-  m_VertexBuffer->Destroy();
-
   createSwapChain();
   createImageViews();
   createFramebuffer();
