@@ -1,11 +1,11 @@
 #pragma once
 #include <Buffer.hpp>
-#include <Vulkan/Vulkan.h>
+#include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
-#include <span>
 #include <array>
 #include <VertexArray.hpp>
+#include <cstring>
 
 namespace Engine {
 class VulkanVertexBuffer : public VertexBuffer {

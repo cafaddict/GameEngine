@@ -32,10 +32,10 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
 endif()
 
 # specify the C++ standard
+# SET(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 add_subdirectory("external/glfw-3.3.4")
 add_subdirectory("external/glm")
 add_subdirectory(Engine)
