@@ -7,10 +7,19 @@ const bool enableValidationLayers = true;
 
 namespace Engine {
 // This is only for testing remove it
+// const std::vector<Vertex> vertices = {
+//     {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+//     {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+//     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
+
 const std::vector<Vertex> vertices = {
-    {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
+    {{-0.5f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}};
+
+const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+
 // debugCallback
 static VKAPI_ATTR VkBool32 VKAPI_CALL
 debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -707,10 +716,9 @@ void VulkanRenderer::createCommandPool() {
 }
 
 void VulkanRenderer::createVertexBuffer() {
-  m_VertexBuffer =
-      std::unique_ptr<VulkanVertexBuffer>(VulkanVertexBuffer::Create(
-          &m_VulkanData.device, &m_VulkanData.physicalDevice, vertices));
-  m_VertexBuffer->Bind();
+  m_VertexBuffer = std::unique_ptr<VulkanVertexBuffer>(
+      VulkanVertexBuffer::Create(&m_VulkanData, vertices));
+  // m_VertexBuffer->Bind();
 }
 
 void VulkanRenderer::createCommandBuffer() {
