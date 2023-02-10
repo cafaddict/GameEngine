@@ -13,7 +13,7 @@ namespace Engine {
 //     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
 
 const std::vector<Vertex> vertices = {
-    {{-0.5f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
     {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},
     {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}};
@@ -27,18 +27,18 @@ debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
               const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
               void *pUserData) {
   switch (messageSeverity) {
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    ENGINE_TRACE("validation layer: {0}", pCallbackData->pMessage);
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    ENGINE_INFO("validation layer: {0}", pCallbackData->pMessage);
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    ENGINE_WARN("validation layer: {0}", pCallbackData->pMessage);
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    ENGINE_ERROR("validation layer: {0}", pCallbackData->pMessage);
-    break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+      ENGINE_TRACE("validation layer: {0}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+      ENGINE_INFO("validation layer: {0}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+      ENGINE_WARN("validation layer: {0}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+      ENGINE_ERROR("validation layer: {0}", pCallbackData->pMessage);
+      break;
   }
   return VK_FALSE;
 }
@@ -63,7 +63,7 @@ void VulkanRenderer::Init() {
   createInstance();
   setupDebugMessenger();
   if (m_VulkanData.window != nullptr)
-    createSurface(); // For now alway need window
+    createSurface();  // For now alway need window
   pickPhysicalDevice();
   createLogicalDevice();
   createSwapChain();
@@ -73,6 +73,7 @@ void VulkanRenderer::Init() {
   createFramebuffer();
   createCommandPool();
   createVertexBuffer();
+  createIndexBuffer();
   createCommandBuffer();
   createSyncObjects();
 }
@@ -153,7 +154,7 @@ void VulkanRenderer::Draw() {
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = swapChains;
   presentInfo.pImageIndices = &imageIndex;
-  presentInfo.pResults = nullptr; // Optional
+  presentInfo.pResults = nullptr;  // Optional
 
   result = vkQueuePresentKHR(m_VulkanData.presentQueue, &presentInfo);
 
@@ -172,6 +173,7 @@ void VulkanRenderer::Draw() {
 void VulkanRenderer::Shutdown() {
   cleanupSwapChain();
 
+  m_IndexBuffer->Destroy();
   m_VertexBuffer->Destroy();
 
   vkDestroyPipeline(m_VulkanData.device, m_VulkanData.graphicsPipeline,
@@ -305,8 +307,7 @@ void VulkanRenderer::populateDebugMessengerCreateInfo(
 }
 
 void VulkanRenderer::setupDebugMessenger() {
-  if (!enableValidationLayers)
-    return;
+  if (!enableValidationLayers) return;
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   populateDebugMessengerCreateInfo(createInfo);
 
@@ -449,8 +450,8 @@ void VulkanRenderer::createSwapChain() {
     createInfo.pQueueFamilyIndices = queueFamilyIndices;
   } else {
     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.queueFamilyIndexCount = 0;     // Optional
-    createInfo.pQueueFamilyIndices = nullptr; // Optional
+    createInfo.queueFamilyIndexCount = 0;      // Optional
+    createInfo.pQueueFamilyIndices = nullptr;  // Optional
   }
 
   createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
@@ -656,7 +657,7 @@ void VulkanRenderer::createGraphicsPipeline() {
   pipelineInfo.pViewportState = &viewportState;
   pipelineInfo.pRasterizationState = &rasterizer;
   pipelineInfo.pMultisampleState = &multisampling;
-  pipelineInfo.pDepthStencilState = nullptr; // Optional
+  pipelineInfo.pDepthStencilState = nullptr;  // Optional
   pipelineInfo.pColorBlendState = &colorBlending;
   pipelineInfo.pDynamicState = &dynamicState;
 
@@ -665,8 +666,8 @@ void VulkanRenderer::createGraphicsPipeline() {
   pipelineInfo.renderPass = m_VulkanData.renderPass;
   pipelineInfo.subpass = 0;
 
-  pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
-  pipelineInfo.basePipelineIndex = -1;              // Optional
+  pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;  // Optional
+  pipelineInfo.basePipelineIndex = -1;               // Optional
 
   if (vkCreateGraphicsPipelines(m_VulkanData.device, VK_NULL_HANDLE, 1,
                                 &pipelineInfo, nullptr,
@@ -720,6 +721,11 @@ void VulkanRenderer::createVertexBuffer() {
   m_VertexBuffer = std::unique_ptr<VulkanVertexBuffer>(
       VulkanVertexBuffer::Create(&m_VulkanData, vertices));
   // m_VertexBuffer->Bind();
+}
+
+void VulkanRenderer::createIndexBuffer() {
+  m_IndexBuffer = std::unique_ptr<VulkanIndexBuffer>(
+      VulkanIndexBuffer::Create(&m_VulkanData, indices));
 }
 
 void VulkanRenderer::createCommandBuffer() {
@@ -834,8 +840,8 @@ bool VulkanRenderer::checkDeviceExtensionSupport(VkPhysicalDevice device) {
   return requiredExtensions.empty();
 }
 
-VulkanRenderer::QueueFamilyIndices
-VulkanRenderer::findQueueFamilies(VkPhysicalDevice device) {
+VulkanRenderer::QueueFamilyIndices VulkanRenderer::findQueueFamilies(
+    VkPhysicalDevice device) {
   QueueFamilyIndices indices;
   uint32_t queueFamilyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -863,8 +869,8 @@ VulkanRenderer::findQueueFamilies(VkPhysicalDevice device) {
   return indices;
 }
 
-VulkanRenderer::SwapChainSupportDetails
-VulkanRenderer::querySwapChainSupport(VkPhysicalDevice device) {
+VulkanRenderer::SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(
+    VkPhysicalDevice device) {
   SwapChainSupportDetails details;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_VulkanData.surface,
                                             &details.capabilities);
@@ -913,8 +919,8 @@ VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(
   return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D
-VulkanRenderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) {
+VkExtent2D VulkanRenderer::chooseSwapExtent(
+    const VkSurfaceCapabilitiesKHR &capabilities) {
   if (capabilities.currentExtent.width !=
       std::numeric_limits<uint32_t>::max()) {
     return capabilities.currentExtent;
@@ -949,8 +955,8 @@ std::vector<char> VulkanRenderer::readFile(const std::string_view filename) {
 
   return buffer;
 }
-VkShaderModule
-VulkanRenderer::createShaderModule(const std::vector<char> &code) {
+VkShaderModule VulkanRenderer::createShaderModule(
+    const std::vector<char> &code) {
   VkShaderModuleCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   createInfo.codeSize = code.size();
@@ -969,8 +975,8 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer,
                                          uint32_t imageIndex) {
   VkCommandBufferBeginInfo beginInfo{};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = 0;                  // Optional
-  beginInfo.pInheritanceInfo = nullptr; // Optional
+  beginInfo.flags = 0;                   // Optional
+  beginInfo.pInheritanceInfo = nullptr;  // Optional
 
   if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
     throw std::runtime_error("failed to begin recording command buffer!");
@@ -1009,18 +1015,22 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer,
   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
   VkBuffer vertexBuffers[] = {m_VertexBuffer->GetVertexBuffer()};
+  VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+  vkCmdBindIndexBuffer(commandBuffer, indexBuffers, 0, VK_INDEX_TYPE_UINT16);
 
-  vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+  // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
-  vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+  // vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+  vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0,
+                   0, 0);
 
   vkCmdEndRenderPass(commandBuffer);
 
   if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
     throw std::runtime_error("failed to record command buffer!");
   }
-} // namespace Engine
+}  // namespace Engine
 
-} // namespace Engine
+}  // namespace Engine
