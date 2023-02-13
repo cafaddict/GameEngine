@@ -86,6 +86,7 @@ class VulkanRenderer : public Renderer {
   void createSwapChain();
   void createImageViews();
   void createRenderPass();
+  void createDescriptorSetLayout();
   void createGraphicsPipeline();
   void createFramebuffer();
   void createCommandPool();

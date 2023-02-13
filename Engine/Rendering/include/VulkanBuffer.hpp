@@ -79,4 +79,34 @@ class VulkanIndexBuffer : public IndexBuffer {
   uint32_t findMemoryType(uint32_t typeFilter,
                           VkMemoryPropertyFlags properties);
 };
+
+class VulkanUniformBuffer {
+ public:
+  ~VulkanUniformBuffer();
+  VulkanUniformBuffer();
+  VulkanUniformBuffer(VulkanData *vulkanData,
+                      UniformBufferObject uniformobject);
+  void Bind();
+  void UnBind();
+  void SetData(const void *data, uint32_t size);
+  static VulkanUniformBuffer *Create(VulkanData *vulkanData,
+                                     UniformBufferObject uniformbufferobject);
+  void Destroy();
+  std::vector<VkBuffer> GetUniformBuffer() { return m_UniformBuffers; }
+  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                    VkDeviceMemory &bufferMemory);
+  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+ private:
+  std::vector<VkBuffer> m_UniformBuffers;
+  std::vector<VkDeviceMemory> m_UniformBuffersMemory;
+  std::vector<void *> m_UniformBuffersMapped;
+  VkDevice *m_Device;
+  VkCommandPool *m_CommandPool;
+  VkPhysicalDevice *m_PhysicalDevice;
+  VkQueue *m_GraphicsQueue;
+  uint32_t findMemoryType(uint32_t typeFilter,
+                          VkMemoryPropertyFlags properties);
+};
 }  // namespace Engine

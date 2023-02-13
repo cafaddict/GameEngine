@@ -20,6 +20,12 @@ const std::vector<Vertex> vertices = {
 
 const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
+struct UniformBufferObject {
+  glm::mat4 model;
+  glm::mat4 view;
+  glm::mat4 proj;
+};
+
 // debugCallback
 static VKAPI_ATTR VkBool32 VKAPI_CALL
 debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -69,6 +75,7 @@ void VulkanRenderer::Init() {
   createSwapChain();
   createImageViews();
   createRenderPass();
+  createDescriptorSetLayout();
   createGraphicsPipeline();
   createFramebuffer();
   createCommandPool();
@@ -172,6 +179,9 @@ void VulkanRenderer::Draw() {
 
 void VulkanRenderer::Shutdown() {
   cleanupSwapChain();
+
+  vkDestroyDescriptorSetLayout(m_VulkanData.device,
+                               m_VulkanData.descriptorSetLayout, nullptr);
 
   m_IndexBuffer->Destroy();
   m_VertexBuffer->Destroy();
@@ -547,6 +557,25 @@ void VulkanRenderer::createRenderPass() {
   }
 }
 
+void VulkanRenderer::createDescriptorSetLayout() {
+  VkDescriptorSetLayoutBinding uboLayoutBinding{};
+  uboLayoutBinding.binding = 0;
+  uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  uboLayoutBinding.descriptorCount = 1;
+  uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  uboLayoutBinding.pImmutableSamplers = nullptr;
+
+  VkDescriptorSetLayoutCreateInfo layoutInfo{};
+  layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layoutInfo.bindingCount = 1;
+  layoutInfo.pBindings = &uboLayoutBinding;
+  if (vkCreateDescriptorSetLayout(m_VulkanData.device, &layoutInfo, nullptr,
+                                  &m_VulkanData.descriptorSetLayout) !=
+      VK_SUCCESS) {
+    throw std::runtime_error("failed to create descriptor set layout!");
+  }
+}
+
 void VulkanRenderer::createGraphicsPipeline() {
   auto vertShaderCode = readFile("../../resources/shaders/vert.spv");
   auto fragShaderCode = readFile("../../resources/shaders/frag.spv");
@@ -639,7 +668,8 @@ void VulkanRenderer::createGraphicsPipeline() {
 
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 0;
+  pipelineLayoutInfo.setLayoutCount = 1;
+  pipelineLayoutInfo.pSetLayouts = &m_VulkanData.descriptorSetLayout;
   pipelineLayoutInfo.pushConstantRangeCount = 0;
 
   if (vkCreatePipelineLayout(m_VulkanData.device, &pipelineLayoutInfo, nullptr,
