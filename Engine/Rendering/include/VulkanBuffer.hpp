@@ -5,11 +5,20 @@
 #include <VertexArray.hpp>
 #include <VulkanData.hpp>
 #include <array>
+#include <chrono>
 #include <cstring>
-#include <glm/glm.hpp>
 #include <vector>
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Engine {
+
+struct UniformBufferObject {
+  glm::mat4 model;
+  glm::mat4 view;
+  glm::mat4 proj;
+};
 
 class VulkanVertexBuffer : public VertexBuffer {
  public:
@@ -84,16 +93,17 @@ class VulkanUniformBuffer {
  public:
   ~VulkanUniformBuffer();
   VulkanUniformBuffer();
-  VulkanUniformBuffer(VulkanData *vulkanData,
-                      UniformBufferObject uniformobject);
+  VulkanUniformBuffer(VulkanData *vulkanData, int MAX_FRAMES_IN_FLIGHT);
+  void Update(uint32_t currentImage, UniformBufferObject ubo);
   void Bind();
   void UnBind();
   void SetData(const void *data, uint32_t size);
   static VulkanUniformBuffer *Create(VulkanData *vulkanData,
-                                     UniformBufferObject uniformbufferobject);
+
+                                     int MAX_FRAMES_IN_FLIGHT);
   void Destroy();
-  std::vector<VkBuffer> GetUniformBuffer() { return m_UniformBuffers; }
-  void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+  std::vector<VkBuffer> GetUniformBuffers() { return m_UniformBuffers; }
+  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
                     VkMemoryPropertyFlags properties, VkBuffer &buffer,
                     VkDeviceMemory &bufferMemory);
   void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -106,6 +116,10 @@ class VulkanUniformBuffer {
   VkCommandPool *m_CommandPool;
   VkPhysicalDevice *m_PhysicalDevice;
   VkQueue *m_GraphicsQueue;
+
+  UniformBufferObject m_Uniformbufferobject;
+  int m_max_frame_in_flight;
+
   uint32_t findMemoryType(uint32_t typeFilter,
                           VkMemoryPropertyFlags properties);
 };

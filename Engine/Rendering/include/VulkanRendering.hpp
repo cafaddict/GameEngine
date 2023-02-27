@@ -24,7 +24,21 @@
 #include <stdexcept>
 #include <vector>
 
+#define GLM_FORCE_RADIANS
+#include <chrono>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace Engine {
+
+const std::vector<Vertex> vertices = {
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}};
+
+const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+
 class VulkanRenderer : public Renderer {
  public:
   VulkanRenderer();
@@ -73,6 +87,7 @@ class VulkanRenderer : public Renderer {
   VulkanData m_VulkanData;
   std::unique_ptr<VulkanVertexBuffer> m_VertexBuffer;
   std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
+  std::unique_ptr<VulkanUniformBuffer> m_UniformBuffers;
 
   const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -92,6 +107,9 @@ class VulkanRenderer : public Renderer {
   void createCommandPool();
   void createVertexBuffer();
   void createIndexBuffer();
+  void createUniformBuffers();
+  void createDescriptorPool();
+  void createDescriptorSets();
   void createCommandBuffer();
   void createSyncObjects();
 
@@ -119,5 +137,29 @@ class VulkanRenderer : public Renderer {
 
  public:
   static std::vector<char> readFile(const std::string_view filename);
+
+ private:
+  // will be removed
+  void updateUniformBuffer(uint32_t currentImage) {
+    static auto startTime = std::chrono::high_resolution_clock::now();
+
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(
+                     currentTime - startTime)
+                     .count();
+
+    UniformBufferObject ubo{};
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.view =
+        glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                    glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.proj = glm::perspective(glm::radians(45.0f),
+                                m_VulkanData.swapChainExtent.width /
+                                    (float)m_VulkanData.swapChainExtent.height,
+                                0.1f, 10.0f);
+    ubo.proj[1][1] *= -1;
+    m_UniformBuffers->Update(currentImage, ubo);
+  }
 };
 }  // namespace Engine

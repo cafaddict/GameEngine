@@ -12,20 +12,6 @@ namespace Engine {
 //     {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
 //     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
 
-const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}};
-
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
-
-struct UniformBufferObject {
-  glm::mat4 model;
-  glm::mat4 view;
-  glm::mat4 proj;
-};
-
 // debugCallback
 static VKAPI_ATTR VkBool32 VKAPI_CALL
 debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -81,6 +67,9 @@ void VulkanRenderer::Init() {
   createCommandPool();
   createVertexBuffer();
   createIndexBuffer();
+  createUniformBuffers();
+  createDescriptorPool();
+  createDescriptorSets();
   createCommandBuffer();
   createSyncObjects();
 }
@@ -116,6 +105,8 @@ void VulkanRenderer::Draw() {
   } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
     throw std::runtime_error("failed to acquire swap chain image!");
   }
+  // will be removed
+  updateUniformBuffer(m_VulkanData.currentFrame);
 
   // Only reset the fence if we are submitting work
   vkResetFences(m_VulkanData.device, 1,
@@ -180,6 +171,10 @@ void VulkanRenderer::Draw() {
 void VulkanRenderer::Shutdown() {
   cleanupSwapChain();
 
+  m_UniformBuffers->Destroy();
+
+  vkDestroyDescriptorPool(m_VulkanData.device, m_VulkanData.descriptorPool,
+                          nullptr);
   vkDestroyDescriptorSetLayout(m_VulkanData.device,
                                m_VulkanData.descriptorSetLayout, nullptr);
 
@@ -632,7 +627,7 @@ void VulkanRenderer::createGraphicsPipeline() {
   rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
   rasterizer.lineWidth = 1.0f;
   rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-  rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+  rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
   rasterizer.depthBiasEnable = VK_FALSE;
 
   VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -756,6 +751,67 @@ void VulkanRenderer::createVertexBuffer() {
 void VulkanRenderer::createIndexBuffer() {
   m_IndexBuffer = std::unique_ptr<VulkanIndexBuffer>(
       VulkanIndexBuffer::Create(&m_VulkanData, indices));
+}
+
+void VulkanRenderer::createUniformBuffers() {
+  m_UniformBuffers = std::unique_ptr<VulkanUniformBuffer>(
+      VulkanUniformBuffer::Create(&m_VulkanData, MAX_FRAMES_IN_FLIGHT));
+}
+
+void VulkanRenderer::createDescriptorPool() {
+  VkDescriptorPoolSize poolSize{};
+  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+  VkDescriptorPoolCreateInfo poolInfo{};
+  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = 1;
+  poolInfo.pPoolSizes = &poolSize;
+
+  poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+  if (vkCreateDescriptorPool(m_VulkanData.device, &poolInfo, nullptr,
+                             &m_VulkanData.descriptorPool) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create descriptor pool!");
+  }
+}
+
+void VulkanRenderer::createDescriptorSets() {
+  std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT,
+                                             m_VulkanData.descriptorSetLayout);
+  VkDescriptorSetAllocateInfo allocInfo{};
+  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  allocInfo.descriptorPool = m_VulkanData.descriptorPool;
+  allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+  allocInfo.pSetLayouts = layouts.data();
+
+  m_VulkanData.descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+  if (vkAllocateDescriptorSets(m_VulkanData.device, &allocInfo,
+                               m_VulkanData.descriptorSets.data()) !=
+      VK_SUCCESS) {
+    throw std::runtime_error("failed to allocate descriptor sets!");
+  }
+
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = m_UniformBuffers->GetUniformBuffers()[i];
+    bufferInfo.offset = 0;
+    bufferInfo.range = sizeof(UniformBufferObject);
+
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = m_VulkanData.descriptorSets[i];
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &bufferInfo;
+    descriptorWrite.pImageInfo = nullptr;        // Optional
+    descriptorWrite.pTexelBufferView = nullptr;  // Optional
+
+    vkUpdateDescriptorSets(m_VulkanData.device, 1, &descriptorWrite, 0,
+                           nullptr);
+  }
 }
 
 void VulkanRenderer::createCommandBuffer() {
@@ -1053,6 +1109,10 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer,
   // vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
   // vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+  vkCmdBindDescriptorSets(
+      commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+      m_VulkanData.pipelineLayout, 0, 1,
+      &m_VulkanData.descriptorSets[m_VulkanData.currentFrame], 0, nullptr);
   vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0,
                    0, 0);
 
