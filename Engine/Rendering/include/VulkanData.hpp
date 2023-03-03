@@ -40,4 +40,9 @@ struct VulkanData {
   uint32_t currentFrame = 0;
   bool framebufferResized = false;
   bool minimized = false;
+
+  VkImage textureImage;
+  VkDeviceMemory textureImageMemory;
+  VkImageView textureImageView;
+  VkSampler textureSampler;
 };

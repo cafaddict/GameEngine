@@ -8,19 +8,45 @@
 #include <chrono>
 #include <cstring>
 #include <vector>
+
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Engine {
 
 struct UniformBufferObject {
-  glm::mat4 model;
-  glm::mat4 view;
-  glm::mat4 proj;
+  alignas(16) glm::mat4 model;
+  alignas(16) glm::mat4 view;
+  alignas(16) glm::mat4 proj;
 };
 
-class VulkanVertexBuffer : public VertexBuffer {
+class VulkanBuffer {
+ public:
+  ~VulkanBuffer();
+  VulkanBuffer();
+  VulkanBuffer(VulkanData *vulkanData);
+  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                    VkDeviceMemory &bufferMemory);
+
+  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+  uint32_t findMemoryType(uint32_t typeFilter,
+                          VkMemoryPropertyFlags properties);
+
+  VkCommandBuffer beginSingleTimeCommands();
+  void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+ protected:
+  VkDevice *m_Device;
+  VkCommandPool *m_CommandPool;
+  VkPhysicalDevice *m_PhysicalDevice;
+  VkQueue *m_GraphicsQueue;
+};
+
+class VulkanVertexBuffer : public VertexBuffer, private VulkanBuffer {
  public:
   virtual ~VulkanVertexBuffer();
   VulkanVertexBuffer();
@@ -35,26 +61,16 @@ class VulkanVertexBuffer : public VertexBuffer {
 
   VkBuffer GetVertexBuffer() { return m_VertexBuffer; };
 
-  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                    VkDeviceMemory &bufferMemory);
-
-  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
  private:
   VkBuffer m_VertexBuffer;
   VkDeviceMemory m_VertexBufferMemory;
-  VkDevice *m_Device;
-  VkCommandPool *m_CommandPool;
-  VkPhysicalDevice *m_PhysicalDevice;
-  VkQueue *m_GraphicsQueue;
 
   std::vector<Vertex> m_vertices;
 
   uint32_t findMemoryType(uint32_t typeFilter,
                           VkMemoryPropertyFlags properties);
 };
-class VulkanIndexBuffer : public IndexBuffer {
+class VulkanIndexBuffer : public IndexBuffer, private VulkanBuffer {
  public:
   virtual ~VulkanIndexBuffer();
   VulkanIndexBuffer();
@@ -69,27 +85,14 @@ class VulkanIndexBuffer : public IndexBuffer {
 
   VkBuffer GetIndexBuffer() { return m_IndexBuffer; };
 
-  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                    VkDeviceMemory &bufferMemory);
-
-  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
  private:
   VkBuffer m_IndexBuffer;
   VkDeviceMemory m_IndexBufferMemory;
-  VkDevice *m_Device;
-  VkCommandPool *m_CommandPool;
-  VkPhysicalDevice *m_PhysicalDevice;
-  VkQueue *m_GraphicsQueue;
 
   std::vector<uint16_t> m_indices;
-
-  uint32_t findMemoryType(uint32_t typeFilter,
-                          VkMemoryPropertyFlags properties);
 };
 
-class VulkanUniformBuffer {
+class VulkanUniformBuffer : private VulkanBuffer {
  public:
   ~VulkanUniformBuffer();
   VulkanUniformBuffer();
@@ -103,24 +106,13 @@ class VulkanUniformBuffer {
                                      int MAX_FRAMES_IN_FLIGHT);
   void Destroy();
   std::vector<VkBuffer> GetUniformBuffers() { return m_UniformBuffers; }
-  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                    VkDeviceMemory &bufferMemory);
-  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
  private:
   std::vector<VkBuffer> m_UniformBuffers;
   std::vector<VkDeviceMemory> m_UniformBuffersMemory;
   std::vector<void *> m_UniformBuffersMapped;
-  VkDevice *m_Device;
-  VkCommandPool *m_CommandPool;
-  VkPhysicalDevice *m_PhysicalDevice;
-  VkQueue *m_GraphicsQueue;
 
   UniformBufferObject m_Uniformbufferobject;
   int m_max_frame_in_flight;
-
-  uint32_t findMemoryType(uint32_t typeFilter,
-                          VkMemoryPropertyFlags properties);
 };
 }  // namespace Engine
