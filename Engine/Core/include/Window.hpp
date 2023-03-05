@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Event.hpp"
 #include <functional>
 #include <string>
+
+#include "Event.hpp"
 
 namespace Engine {
 struct WindowProps {
