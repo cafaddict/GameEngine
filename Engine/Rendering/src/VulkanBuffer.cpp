@@ -165,7 +165,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(VulkanData* vulkanData,
   m_CommandPool = &vulkanData->commandPool;
   m_GraphicsQueue = &vulkanData->graphicsQueue;
 
-  VkDeviceSize bufferSize = sizeof(uint16_t) * indices.size();
+  VkDeviceSize bufferSize = sizeof(uint32_t) * indices.size();
 
   VkBuffer stagingBuffer;
   VkDeviceMemory stagingBufferMemory;

@@ -1,10 +1,12 @@
 #pragma once
 #include <vulkan/vulkan.h>
-
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
 #include <vector>
 // #include <span>
 #include <array>
+
 namespace Engine {
 
 struct Vertex {
@@ -40,6 +42,11 @@ struct Vertex {
     attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
     return attributeDescriptions;
   }
+
+  bool operator==(const Vertex& other) const {
+    return pos == other.pos && color == other.color &&
+           texCoord == other.texCoord;
+  }
 };
 
 class VertexArray {
@@ -53,3 +60,15 @@ class VertexArray {
   unsigned int m_Attribute_num;
 };
 }  // namespace Engine
+
+namespace std {
+template <>
+struct hash<Engine::Vertex> {
+  size_t operator()(Engine::Vertex const& vertex) const {
+    return ((hash<glm::vec3>()(vertex.pos) ^
+             (hash<glm::vec3>()(vertex.color) << 1)) >>
+            1) ^
+           (hash<glm::vec2>()(vertex.texCoord) << 1);
+  }
+};
+}  // namespace std
