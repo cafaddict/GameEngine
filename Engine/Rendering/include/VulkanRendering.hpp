@@ -121,6 +121,7 @@ class VulkanRenderer : public Renderer {
   void createDescriptorSetLayout();
   void createGraphicsPipeline();
   void createCommandPool();
+  void createColorResources();
   void createDepthResources();
   void createFramebuffer();
   void createTextureImage();
@@ -159,9 +160,10 @@ class VulkanRenderer : public Renderer {
 
   // Image Related Helper function
   void createImage(uint32_t width, uint32_t height, uint32_t mipLevels,
-                   VkFormat format, VkImageTiling tiling,
-                   VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
-                   VkImage& image, VkDeviceMemory& imageMemory);
+                   VkSampleCountFlagBits numSamples, VkFormat format,
+                   VkImageTiling tiling, VkImageUsageFlags usage,
+                   VkMemoryPropertyFlags properties, VkImage& image,
+                   VkDeviceMemory& imageMemory);
   void transitionImageLayout(VkImage image, VkFormat format,
                              VkImageLayout oldLayout, VkImageLayout newLayout,
                              uint32_t mipLevels);
@@ -181,6 +183,8 @@ class VulkanRenderer : public Renderer {
 
   void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth,
                        int32_t texHeight, uint32_t mipLevels);
+
+  VkSampleCountFlagBits getMaxUsableSampleCount();
 
  public:
   static std::vector<char> readFile(const std::string_view filename);
