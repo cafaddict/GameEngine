@@ -25,6 +25,7 @@
 #include <vector>
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,15 +33,26 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 namespace Engine {
 
-const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
+// const std::vector<Vertex> vertices = {
+//     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+//     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+//     {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+//     {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
 
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+//     {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+//     {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+//     {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+//     {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}};
+
+// const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
+
+const std::string MODEL_PATH = "../../resources/models/viking_room.obj";
+const std::string TEXTURE_PATH = "../../resources/models/viking_room.png";
 
 class VulkanRenderer : public Renderer {
  public:
@@ -88,6 +100,8 @@ class VulkanRenderer : public Renderer {
  private:
   // Vulkan Init Data
   VulkanData m_VulkanData;
+  std::vector<Vertex> vertices;
+  std::vector<uint32_t> indices;
   std::unique_ptr<VulkanVertexBuffer> m_VertexBuffer;
   std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
   std::unique_ptr<VulkanUniformBuffer> m_UniformBuffers;
@@ -106,11 +120,13 @@ class VulkanRenderer : public Renderer {
   void createRenderPass();
   void createDescriptorSetLayout();
   void createGraphicsPipeline();
-  void createFramebuffer();
   void createCommandPool();
+  void createDepthResources();
+  void createFramebuffer();
   void createTextureImage();
   void createTextureImageView();
   void createTextureSampler();
+  void loadModel();
   void createVertexBuffer();
   void createIndexBuffer();
   void createUniformBuffers();
@@ -150,7 +166,16 @@ class VulkanRenderer : public Renderer {
                              VkImageLayout oldLayout, VkImageLayout newLayout);
   void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
                          uint32_t height);
-  VkImageView createImageView(VkImage image, VkFormat format);
+  VkImageView createImageView(VkImage image, VkFormat format,
+                              VkImageAspectFlags aspectFlags);
+
+  VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates,
+                               VkImageTiling tiling,
+                               VkFormatFeatureFlags features);
+
+  VkFormat findDepthFormat();
+
+  bool hasStencilComponent(VkFormat format);
 
  public:
   static std::vector<char> readFile(const std::string_view filename);

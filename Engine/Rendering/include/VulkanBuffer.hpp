@@ -74,13 +74,13 @@ class VulkanIndexBuffer : public IndexBuffer, private VulkanBuffer {
  public:
   virtual ~VulkanIndexBuffer();
   VulkanIndexBuffer();
-  VulkanIndexBuffer(VulkanData *vulkanData, std::vector<uint16_t> indices);
+  VulkanIndexBuffer(VulkanData *vulkanData, std::vector<uint32_t> indices);
   virtual void Bind() const override;
   virtual void UnBind() const override;
   virtual void SetData(const void *data, uint32_t size) override;
 
   static VulkanIndexBuffer *Create(VulkanData *vulkanData,
-                                   std::vector<uint16_t> indices);
+                                   std::vector<uint32_t> indices);
   void Destroy();
 
   VkBuffer GetIndexBuffer() { return m_IndexBuffer; };
@@ -89,7 +89,7 @@ class VulkanIndexBuffer : public IndexBuffer, private VulkanBuffer {
   VkBuffer m_IndexBuffer;
   VkDeviceMemory m_IndexBufferMemory;
 
-  std::vector<uint16_t> m_indices;
+  std::vector<uint32_t> m_indices;
 };
 
 class VulkanUniformBuffer : private VulkanBuffer {

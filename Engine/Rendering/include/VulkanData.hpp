@@ -41,8 +41,14 @@ struct VulkanData {
   bool framebufferResized = false;
   bool minimized = false;
 
+  // image
   VkImage textureImage;
   VkDeviceMemory textureImageMemory;
   VkImageView textureImageView;
   VkSampler textureSampler;
+
+  // Depth image
+  VkImage depthImage;
+  VkDeviceMemory depthImageMemory;
+  VkImageView depthImageView;
 };

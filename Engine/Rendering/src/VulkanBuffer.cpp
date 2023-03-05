@@ -158,7 +158,7 @@ VulkanIndexBuffer::~VulkanIndexBuffer() {}
 VulkanIndexBuffer::VulkanIndexBuffer() {}
 
 VulkanIndexBuffer::VulkanIndexBuffer(VulkanData* vulkanData,
-                                     std::vector<uint16_t> indices) {
+                                     std::vector<uint32_t> indices) {
   m_Device = &vulkanData->device;
   m_PhysicalDevice = &vulkanData->physicalDevice;
   m_indices = indices;
@@ -193,14 +193,14 @@ VulkanIndexBuffer::VulkanIndexBuffer(VulkanData* vulkanData,
 void VulkanIndexBuffer::Bind() const {
   void* data;
   vkMapMemory(*m_Device, m_IndexBufferMemory, 0,
-              sizeof(uint16_t) * m_indices.size(), 0, &data);
-  memcpy(data, m_indices.data(), sizeof(uint16_t) * m_indices.size());
+              sizeof(uint32_t) * m_indices.size(), 0, &data);
+  memcpy(data, m_indices.data(), sizeof(uint32_t) * m_indices.size());
   vkUnmapMemory(*m_Device, m_IndexBufferMemory);
 }
 void VulkanIndexBuffer::UnBind() const {}
 void VulkanIndexBuffer::SetData(const void* data, uint32_t size){};
 VulkanIndexBuffer* VulkanIndexBuffer::Create(VulkanData* vulkanData,
-                                             std::vector<uint16_t> indices) {
+                                             std::vector<uint32_t> indices) {
   return new VulkanIndexBuffer(vulkanData, indices);
 }
 void VulkanIndexBuffer::Destroy() {
