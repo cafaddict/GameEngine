@@ -1,0 +1,1 @@
+add_library(TINY_OBJ_LOADER SHARED tiny_obj_loader.h tiny_obj_loader.cpp)

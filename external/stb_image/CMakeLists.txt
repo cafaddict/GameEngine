@@ -1,0 +1,1 @@
+add_library(STB_IMAGE SHARED stb_image.h stb_image.cpp)

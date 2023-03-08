@@ -1,6 +1,7 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
+#define GLFW_INCLUDE_NONE
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
@@ -72,6 +73,8 @@ class VulkanRenderer : public Renderer {
   }
 
   virtual void WaitIdle() override { vkDeviceWaitIdle(m_VulkanData.device); }
+
+  VulkanData GetVulkanData() { return m_VulkanData; }
 
  private:
   // Main functions

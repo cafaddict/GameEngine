@@ -13,7 +13,7 @@ Application::Application() {
   // Renderer
   auto window = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
   // m_Renderer->SetWindow(window);
-  m_Renderer = std::unique_ptr<Renderer>(Renderer::Create(window));
+  m_Renderer = Renderer::Create(window);
 }
 
 Application::~Application() {}

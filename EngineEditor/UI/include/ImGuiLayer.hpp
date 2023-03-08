@@ -1,4 +1,6 @@
 #pragma once
+#define GLFW_INCLUDE_VULKAN
+#define GLFW_INCLUDE_NONE
 #include <imgui/imgui.h>
 
 #include <Event.hpp>
@@ -7,6 +9,15 @@
 #include <ApplicationEvent.hpp>
 #include <Layer.hpp>
 #include <Log.hpp>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include <Application.hpp>
+#include <VulkanRendering.hpp>
+
+#include "imgui_impl_vulkan.h"
+#include "imgui_impl_glfw.h"
 
 namespace Editor {
 class ImGuiLayer : public Engine::Layer {
@@ -22,6 +33,7 @@ class ImGuiLayer : public Engine::Layer {
 
  private:
   float m_Time = 0.0f;
+  VkDescriptorPool imguiPool;
 
  private:
   bool OnMouseButtonPressedEvent(Engine::MouseButtonPressedEvent& e);

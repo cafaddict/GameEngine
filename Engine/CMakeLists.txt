@@ -29,6 +29,6 @@ add_subdirectory(Core)
 
 # add_subdirectory(Physics)
 # add_subdirectory(Events)
-add_library(ENGINE Engine.hpp Engine.cpp)
+add_library(ENGINE SHARED Engine.hpp Engine.cpp)
 target_link_libraries(ENGINE UTILS RENDERING EVENTS CORE)
 target_include_directories(ENGINE PUBLIC Core Events Physics Rendering Utils ../external)
