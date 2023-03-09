@@ -10,6 +10,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
   set(OS "win")
 
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /FORCE:MULTIPLE") 
 
   # set(BUILD_SHARED_LIBS TRUE)
   if(${CMAKE_CL_64})
@@ -38,6 +39,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory("external/glfw-3.3.4")
 add_subdirectory("external/glm")
+add_subdirectory("external/stb_image")
+add_subdirectory("external/tinyobjloader")
 add_subdirectory(Engine)
 add_subdirectory(EngineEditor)
 add_subdirectory(SandBox)

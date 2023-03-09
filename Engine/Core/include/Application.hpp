@@ -26,6 +26,7 @@ class Application {
 
   inline static Application& Get() { return *s_Instance; }
   inline Window& GetWindow() const { return *m_Window; }
+  inline Renderer* GetRenderer() const { return m_Renderer; }
 
  private:
   std::unique_ptr<Window> m_Window;
@@ -40,7 +41,7 @@ class Application {
   static Application* s_Instance;
 
   // Renderer
-  std::unique_ptr<Renderer> m_Renderer;
+  Renderer* m_Renderer;
   // std::unique_ptr<Shader> m_Shader;
   // std::unique_ptr<VertexBuffer> m_VertexBuffer;
 };

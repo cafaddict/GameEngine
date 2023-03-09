@@ -58,6 +58,7 @@ THE SOFTWARE.
 //   #include "tiny_obj_loader.h"
 //
 
+#pragma once
 #ifndef TINY_OBJ_LOADER_H_
 #define TINY_OBJ_LOADER_H_
 
@@ -140,10 +141,10 @@ namespace tinyobj {
 //
 
 #ifdef TINYOBJLOADER_USE_DOUBLE
-//#pragma message "using double"
+// #pragma message "using double"
 typedef double real_t;
 #else
-//#pragma message "using float"
+// #pragma message "using float"
 typedef float real_t;
 #endif
 

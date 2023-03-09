@@ -1,3 +1,5 @@
+#pragma once
+#define GLFW_INCLUDE_NONE
 #include <Engine.hpp>
 #include <ImGuiLayer.hpp>
 #include <Input.hpp>
@@ -20,9 +22,9 @@ class Sandbox : public Engine::Application {
  public:
   Sandbox() {
     PushLayer(new ExampleLayer());
-    // PushOverlay(new Editor::ImGuiLayer());
+    PushOverlay(new Editor::ImGuiLayer());
   }
   ~Sandbox() {}
 };
-
+extern Engine::Application* Engine::CreateApplication();
 Engine::Application* Engine::CreateApplication() { return new Sandbox(); }
