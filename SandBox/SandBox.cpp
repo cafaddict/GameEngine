@@ -22,7 +22,7 @@ class Sandbox : public Engine::Application {
  public:
   Sandbox() {
     PushLayer(new ExampleLayer());
-    // PushOverlay(new Editor::ImGuiLayer());
+    PushOverlay(new Editor::ImGuiLayer());
   }
   ~Sandbox() {}
 };

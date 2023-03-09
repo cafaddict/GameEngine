@@ -44,5 +44,7 @@ class ImGuiLayer : public Engine::Layer {
   bool OnKeyReleasedEvent(Engine::KeyReleasedEvent& e);
   bool OnWindowResizeEvent(Engine::WindowResizeEvent& e);
   bool OnKeyTypedEvent(Engine::KeyTypedEvent& e);
+  void FrameRender(ImDrawData* draw_data);
+  void FramePresent();
 };
 }  // namespace Editor

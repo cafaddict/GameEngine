@@ -76,7 +76,7 @@ class VulkanRenderer : public Renderer {
 
   VulkanData GetVulkanData() { return m_VulkanData; }
 
- private:
+ public:
   // Main functions
   virtual void Init() override;
   void recreateSwapChain();
