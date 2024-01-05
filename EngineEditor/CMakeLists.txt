@@ -25,5 +25,6 @@ endif()
 add_subdirectory(UI)
 
 add_library(EDITOR Editor.hpp Editor.cpp)
-target_link_libraries(EDITOR UI)
-target_include_directories(EDITOR PUBLIC UI ../external)
+target_link_libraries(EDITOR UI ENGINE STB_IMAGE)
+# target_include_directories(EDITOR PUBLIC UI ../external)
+target_include_directories(EDITOR PUBLIC UI)

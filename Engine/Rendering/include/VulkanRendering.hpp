@@ -32,10 +32,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image/stb_image.h>
+// #include <stb_image/stb_image.h>
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tinyobjloader/tiny_obj_loader.h>
+// #include <tinyobjloader/tiny_obj_loader.h>
 
 namespace Engine {
 

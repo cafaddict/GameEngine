@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 
 # set the project name and version
 project(VulkanEngine)
@@ -21,6 +21,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
   endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES Linux)
   set(OS "lin")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--allow-multiple-definition")
+
 
   if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
     set(ARCH "x86_64")
@@ -29,7 +31,9 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES Linux)
   endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   set(OS "mac")
-  set(ARCH "x86_64")
+  # set(ARCH "x86_64")
+# Set linker flags to use the GNU linker and enable the --allow-multiple-definition option
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=ld -Wl,-z,muldefs")
 endif()
 
 # specify the C++ standard
@@ -84,5 +88,5 @@ endif()
 
 include_directories(external)
 include_directories(Engine)
-include_directories(EngineShell)
+include_directories(EngineEditor)
 include_directories(SandBox)

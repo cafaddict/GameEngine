@@ -5,6 +5,8 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+#include <stb_image/stb_image.h>
+#include <tinyobjloader/tiny_obj_loader.h>
 namespace Engine {
 // This is only for testing remove it
 // const std::vector<Vertex> vertices = {
@@ -262,6 +264,28 @@ void VulkanRenderer::createInstance() {
       static_cast<uint32_t>(glfwExtensions.size());
   createInfo.ppEnabledExtensionNames = glfwExtensions.data();
 
+  uint32_t extensionCount = 0;
+  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+  std::vector<VkExtensionProperties> extensions(extensionCount);
+  vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
+                                         extensions.data());
+  bool portabilitySubsetSupported = false;
+  for (const auto &extension : extensions) {
+    std::cout << '\t' << extension.extensionName << std::endl;
+    if (strcmp(extension.extensionName, "VK_KHR_portability_subset") == 0) {
+      portabilitySubsetSupported = true;
+      break;
+    }
+  }
+
+  if (portabilitySubsetSupported) {
+    createInfo.enabledExtensionCount = 1;
+    const char *extensionName = "VK_KHR_portability_subset";
+    createInfo.ppEnabledExtensionNames = &extensionName;
+  } else {
+    std::cout << "there is no portabilitySubsetSupported" << std::endl;
+  }
+
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
   if (enableValidationLayers) {
     createInfo.enabledLayerCount =
@@ -275,12 +299,6 @@ void VulkanRenderer::createInstance() {
   if (vkCreateInstance(&createInfo, nullptr, &m_VulkanData.instance)) {
     throw std::runtime_error("failed to create instance!");
   }
-
-  // uint32_t extensionCount = 0;
-  // vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-  // std::vector<VkExtensionProperties> extensions(extensionCount);
-  // vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
-  //   extensions.data());
 
   // std::cout << "available extensions:\n";
 
@@ -954,7 +972,7 @@ void VulkanRenderer::loadModel() {
 
   if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
                         MODEL_PATH.c_str())) {
-        throw std::runtime_error(warn + err);
+    throw std::runtime_error(warn + err);
   }
 
   std::unordered_map<Vertex, uint32_t> uniqueVertices{};
