@@ -3,7 +3,7 @@
 
 namespace Engine {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
-Application* Application::s_Instance = nullptr;
+Application *Application::s_Instance = nullptr;
 Application::Application() {
   ENGINE_ASSERT(!s_Instance, "Application already exists!");
   s_Instance = this;
@@ -11,14 +11,14 @@ Application::Application() {
   m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 
   // Renderer
-  auto window = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
+  auto window = static_cast<GLFWwindow *>(m_Window->GetNativeWindow());
   // m_Renderer->SetWindow(window);
   m_Renderer = Renderer::Create(window);
 }
 
 Application::~Application() {}
 
-void Application::OnEvent(Event& e) {
+void Application::OnEvent(Event &e) {
   EventDispatcher dispatcher(e);
   dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
   dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(OnESC));
@@ -26,34 +26,35 @@ void Application::OnEvent(Event& e) {
   // ENGINE_INFO("{0}", e);
   for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();) {
     (*--it)->OnEvent(e);
-    if (e.IsHandled()) break;
+    if (e.IsHandled())
+      break;
   }
 }
 
 void Application::run() {
   while (m_Running) {
-    for (Layer* layer : m_LayerStack) layer->OnUpdate();
+    for (Layer *layer : m_LayerStack)
+      layer->OnUpdate();
 
     m_Window->OnUpdate();
 
     m_Renderer->Draw();
-    ;
   }
 
   m_Renderer->WaitIdle();
 }
 
-void Application::PushLayer(Layer* layer) {
+void Application::PushLayer(Layer *layer) {
   m_LayerStack.PushLayer(layer);
   layer->OnAttach();
 }
 
-void Application::PushOverlay(Layer* overlay) {
+void Application::PushOverlay(Layer *overlay) {
   m_LayerStack.PushLayer(overlay);
   overlay->OnAttach();
 }
 
-bool Application::OnWindowClose(WindowCloseEvent& e) {
+bool Application::OnWindowClose(WindowCloseEvent &e) {
   bool Handled = e.IsHandled();
   if (Handled) {
     ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
@@ -62,7 +63,7 @@ bool Application::OnWindowClose(WindowCloseEvent& e) {
 
   return true;
 }
-bool Application::OnESC(KeyPressedEvent& e) {
+bool Application::OnESC(KeyPressedEvent &e) {
   bool Handled = e.IsHandled();
   if (Handled) {
     ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
@@ -73,7 +74,7 @@ bool Application::OnESC(KeyPressedEvent& e) {
   return true;
 }
 
-bool Application::OnWindowResize(WindowResizeEvent& e) {
+bool Application::OnWindowResize(WindowResizeEvent &e) {
   bool Handled = e.IsHandled();
   if (Handled) {
     ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
@@ -89,4 +90,4 @@ bool Application::OnWindowResize(WindowResizeEvent& e) {
   return true;
 }
 
-}  // namespace Engine
+} // namespace Engine

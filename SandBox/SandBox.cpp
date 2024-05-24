@@ -5,7 +5,7 @@
 #include <Input.hpp>
 
 class ExampleLayer : public Engine::Layer {
- public:
+public:
   ExampleLayer() : Layer("Example") {}
   void OnUpdate() override {
     // CLIENT_INFO("ExampleLayer::Update");
@@ -13,18 +13,18 @@ class ExampleLayer : public Engine::Layer {
       CLIENT_TRACE("A key is pressed");
     }
   }
-  void OnEvent(Engine::Event& event) override {
+  void OnEvent(Engine::Event &event) override {
     // CLIENT_INFO("{0}", event);
   }
 };
 
 class Sandbox : public Engine::Application {
- public:
+public:
   Sandbox() {
     PushLayer(new ExampleLayer());
     PushOverlay(new Editor::ImGuiLayer());
   }
   ~Sandbox() {}
 };
-extern Engine::Application* Engine::CreateApplication();
-Engine::Application* Engine::CreateApplication() { return new Sandbox(); }
+extern Engine::Application *Engine::CreateApplication();
+Engine::Application *Engine::CreateApplication() { return new Sandbox(); }
