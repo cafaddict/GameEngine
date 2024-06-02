@@ -3,28 +3,35 @@
 #include <Engine.hpp>
 #include <ImGuiLayer.hpp>
 #include <Input.hpp>
+#include <Application.hpp>
 
 class ExampleLayer : public Engine::Layer {
-public:
-  ExampleLayer() : Layer("Example") {}
-  void OnUpdate() override {
-    // CLIENT_INFO("ExampleLayer::Update");
-    if (Engine::Input::IsKeyPressed(GLFW_KEY_A)) {
-      CLIENT_TRACE("A key is pressed");
-    }
-  }
-  void OnEvent(Engine::Event &event) override {
-    // CLIENT_INFO("{0}", event);
-  }
-};
+    public:
+    ExampleLayer() : Layer("Example") {}
+    void OnUpdate() override {
+        // CLIENT_INFO("ExampleLayer::Update");
+
+        Engine::Application& app = Engine::Application::Get();
+        auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
+        auto vulkandata = renderer->GetVulkanData();
+        renderer->QueueSubmit();
+
+        if (Engine::Input::IsKeyPressed(GLFW_KEY_A)) {
+            CLIENT_TRACE("A key is pressed");
+            }
+        }
+    void OnEvent(Engine::Event& event) override {
+        // CLIENT_INFO("{0}", event);
+        }
+    };
 
 class Sandbox : public Engine::Application {
-public:
-  Sandbox() {
-    PushLayer(new ExampleLayer());
-    PushOverlay(new Editor::ImGuiLayer());
-  }
-  ~Sandbox() {}
-};
-extern Engine::Application *Engine::CreateApplication();
-Engine::Application *Engine::CreateApplication() { return new Sandbox(); }
+    public:
+    Sandbox() {
+        PushLayer(new ExampleLayer());
+        PushOverlay(new Editor::ImGuiLayer());
+        }
+    ~Sandbox() {}
+    };
+extern Engine::Application* Engine::CreateApplication();
+Engine::Application* Engine::CreateApplication() { return new Sandbox(); }
