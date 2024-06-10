@@ -14,7 +14,7 @@ class ExampleLayer : public Engine::Layer {
         Engine::Application& app = Engine::Application::Get();
         auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
         auto vulkandata = renderer->GetVulkanData();
-        renderer->QueueSubmit();
+        renderer->BeginRecord();
 
         if (Engine::Input::IsKeyPressed(GLFW_KEY_A)) {
             CLIENT_TRACE("A key is pressed");
@@ -28,8 +28,10 @@ class ExampleLayer : public Engine::Layer {
 class Sandbox : public Engine::Application {
     public:
     Sandbox() {
+        PushLayer(new Editor::ImGuiLayer());
+
         PushLayer(new ExampleLayer());
-        PushOverlay(new Editor::ImGuiLayer());
+        // PushOverlay(new Editor::ImGuiLayer());
         }
     ~Sandbox() {}
     };

@@ -1,4 +1,5 @@
 #include "ImGuiLayer.hpp"
+#include "imgui_impl_vulkan.cpp"
 
 namespace Editor
     {
@@ -61,8 +62,10 @@ namespace Editor
         init_info.MinImageCount = 3;
         init_info.ImageCount = 3;
         init_info.MSAASamples = vulkandata.msaaSamples;
+        init_info.PipelineCache = g_PipelineCache;
         ENGINE_WARN("Vulkan_Init");
         ImGui_ImplVulkan_Init(&init_info, vulkandata.renderPass);
+
 
         VkCommandBuffer cmd = vulkandata.commandBuffers[vulkandata.currentFrame];
         VkCommandBufferBeginInfo beginInfo{};
@@ -71,6 +74,8 @@ namespace Editor
 
         // vkResetCommandBuffer(vulkandata.commandBuffers[vulkandata.currentFrame],
         //                      /*VkCommandBufferResetFlagBits*/ 0);
+
+
         vkBeginCommandBuffer(cmd, &beginInfo);
         ENGINE_WARN("ImGui_ImplVulakn");
         ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -123,6 +128,7 @@ namespace Editor
         // vkResetCommandPool(vulkandata.device, vulkandata.commandPool, 0);
 
         // clear font textures from cpu data
+
         ImGui_ImplVulkan_DestroyFontUploadObjects();
         ENGINE_WARN("ImGui Attach Finished");
         }
@@ -169,43 +175,45 @@ namespace Editor
         auto window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
         VkResult err;
 
-        VkSemaphore image_acquired_semaphore =
-            vulkandata.imageAvailableSemaphores[vulkandata.currentFrame];
-        VkSemaphore render_complete_semaphore =
-            vulkandata.renderFinishedSemaphores[vulkandata.currentFrame];
-        uint32_t imageIndex;
-        err = vkAcquireNextImageKHR(vulkandata.device, vulkandata.swapChain,
-            UINT64_MAX, image_acquired_semaphore,
-            VK_NULL_HANDLE, &imageIndex);
-        if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
-            {
-            renderer->recreateSwapChain();
-            return;
-            }
+        // VkSemaphore image_acquired_semaphore =
+        //     vulkandata.imageAvailableSemaphores[vulkandata.currentFrame];
+        // VkSemaphore render_complete_semaphore =
+        //     vulkandata.renderFinishedSemaphores[vulkandata.currentFrame];
+        // uint32_t imageIndex;
+        // err = vkAcquireNextImageKHR(vulkandata.device, vulkandata.swapChain,
+        //     UINT64_MAX, image_acquired_semaphore,
+        //     VK_NULL_HANDLE, &imageIndex);
+        // if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
+        //     {
+        //     renderer->recreateSwapChain();
+        //     return;
+        //     }
 
-        {
-        err = vkWaitForFences(
-            vulkandata.device, 1,
-            &vulkandata.inFlightFences[vulkandata.currentFrame], VK_TRUE,
-            UINT64_MAX); // wait indefinitely instead of periodically checking
+        // {
+        // err = vkWaitForFences(
+        //     vulkandata.device, 1,
+        //     &vulkandata.inFlightFences[vulkandata.currentFrame], VK_TRUE,
+        //     UINT64_MAX); // wait indefinitely instead of periodically checking
 
-        err = vkResetFences(vulkandata.device, 1,
-            &vulkandata.inFlightFences[vulkandata.currentFrame]);
-        }
-        {
-        // err = vkResetCommandPool(vulkandata.device, vulkandata.commandPool, 0);
+        // err = vkResetFences(vulkandata.device, 1,
+        //     &vulkandata.inFlightFences[vulkandata.currentFrame]);
+        // }
+        // {
+        // // err = vkResetCommandPool(vulkandata.device, vulkandata.commandPool, 0);
 
-        VkCommandBufferBeginInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        err = vkBeginCommandBuffer(
-            vulkandata.commandBuffers[vulkandata.currentFrame], &info);
-        }
+        // VkCommandBufferBeginInfo info = {};
+        // info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        // info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        // err = vkBeginCommandBuffer(
+        //     vulkandata.commandBuffers[vulkandata.currentFrame], &info);
+        // }
         {
         VkRenderPassBeginInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         info.renderPass = vulkandata.renderPass;
-        info.framebuffer = vulkandata.swapChainFramebuffers[imageIndex];
+        // info.framebuffer = vulkandata.swapChainFramebuffers[imageIndex];
+        info.framebuffer = vulkandata.swapChainGUIFramebuffers[vulkandata.image_index];
+
         info.renderArea.extent.width = app.GetWindow().GetWidth();
         info.renderArea.extent.height = app.GetWindow().GetHeight();
         std::array<VkClearValue, 2> clearValues{};
@@ -213,8 +221,14 @@ namespace Editor
         clearValues[1].depthStencil = { 1.0f, 0 };
         info.clearValueCount = static_cast<uint32_t>(clearValues.size());
         info.pClearValues = clearValues.data();
-        vkCmdBeginRenderPass(vulkandata.commandBuffers[vulkandata.currentFrame],
-            &info, VK_SUBPASS_CONTENTS_INLINE);
+
+
+        ImGui_ImplVulkan_Data* gui_vulkandata = ImGui_ImplVulkan_GetBackendData();
+        vkCmdBindPipeline(vulkandata.commandBuffers[vulkandata.currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, gui_vulkandata->Pipeline);
+
+
+        // vkCmdBeginRenderPass(vulkandata.commandBuffers[vulkandata.currentFrame],
+        //     &info, VK_SUBPASS_CONTENTS_INLINE);
         }
 
         // Record dear imgui primitives into command buffer
@@ -223,24 +237,24 @@ namespace Editor
 
         // Submit command buffer
         vkCmdEndRenderPass(vulkandata.commandBuffers[vulkandata.currentFrame]);
-        {
-        VkPipelineStageFlags wait_stage =
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        VkSubmitInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        info.waitSemaphoreCount = 1;
-        info.pWaitSemaphores = &image_acquired_semaphore;
-        info.pWaitDstStageMask = &wait_stage;
-        info.commandBufferCount = 1;
-        info.pCommandBuffers = &vulkandata.commandBuffers[vulkandata.currentFrame];
-        info.signalSemaphoreCount = 1;
-        info.pSignalSemaphores = &render_complete_semaphore;
+        // {
+        // VkPipelineStageFlags wait_stage =
+        //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        // VkSubmitInfo info = {};
+        // info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        // info.waitSemaphoreCount = 1;
+        // info.pWaitSemaphores = &image_acquired_semaphore;
+        // info.pWaitDstStageMask = &wait_stage;
+        // info.commandBufferCount = 1;
+        // info.pCommandBuffers = &vulkandata.commandBuffers[vulkandata.currentFrame];
+        // info.signalSemaphoreCount = 1;
+        // info.pSignalSemaphores = &render_complete_semaphore;
 
-        vkEndCommandBuffer(vulkandata.commandBuffers[vulkandata.currentFrame]);
+        // vkEndCommandBuffer(vulkandata.commandBuffers[vulkandata.currentFrame]);
 
-        vkQueueSubmit(vulkandata.graphicsQueue, 1, &info,
-            vulkandata.inFlightFences[vulkandata.currentFrame]);
-        }
+        // vkQueueSubmit(vulkandata.graphicsQueue, 1, &info,
+        //     vulkandata.inFlightFences[vulkandata.currentFrame]);
+        // }
 
         // VkPresentInfoKHR info = {};
         // info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

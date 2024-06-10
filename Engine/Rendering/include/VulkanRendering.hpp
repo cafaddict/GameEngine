@@ -63,7 +63,7 @@ namespace Engine
             VulkanRenderer(GLFWwindow* window);
             virtual ~VulkanRenderer();
 
-            void QueueSubmit();
+            void BeginRecord();
             virtual void Draw() override;
             virtual void SetWindow(GLFWwindow* window) override
                 {
@@ -130,12 +130,14 @@ namespace Engine
             void createSwapChain();
             void createImageViews();
             void createRenderPass();
+            void createGUIRenderPass();
             void createDescriptorSetLayout();
             void createGraphicsPipeline();
             void createCommandPool();
             void createColorResources();
             void createDepthResources();
             void createFramebuffer();
+            void createGUIFramebuffer();
             void createTextureImage();
             void createTextureImageView();
             void createTextureSampler();
@@ -169,6 +171,7 @@ namespace Engine
             VkShaderModule createShaderModule(const std::vector<char>& code);
 
             void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
 
             // Image Related Helper function
             void createImage(uint32_t width, uint32_t height, uint32_t mipLevels,
