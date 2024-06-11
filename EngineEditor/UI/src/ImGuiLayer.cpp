@@ -161,6 +161,7 @@ namespace Editor
 
         static bool show = true;
         ImGui::ShowDemoWindow(&show);
+
         // Rendering
         ImGui::Render();
         // ENGINE_WARN("Rendering data");

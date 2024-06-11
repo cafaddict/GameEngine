@@ -23,6 +23,12 @@ class ExampleLayer : public Engine::Layer {
     void OnEvent(Engine::Event& event) override {
         // CLIENT_INFO("{0}", event);
         }
+
+    void OnAttach() override {
+        Engine::Application& app = Engine::Application::Get();
+        auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
+        renderer->addModel("../../resources/models/viking_room.obj");
+        }
     };
 
 class Sandbox : public Engine::Application {

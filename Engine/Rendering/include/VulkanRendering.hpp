@@ -64,6 +64,7 @@ namespace Engine
             virtual ~VulkanRenderer();
 
             void BeginRecord();
+            virtual void addModel(std::string model_path) override;
             virtual void Draw() override;
             virtual void SetWindow(GLFWwindow* window) override
                 {
