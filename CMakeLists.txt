@@ -48,6 +48,7 @@ add_subdirectory("external/tinyobjloader")
 add_subdirectory(Engine)
 add_subdirectory(EngineEditor)
 add_subdirectory(SandBox)
+add_subdirectory(ParticleSandBox)
 
 # add_subdirectory(ScriptingLanguage)
 
@@ -90,3 +91,4 @@ include_directories(external)
 include_directories(Engine)
 include_directories(EngineEditor)
 include_directories(SandBox)
+include_directories(ParticleSandBox)
