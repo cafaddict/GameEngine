@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
-
+#include <Particle.hpp>
 struct VulkanData {
     GLFWwindow* window = nullptr;
 

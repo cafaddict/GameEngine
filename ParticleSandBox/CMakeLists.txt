@@ -5,8 +5,8 @@ add_executable(ParticleSandBox ParticleSandBox.cpp)
 
 # target_link_libraries(SandBox PUBLIC EDITOR ENGINE glfw TINY_OBJ_LOADER STB_IMAGE)
 # target_include_directories(SandBox PUBLIC ../Engine ../EngineEditor ../external)
-target_link_libraries(ParticleSandBox PUBLIC STB_IMAGE EDITOR ENGINE glm)
-target_include_directories(ParticleSandBox PUBLIC ../EngineEditor)
+target_link_libraries(ParticleSandBox PUBLIC STB_IMAGE ENGINE glm)
+# target_include_directories(ParticleSandBox PUBLIC ../En)
 
 
 # platform detection

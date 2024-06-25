@@ -36,8 +36,8 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 // #include <tinyobjloader/tiny_obj_loader.h>
+// #include <Particle.hpp>
 
-#include <Particle.hpp>
 
 namespace Engine
     {
@@ -67,7 +67,7 @@ namespace Engine
 
             void BeginRecord();
             virtual void addModel(std::string model_path) override;
-            virtual void addParticles(std::vector<Particle> particles) override;
+            // virtual void addParticles(std::vector<Particle> particles) override;
             virtual void Draw() override;
             virtual void SetWindow(GLFWwindow* window) override
                 {

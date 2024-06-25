@@ -27,10 +27,11 @@ add_subdirectory(Rendering)
 add_subdirectory(Physics)
 add_subdirectory(Events)
 add_subdirectory(Core)
+add_subdirectory(UI)
 
 
 # add_subdirectory(Physics)
 # add_subdirectory(Events)
 add_library(ENGINE Engine.hpp Engine.cpp)
-target_link_libraries(ENGINE UTILS RENDERING PHYSICS EVENTS CORE STB_IMAGE)
-target_include_directories(ENGINE PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Core Events Rendering Physics Utils ../external)
+target_link_libraries(ENGINE UTILS RENDERING PHYSICS EVENTS CORE STB_IMAGE UI)
+target_include_directories(ENGINE PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Core Events Rendering Physics Utils UI ../external)

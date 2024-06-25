@@ -5,8 +5,10 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+
 #include <stb_image/stb_image.h>
 #include <tinyobjloader/tiny_obj_loader.h>
+
 namespace Engine
     {
     // This is only for testing remove it

@@ -21,13 +21,6 @@ namespace Engine
             glm::vec4 getColor();
         };
 
-    Particle::Particle(/* args */)
-        {
-        }
-
-    Particle::~Particle()
-        {
-        }
 
 
     } // namespace Engine

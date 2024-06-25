@@ -1,6 +1,6 @@
 #pragma once
 #include <GLFW/glfw3.h>
-#include <Particle.hpp>
+// #include <Particle.hpp>
 // #include <KHR/khrplatform.h>
 // #include <glad/glad.h>
 
@@ -11,7 +11,7 @@ namespace Engine {
         virtual void Init() = 0;
         virtual void Draw() = 0;
         virtual void addModel(std::string model_path) = 0;
-        virtual void addParticles(std::vector<Particle> particles) = 0;
+        // virtual void addParticles(std::vector<Particle> particles) = 0;
         virtual void SetWindow(GLFWwindow* window) = 0;
         virtual void SetWindowResized(bool resized) = 0;
         virtual void SetWindowMinimized(bool minimized) = 0;

@@ -46,4 +46,5 @@ include_directories(../include)
 file(GLOB SRC "*.hpp" "*.cpp")
 add_library(PHYSICS ${SRC})
 target_link_libraries(PHYSICS glm UTILS)
-target_include_directories(PHYSICS PUBLIC ../include)
+target_include_directories(PHYSICS PUBLIC ../include ../../../external)
+

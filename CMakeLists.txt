@@ -46,7 +46,6 @@ add_subdirectory("external/glm")
 add_subdirectory("external/stb_image")
 add_subdirectory("external/tinyobjloader")
 add_subdirectory(Engine)
-add_subdirectory(EngineEditor)
 add_subdirectory(SandBox)
 add_subdirectory(ParticleSandBox)
 
