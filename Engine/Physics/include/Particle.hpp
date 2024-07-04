@@ -9,9 +9,7 @@ namespace Engine
     class Particle
         {
             private:
-            glm::vec3 position;
-            glm::vec3 velocity;
-            glm::vec4 color;
+
 
             public:
             Particle(/* args */);
@@ -19,6 +17,9 @@ namespace Engine
             glm::vec3 getVelocity();
             glm::vec3 getPosition();
             glm::vec4 getColor();
+            glm::vec3 position;
+            glm::vec3 velocity;
+            glm::vec4 color;
         };
 
 

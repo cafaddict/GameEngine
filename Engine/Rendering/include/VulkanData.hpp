@@ -18,6 +18,7 @@ struct VulkanData {
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
     VkQueue graphicsQueue;
+    VkQueue computeQueue;
     VkQueue presentQueue;
     VkSurfaceKHR surface;
     VkSwapchainKHR swapChain;
@@ -27,17 +28,33 @@ struct VulkanData {
     std::vector<VkImageView> swapChainImageViews;
     VkRenderPass renderPass;
     VkRenderPass GUIrenderPass;
+
     VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSetLayout computeDescriptorSetLayout;
+
     VkPipelineLayout pipelineLayout;
+    VkPipelineLayout computePipelineLayout;
+
     VkPipeline graphicsPipeline;
+    VkPipeline computePipeline;
+
+
     std::vector<VkFramebuffer> swapChainFramebuffers;
     std::vector<VkFramebuffer> swapChainGUIFramebuffers;
+
     VkCommandPool commandPool;
+    VkCommandPool computeCommandPool;
+
     std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkCommandBuffer> computeCommandBuffers;
+
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
+
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkSemaphore> computeFinishedSemaphores;
+
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
     bool framebufferResized = false;

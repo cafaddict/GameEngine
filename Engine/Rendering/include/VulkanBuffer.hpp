@@ -8,12 +8,14 @@
 #include <chrono>
 #include <cstring>
 #include <vector>
+#include <memory>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+// #include <Particle.hpp>
 
 namespace Engine {
 
@@ -38,6 +40,8 @@ namespace Engine {
 
         VkCommandBuffer beginSingleTimeCommands();
         void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+
 
         protected:
         VkDevice* m_Device;
@@ -117,19 +121,19 @@ namespace Engine {
         };
 
 
-    class VulkanShaderStorageBuffer : private VulkanBuffer {
+    template<typename T>
+    class VulkanShaderStorageBuffer : public VulkanBuffer {
         public:
         ~VulkanShaderStorageBuffer();
         VulkanShaderStorageBuffer();
-        VulkanShaderStorageBuffer(VulkanData* vulkanData, int MAX_FRAMES_IN_FLIGHT);
+        VulkanShaderStorageBuffer(VulkanData* vulkanData, int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector< T > objects);
         void Bind();
         void UnBind();
         void SetData(const void* data, uint32_t size);
         static VulkanShaderStorageBuffer* Create(VulkanData* vulkanData,
-
-            int MAX_FRAMES_IN_FLIGHT);
+            int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector< T > objects);
         void Destroy();
-        std::vector<VkBuffer> GetUniformBuffers() { return m_ShaderStorageBuffers; }
+        std::vector<VkBuffer> GetShaderStorageBuffers() { return m_ShaderStorageBuffers; }
 
         private:
         std::vector<VkBuffer> m_ShaderStorageBuffers;
@@ -139,3 +143,5 @@ namespace Engine {
         int m_max_frame_in_flight;
         };
     }  // namespace Engine
+
+#include "VulkanBuffer.tpp"

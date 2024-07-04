@@ -1,5 +1,14 @@
 #include <Particle.hpp>
 namespace Engine {
+
+    Particle::Particle() {
+
+        }
+
+    Particle::~Particle() {
+
+        }
+
     glm::vec3 Particle::getVelocity()
         {
         return velocity;

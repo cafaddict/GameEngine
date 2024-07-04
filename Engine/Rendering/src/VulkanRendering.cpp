@@ -8,6 +8,8 @@ const bool enableValidationLayers = true;
 
 #include <stb_image/stb_image.h>
 #include <tinyobjloader/tiny_obj_loader.h>
+#include <random>
+
 
 namespace Engine
     {
@@ -73,9 +75,16 @@ namespace Engine
         createImageViews();
         createRenderPass();
         createGUIRenderPass();
+
         createDescriptorSetLayout();
+        createComputeDescriptorSetLayout();
+
         createGraphicsPipeline();
+        createComputePipeline();
+
         createCommandPool();
+        createComputeCommandPool();
+
         createColorResources();
         createDepthResources();
         createFramebuffer();
@@ -85,11 +94,16 @@ namespace Engine
         createTextureSampler();
 
         createUniformBuffers();
+        VkDeviceSize buffersize = sizeof(Particle) * 1000;
+        createShaderStorageBuffers(buffersize);
 
 
         createDescriptorPool();
         createDescriptorSets();
+
         createCommandBuffer();
+        createComputeCommandBuffer();
+
         createSyncObjects();
 
 
@@ -335,6 +349,9 @@ namespace Engine
 
         m_IndexBuffer->Destroy();
         m_VertexBuffer->Destroy();
+        m_UniformBuffers->Destroy();
+        // dynamic_cast<VulkanShaderStorageBuffer<Particle>*>(m_ShaderStorageBuffers.get())->Destroy();
+        // m_ShaderStorageBuffers->Destroy();
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
@@ -342,11 +359,15 @@ namespace Engine
                 m_VulkanData.renderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(m_VulkanData.device,
                 m_VulkanData.imageAvailableSemaphores[i], nullptr);
+            vkDestroySemaphore(m_VulkanData.device,
+                m_VulkanData.computeFinishedSemaphores[i], nullptr);
             vkDestroyFence(m_VulkanData.device, m_VulkanData.inFlightFences[i],
                 nullptr);
             }
 
         vkDestroyCommandPool(m_VulkanData.device, m_VulkanData.commandPool, nullptr);
+        vkDestroyCommandPool(m_VulkanData.device, m_VulkanData.computeCommandPool, nullptr);
+
 
         vkDestroyDevice(m_VulkanData.device, nullptr);
 
@@ -564,7 +585,8 @@ namespace Engine
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
         std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(),
-                                                  indices.presentFamily.value() };
+                                                  indices.presentFamily.value(),
+                                                  indices.computeFamily.value() };
 
         float queuePriority = 1.0f;
         for (uint32_t queueFamily : uniqueQueueFamilies)
@@ -614,6 +636,8 @@ namespace Engine
 
         vkGetDeviceQueue(m_VulkanData.device, indices.graphicsFamily.value(), 0,
             &(m_VulkanData.graphicsQueue));
+        vkGetDeviceQueue(m_VulkanData.device, indices.computeFamily.value(), 0,
+            &(m_VulkanData.computeQueue));
         vkGetDeviceQueue(m_VulkanData.device, indices.presentFamily.value(), 0,
             &m_VulkanData.presentQueue);
         }
@@ -928,6 +952,49 @@ namespace Engine
             }
         }
 
+    void VulkanRenderer::createComputeDescriptorSetLayout()
+        {
+
+        VkDescriptorSetLayoutBinding uniformBufferBinding = {};
+        uniformBufferBinding.binding = 0;
+        uniformBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformBufferBinding.descriptorCount = 1;
+        uniformBufferBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT; // Use in compute shader
+        uniformBufferBinding.pImmutableSamplers = nullptr; // Not used for buffers
+
+
+        VkDescriptorSetLayoutBinding storageBufferBinding{};
+        storageBufferBinding.binding = 1;
+        storageBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        storageBufferBinding.descriptorCount = 1;
+        storageBufferBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        storageBufferBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutBinding storageBufferDynamicBinding{};
+        storageBufferDynamicBinding.binding = 2;
+        storageBufferDynamicBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+        storageBufferDynamicBinding.descriptorCount = 1;
+        storageBufferDynamicBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        storageBufferDynamicBinding.pImmutableSamplers = nullptr;
+
+
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uniformBufferBinding, storageBufferBinding, storageBufferDynamicBinding };
+
+        VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
+        layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutCreateInfo.pBindings = bindings.data();
+
+
+        if (vkCreateDescriptorSetLayout(m_VulkanData.device, &layoutCreateInfo, nullptr,
+            &m_VulkanData.computeDescriptorSetLayout) !=
+            VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to create compute descriptor set layout!");
+            }
+        }
+
     void VulkanRenderer::createGraphicsPipeline()
         {
         auto vertShaderCode = readFile("../../resources/shaders/vert.spv");
@@ -1080,7 +1147,44 @@ namespace Engine
         vkDestroyShaderModule(m_VulkanData.device, vertShaderModule, nullptr);
         }
 
+    void VulkanRenderer::createComputePipeline()
+        {
+        auto computeShaderCode = readFile("../../resources/shaders/particlecompute.spv");
 
+
+        VkShaderModule computeShaderModule = createShaderModule(computeShaderCode);
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &m_VulkanData.computeDescriptorSetLayout;
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pPushConstantRanges = nullptr; // Pointer to push constant ranges
+
+        if (vkCreatePipelineLayout(m_VulkanData.device, &pipelineLayoutInfo, nullptr,
+            &m_VulkanData.computePipelineLayout) != VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to create pipeline layout!");
+            }
+
+        VkComputePipelineCreateInfo computePipelineInfo = {};
+        computePipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+        computePipelineInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        computePipelineInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        computePipelineInfo.stage.module = computeShaderModule;
+        computePipelineInfo.stage.pName = "main";
+        computePipelineInfo.layout = m_VulkanData.computePipelineLayout;
+
+        if (vkCreateComputePipelines(m_VulkanData.device, VK_NULL_HANDLE, 1,
+            &computePipelineInfo, nullptr,
+            &m_VulkanData.computePipeline) != VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to create graphics pipeline!");
+            }
+
+        vkDestroyShaderModule(m_VulkanData.device, computeShaderModule, nullptr);
+
+        }
 
     void VulkanRenderer::createFramebuffer()
         {
@@ -1152,6 +1256,22 @@ namespace Engine
             &m_VulkanData.commandPool) != VK_SUCCESS)
             {
             throw std::runtime_error("failed to create command pool!");
+            }
+        }
+
+    void VulkanRenderer::createComputeCommandPool() {
+        QueueFamilyIndices queueFamilyIndices =
+            findQueueFamilies(m_VulkanData.physicalDevice);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        poolInfo.queueFamilyIndex = queueFamilyIndices.computeFamily.value();
+
+        if (vkCreateCommandPool(m_VulkanData.device, &poolInfo, nullptr,
+            &m_VulkanData.computeCommandPool) != VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to create compute command pool!");
             }
         }
 
@@ -1337,6 +1457,27 @@ namespace Engine
             VulkanUniformBuffer::Create(&m_VulkanData, MAX_FRAMES_IN_FLIGHT));
         }
 
+    void VulkanRenderer::createShaderStorageBuffers(VkDeviceSize buffersize) {
+        // Initialize particles
+        std::default_random_engine rndEngine((unsigned)time(nullptr));
+        std::uniform_real_distribution<float> rndDist(0.0f, 1.0f);
+
+        std::vector<Engine::Particle> particles(1000);
+        for (auto& particle : particles) {
+            float r = 0.25f * sqrt(rndDist(rndEngine));
+            float theta = rndDist(rndEngine) * 2.0f * 3.14159265358979323846f;
+            float x = r * cos(theta) * 1000.0f / 1000.0f;
+            float y = r * sin(theta);
+            float z = 0.0f;
+            particle.position = glm::vec3(x, y, z);
+            particle.velocity = glm::normalize(glm::vec3(x, y, z)) * 0.00025f;
+            particle.color = glm::vec4(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine), 1.0f);
+            }
+        m_ShaderStorageBuffers = std::unique_ptr<VulkanBuffer>(
+            VulkanShaderStorageBuffer<Engine::Particle>::Create(&m_VulkanData, MAX_FRAMES_IN_FLIGHT, buffersize, particles));
+        // Engine::VulkanShaderStorageBuffer<Particle>* buffer = Engine::VulkanShaderStorageBuffer<Particle>::Create(&m_VulkanData, MAX_FRAMES_IN_FLIGHT, buffersize, particles);
+        }
+
     void VulkanRenderer::createDescriptorPool()
         {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -1431,10 +1572,28 @@ namespace Engine
             }
         }
 
+    void VulkanRenderer::createComputeCommandBuffer() {
+        m_VulkanData.computeCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = m_VulkanData.computeCommandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount =
+            static_cast<uint32_t>(m_VulkanData.computeCommandBuffers.size());
+
+        if (vkAllocateCommandBuffers(m_VulkanData.device, &allocInfo,
+            m_VulkanData.commandBuffers.data()) !=
+            VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to allocate compute command buffers!");
+            }
+        }
+
     void VulkanRenderer::createSyncObjects()
         {
         m_VulkanData.imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         m_VulkanData.renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        m_VulkanData.computeFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         m_VulkanData.inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
@@ -1451,6 +1610,9 @@ namespace Engine
                 VK_SUCCESS ||
                 vkCreateSemaphore(m_VulkanData.device, &semaphoreInfo, nullptr,
                     &m_VulkanData.renderFinishedSemaphores[i]) !=
+                VK_SUCCESS ||
+                vkCreateSemaphore(m_VulkanData.device, &semaphoreInfo, nullptr,
+                    &m_VulkanData.computeFinishedSemaphores[i]) !=
                 VK_SUCCESS ||
                 vkCreateFence(m_VulkanData.device, &fenceInfo, nullptr,
                     &m_VulkanData.inFlightFences[i]) != VK_SUCCESS)
@@ -1567,6 +1729,12 @@ namespace Engine
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
                 {
                 indices.graphicsFamily = i;
+                }
+            if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+                // Prefer a separate compute queue, but fall back to the same as graphics queue if necessary
+                if (!indices.computeFamily.has_value() || !(queueFamilies[indices.computeFamily.value()].queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+                    indices.computeFamily = i;
+                    }
                 }
             VkBool32 presentSupport = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_VulkanData.surface,

@@ -36,7 +36,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 // #include <tinyobjloader/tiny_obj_loader.h>
-// #include <Particle.hpp>
+#include <Particle.hpp>
 
 
 namespace Engine
@@ -99,10 +99,11 @@ namespace Engine
                 {
                 std::optional<uint32_t> graphicsFamily;
                 std::optional<uint32_t> presentFamily;
+                std::optional<uint32_t> computeFamily;
 
                 bool isComplete()
                     {
-                    return graphicsFamily.has_value() && presentFamily.has_value();
+                    return graphicsFamily.has_value() && presentFamily.has_value() && computeFamily.has_value();
                     }
                 };
 
@@ -121,6 +122,7 @@ namespace Engine
             std::unique_ptr<VulkanVertexBuffer> m_VertexBuffer;
             std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
             std::unique_ptr<VulkanUniformBuffer> m_UniformBuffers;
+            std::unique_ptr<VulkanBuffer> m_ShaderStorageBuffers;
 
             const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -135,9 +137,17 @@ namespace Engine
             void createImageViews();
             void createRenderPass();
             void createGUIRenderPass();
+
             void createDescriptorSetLayout();
+            void createComputeDescriptorSetLayout();
+
             void createGraphicsPipeline();
+            void createComputePipeline();
+
             void createCommandPool();
+            void createComputeCommandPool();
+
+
             void createColorResources();
             void createDepthResources();
             void createFramebuffer();
@@ -145,13 +155,20 @@ namespace Engine
             void createTextureImage();
             void createTextureImageView();
             void createTextureSampler();
+
             void loadModel();
+
             void createVertexBuffer();
             void createIndexBuffer();
             void createUniformBuffers();
+            void createShaderStorageBuffers(VkDeviceSize buffersize);
+
             void createDescriptorPool();
             void createDescriptorSets();
+
             void createCommandBuffer();
+            void createComputeCommandBuffer();
+
             void createSyncObjects();
 
             void cleanupSwapChain();

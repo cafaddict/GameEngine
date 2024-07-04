@@ -279,50 +279,6 @@ namespace Engine
             }
         }
 
-    VulkanShaderStorageBuffer::~VulkanShaderStorageBuffer() {}
-    VulkanShaderStorageBuffer::VulkanShaderStorageBuffer() {}
 
-    VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(VulkanData* vulkanData,
-        int MAX_FRAMES_IN_FLIGHT)
-        {
-        m_Device = &vulkanData->device;
-        m_PhysicalDevice = &vulkanData->physicalDevice;
-        m_CommandPool = &vulkanData->commandPool;
-        m_GraphicsQueue = &vulkanData->graphicsQueue;
-        m_max_frame_in_flight = MAX_FRAMES_IN_FLIGHT;
-
-        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-        m_ShaderStorageBuffers.resize(m_max_frame_in_flight);
-        m_ShaderStorageBuffersMapped.resize(m_max_frame_in_flight);
-        m_ShaderStorageBuffersMemory.resize(m_max_frame_in_flight);
-
-        for (size_t i = 0; i < m_max_frame_in_flight; i++)
-            {
-            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                m_ShaderStorageBuffers[i], m_ShaderStorageBuffersMemory[i]);
-            vkMapMemory(*m_Device, m_ShaderStorageBuffersMemory[i], 0, bufferSize, 0,
-                &m_ShaderStorageBuffersMapped[i]);
-            }
-        }
-
-    void VulkanShaderStorageBuffer::Bind() {}
-    void VulkanShaderStorageBuffer::UnBind() {}
-    void VulkanShaderStorageBuffer::SetData(const void* data, uint32_t size) {};
-    VulkanShaderStorageBuffer* VulkanShaderStorageBuffer::Create(VulkanData* vulkanData,
-        int MAX_FRAMES_IN_FLIGHT)
-        {
-        return new VulkanShaderStorageBuffer(vulkanData, MAX_FRAMES_IN_FLIGHT);
-        }
-    void VulkanShaderStorageBuffer::Destroy()
-        {
-        for (size_t i = 0; i < m_max_frame_in_flight; i++)
-            {
-            vkDestroyBuffer(*m_Device, m_ShaderStorageBuffers[i], nullptr);
-            vkFreeMemory(*m_Device, m_ShaderStorageBuffersMemory[i], nullptr);
-            }
-        }
 
     } // namespace Engine
