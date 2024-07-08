@@ -7,7 +7,7 @@ namespace Engine {
             private:
             std::string modelPath;
             public:
-            ModelComponent(const std::string& path) : modelPath(path) {};
+            ModelComponent(const std::string& path);
             ~ModelComponent();
         };
 

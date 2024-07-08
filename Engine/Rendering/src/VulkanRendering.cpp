@@ -209,47 +209,60 @@ namespace Engine
 
     void VulkanRenderer::addModel(std::string model_path) {
 
+        ModelData* model_data = new ModelData();
+        model_data->Load(model_path);
+        for (int i = 0; i < model_data->indices.size(); i++) {
+            Vertex vertex{};
+            vertex.pos = model_data->positions[i];
+            vertex.texCoord = model_data->uvs[i];
+            vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+            vertices.push_back(vertex);
+            }
+        indices = model_data->indices;
+
+
+
         // loadModel();
 
 
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
+        // tinyobj::attrib_t attrib;
+        // std::vector<tinyobj::shape_t> shapes;
+        // std::vector<tinyobj::material_t> materials;
+        // std::string warn, err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-            model_path.c_str()))
-            {
-            throw std::runtime_error(warn + err);
-            }
+        // if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+        //     model_path.c_str()))
+        //     {
+        //     throw std::runtime_error(warn + err);
+        //     }
 
 
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+        // std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 
-        for (const auto& shape : shapes)
-            {
-            for (const auto& index : shape.mesh.indices)
-                {
-                Vertex vertex{};
+        // for (const auto& shape : shapes)
+        //     {
+        //     for (const auto& index : shape.mesh.indices)
+        //         {
+        //         Vertex vertex{};
 
-                vertex.pos = { attrib.vertices[3 * index.vertex_index + 0],
-                              attrib.vertices[3 * index.vertex_index + 1],
-                              attrib.vertices[3 * index.vertex_index + 2] };
+        //         vertex.pos = { attrib.vertices[3 * index.vertex_index + 0],
+        //                       attrib.vertices[3 * index.vertex_index + 1],
+        //                       attrib.vertices[3 * index.vertex_index + 2] };
 
-                vertex.texCoord = { attrib.texcoords[2 * index.texcoord_index + 0],
-                                   1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
+        //         vertex.texCoord = { attrib.texcoords[2 * index.texcoord_index + 0],
+        //                            1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
 
-                vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //         vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-                if (uniqueVertices.count(vertex) == 0)
-                    {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
-                    }
+        //         if (uniqueVertices.count(vertex) == 0)
+        //             {
+        //             uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+        //             vertices.push_back(vertex);
+        //             }
 
-                indices.push_back(uniqueVertices[vertex]);
-                }
-            }
+        //         indices.push_back(uniqueVertices[vertex]);
+        //         }
+        //     }
         createVertexBuffer();
         createIndexBuffer();
         }
@@ -997,8 +1010,16 @@ namespace Engine
 
     void VulkanRenderer::createGraphicsPipeline()
         {
-        auto vertShaderCode = readFile("../../resources/shaders/vert.spv");
-        auto fragShaderCode = readFile("../../resources/shaders/frag.spv");
+        // auto vertShaderCode = readFile("../../resources/shaders/vert.spv");
+        // auto fragShaderCode = readFile("../../resources/shaders/frag.spv");
+
+        ShaderData* shader_data = new ShaderData();
+        shader_data->LoadVertexShader("../../resources/shaders/vert.spv");
+        shader_data->LoadFragShader("../../resources/shaders/frag.spv");
+        auto vertShaderCode = shader_data->vertexShaderCode;
+        auto fragShaderCode = shader_data->fragmentShaderCode;
+
+
 
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

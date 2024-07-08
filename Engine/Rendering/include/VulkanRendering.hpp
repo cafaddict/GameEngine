@@ -38,6 +38,9 @@
 // #include <tinyobjloader/tiny_obj_loader.h>
 #include <Particle.hpp>
 
+#include <ModelData.hpp>
+#include <ShaderData.hpp>
+
 
 namespace Engine
     {
