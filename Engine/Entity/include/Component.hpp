@@ -5,15 +5,7 @@ namespace Engine {
             private:
             /* data */
             public:
-            Component(/* args */);
-            ~Component();
+            virtual ~Component() = default;
         };
 
-    Component::Component(/* args */)
-        {
-        }
-
-    Component::~Component()
-        {
-        }
     }

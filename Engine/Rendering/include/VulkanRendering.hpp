@@ -40,6 +40,10 @@
 
 #include <ModelData.hpp>
 #include <ShaderData.hpp>
+#include <EntityManager.hpp>
+#include <Entity.hpp>
+#include <ModelComponent.hpp>
+#include <TransformComponent.hpp>
 
 
 namespace Engine
@@ -72,7 +76,7 @@ namespace Engine
             virtual void addModel(std::string model_path) override;
             // virtual void addParticles(std::vector<Particle> particles) override;
             virtual void Draw() override;
-            virtual void SetWindow(GLFWwindow* window) override
+            void SetWindow(GLFWwindow* window) override
                 {
                 m_VulkanData.window = window;
                 }
@@ -91,9 +95,12 @@ namespace Engine
 
             public:
             // Main functions
-            virtual void Init() override;
+            void Init() override;
             void recreateSwapChain();
             void Shutdown();
+
+
+            void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) { m_EntityManager = entitymanager; }
 
 
             // struct
@@ -127,7 +134,11 @@ namespace Engine
             std::unique_ptr<VulkanUniformBuffer> m_UniformBuffers;
             std::unique_ptr<VulkanBuffer> m_ShaderStorageBuffers;
 
+            std::shared_ptr<EntityManager> m_EntityManager;
+
             const int MAX_FRAMES_IN_FLIGHT = 2;
+
+
 
             private:
             // Init functions

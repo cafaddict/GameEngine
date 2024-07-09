@@ -8,8 +8,8 @@ namespace Engine {
             private:
             std::vector<std::shared_ptr<Component>> components;
             public:
-            Entity(/* args */);
-            ~Entity();
+            Entity(/* args */) {};
+            ~Entity() {};
 
             void AddComponent(std::shared_ptr<Component> component) {
                 components.push_back(component);

@@ -40,6 +40,9 @@ namespace Engine
                 case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
                     ENGINE_ERROR("validation layer: {0}", pCallbackData->pMessage);
                     break;
+                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
+                    ENGINE_WARN("validation layer: {0}", pCallbackData->pMessage);
+                    break;
             }
         return VK_FALSE;
         }
@@ -209,16 +212,34 @@ namespace Engine
 
     void VulkanRenderer::addModel(std::string model_path) {
 
-        ModelData* model_data = new ModelData();
-        model_data->Load(model_path);
-        for (int i = 0; i < model_data->indices.size(); i++) {
-            Vertex vertex{};
-            vertex.pos = model_data->positions[i];
-            vertex.texCoord = model_data->uvs[i];
-            vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-            vertices.push_back(vertex);
+
+        auto entities = m_EntityManager->GetAllEntities();
+
+        for (const auto& entity : entities) {
+            auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
+            for (int i = 0; i < model_data->indices.size(); i++) {
+
+                Vertex vertex{};
+                vertex.pos = model_data->positions[i];
+                vertex.texCoord = model_data->uvs[i];
+                vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+                vertices.push_back(vertex);
+                }
+            indices = model_data->indices;
             }
-        indices = model_data->indices;
+
+
+
+        // ModelData* model_data = new ModelData();
+        // model_data->Load(model_path);
+        // for (int i = 0; i < model_data->indices.size(); i++) {
+        //     Vertex vertex{};
+        //     vertex.pos = model_data->positions[i];
+        //     vertex.texCoord = model_data->uvs[i];
+        //     vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //     vertices.push_back(vertex);
+        //     }
+        // indices = model_data->indices;
 
 
 
