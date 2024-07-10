@@ -43,6 +43,7 @@
 #include <EntityManager.hpp>
 #include <Entity.hpp>
 #include <ModelComponent.hpp>
+#include <ShaderComponent.hpp>
 #include <TransformComponent.hpp>
 
 
@@ -92,6 +93,9 @@ namespace Engine
             virtual void WaitIdle() override { vkDeviceWaitIdle(m_VulkanData.device); }
 
             VulkanData GetVulkanData() { return m_VulkanData; }
+
+            void loadModel();
+            void createGraphicsPipeline();
 
             public:
             // Main functions
@@ -155,7 +159,7 @@ namespace Engine
             void createDescriptorSetLayout();
             void createComputeDescriptorSetLayout();
 
-            void createGraphicsPipeline();
+            // void createGraphicsPipeline();
             void createComputePipeline();
 
             void createCommandPool();
@@ -170,7 +174,7 @@ namespace Engine
             void createTextureImageView();
             void createTextureSampler();
 
-            void loadModel();
+
 
             void createVertexBuffer();
             void createIndexBuffer();

@@ -12,6 +12,7 @@ namespace Engine {
             ModelComponent();
             ~ModelComponent();
             void ModifyModelData();
+            void SetModelData(std::shared_ptr<const ModelData> modelData);
             std::shared_ptr<const ModelData> GetModelData() const;
 
         };

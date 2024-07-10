@@ -7,14 +7,27 @@ namespace Engine {
     class ShaderData : public AssetData {
         public:
         ShaderData();
-        ~ShaderData() override;
+        virtual ~ShaderData();
         bool Load(const std::string& path) override;
-        bool LoadVertexShader(const std::string& path);
-        bool LoadFragShader(const std::string& path);
-        bool LoadComputeShader(const std::string& path);
 
-        std::vector<char> vertexShaderCode;
-        std::vector<char> fragmentShaderCode;
-        std::vector<char> computeShaderCode;
+        const std::vector<char>& GetShaderCode() const;
+
+        protected:
+        std::vector<char> shaderCode;
+        };
+
+    class VertexShaderData : public ShaderData {
+        public:
+        bool Load(const std::string& path) override;
+        };
+
+    class FragmentShaderData : public ShaderData {
+        public:
+        bool Load(const std::string& path) override;
+        };
+
+    class ComputeShaderData : public ShaderData {
+        public:
+        bool Load(const std::string& path) override;
         };
     }

@@ -82,7 +82,7 @@ namespace Engine
         createDescriptorSetLayout();
         createComputeDescriptorSetLayout();
 
-        createGraphicsPipeline();
+        // createGraphicsPipeline();
         createComputePipeline();
 
         createCommandPool();
@@ -1034,11 +1034,17 @@ namespace Engine
         // auto vertShaderCode = readFile("../../resources/shaders/vert.spv");
         // auto fragShaderCode = readFile("../../resources/shaders/frag.spv");
 
-        ShaderData* shader_data = new ShaderData();
-        shader_data->LoadVertexShader("../../resources/shaders/vert.spv");
-        shader_data->LoadFragShader("../../resources/shaders/frag.spv");
-        auto vertShaderCode = shader_data->vertexShaderCode;
-        auto fragShaderCode = shader_data->fragmentShaderCode;
+
+        std::vector<char> vertShaderCode;
+        std::vector<char> fragShaderCode;
+
+        auto entities = m_EntityManager->GetAllEntities();
+        for (const auto& entity : entities) {
+            std::shared_ptr<ShaderComponent> shaderComponent = entity->GetComponent<ShaderComponent>();
+            vertShaderCode = shaderComponent->GetVertexShader()->GetShaderCode();
+            fragShaderCode = shaderComponent->GetFragmentShader()->GetShaderCode();
+            }
+
 
 
 
@@ -1441,43 +1447,59 @@ namespace Engine
 
     void VulkanRenderer::loadModel()
         {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
+        auto entities = m_EntityManager->GetAllEntities();
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
-            MODEL_PATH.c_str()))
-            {
-            throw std::runtime_error(warn + err);
-            }
+        for (const auto& entity : entities) {
+            auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
+            for (int i = 0; i < model_data->indices.size(); i++) {
 
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-
-        for (const auto& shape : shapes)
-            {
-            for (const auto& index : shape.mesh.indices)
-                {
                 Vertex vertex{};
-
-                vertex.pos = { attrib.vertices[3 * index.vertex_index + 0],
-                              attrib.vertices[3 * index.vertex_index + 1],
-                              attrib.vertices[3 * index.vertex_index + 2] };
-
-                vertex.texCoord = { attrib.texcoords[2 * index.texcoord_index + 0],
-                                   1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
-
+                vertex.pos = model_data->positions[i];
+                vertex.texCoord = model_data->uvs[i];
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-                if (uniqueVertices.count(vertex) == 0)
-                    {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
-                    }
-
-                indices.push_back(uniqueVertices[vertex]);
+                vertices.push_back(vertex);
                 }
+            indices = model_data->indices;
             }
+        createVertexBuffer();
+        createIndexBuffer();
+        // tinyobj::attrib_t attrib;
+        // std::vector<tinyobj::shape_t> shapes;
+        // std::vector<tinyobj::material_t> materials;
+        // std::string warn, err;
+
+        // if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+        //     MODEL_PATH.c_str()))
+        //     {
+        //     throw std::runtime_error(warn + err);
+        //     }
+
+        // std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
+        // for (const auto& shape : shapes)
+        //     {
+        //     for (const auto& index : shape.mesh.indices)
+        //         {
+        //         Vertex vertex{};
+
+        //         vertex.pos = { attrib.vertices[3 * index.vertex_index + 0],
+        //                       attrib.vertices[3 * index.vertex_index + 1],
+        //                       attrib.vertices[3 * index.vertex_index + 2] };
+
+        //         vertex.texCoord = { attrib.texcoords[2 * index.texcoord_index + 0],
+        //                            1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
+
+        //         vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+        //         if (uniqueVertices.count(vertex) == 0)
+        //             {
+        //             uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+        //             vertices.push_back(vertex);
+        //             }
+
+        //         indices.push_back(uniqueVertices[vertex]);
+        //         }
+        //     }
         }
 
     void VulkanRenderer::createVertexBuffer()

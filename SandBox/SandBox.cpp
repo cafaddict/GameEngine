@@ -6,6 +6,7 @@
 #include <ShaderData.hpp>
 #include <EntityManager.hpp>
 #include <ModelComponent.hpp>
+#include <ShaderComponent.hpp>
 #include <TransformComponent.hpp>
 // #include <ImGuiLayer.hpp>
 // #include <Input.hpp>
@@ -40,15 +41,6 @@ class ExampleLayer : public Engine::Layer {
         auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
         renderer->SetEntityManager(entityManager);
 
-
-
-
-
-
-
-
-
-
         std::string modelPah = "../../resources/models/viking_room.obj";
         auto modelData = assetManager->GetAsset<Engine::ModelData>(modelPah);
         if (modelData) {
@@ -58,10 +50,21 @@ class ExampleLayer : public Engine::Layer {
             ENGINE_ERROR("Model load failed");
             }
 
+        std::string vertexShaderPath = "../../resources/shaders/vert.spv";
+        std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
+
+        auto vertexShaderData = assetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
+        auto fragmentShaderData = assetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
+
         auto entity1 = entityManager->CreateEntity("entity1");
         entity1->AddComponent(std::make_shared<Engine::ModelComponent>(modelData));
+        entity1->AddComponent(std::make_shared <Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr));
 
-        renderer->addModel("../../resources/models/viking_room.obj");
+
+        renderer->loadModel();
+        renderer->createGraphicsPipeline();
+
+        // renderer->addModel("../../resources/models/viking_room.obj");
 
         }
     };

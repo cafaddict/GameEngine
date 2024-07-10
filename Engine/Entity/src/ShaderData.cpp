@@ -6,22 +6,23 @@ namespace Engine {
     ShaderData::~ShaderData() {}
 
     bool ShaderData::Load(const std::string& path) {
-        // This method should implement some generic shader loading if needed
+        ShaderData::shaderCode = AssetData::readFile(path);
         return true;
         }
 
-    bool ShaderData::LoadVertexShader(const std::string& path) {
-        vertexShaderCode = AssetData::readFile(path);
-        return true;
+    const std::vector<char>& ShaderData::GetShaderCode() const {
+        return shaderCode;
         }
 
-    bool ShaderData::LoadFragShader(const std::string& path) {
-        fragmentShaderCode = AssetData::readFile(path);
-        return true;
+    bool VertexShaderData::Load(const std::string& path) {
+        return ShaderData::Load(path);
         }
 
-    bool ShaderData::LoadComputeShader(const std::string& path) {
-        computeShaderCode = AssetData::readFile(path);
-        return true;
+    bool FragmentShaderData::Load(const std::string& path) {
+        return ShaderData::Load(path);
+        }
+
+    bool ComputeShaderData::Load(const std::string& path) {
+        return ShaderData::Load(path);
         }
     }
