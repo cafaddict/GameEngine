@@ -18,7 +18,6 @@ namespace Engine
     //     {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
     //     {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
     //     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
-
     // debugCallback
     static VKAPI_ATTR VkBool32 VKAPI_CALL
         debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -92,17 +91,19 @@ namespace Engine
         createDepthResources();
         createFramebuffer();
         createGUIFramebuffer();
-        createTextureImage();
-        createTextureImageView();
-        createTextureSampler();
+
+
+        // createTextureImage();
+        // createTextureImageView();
+        // createTextureSampler();
 
         createUniformBuffers();
         VkDeviceSize buffersize = sizeof(Particle) * 1000;
         createShaderStorageBuffers(buffersize);
 
 
-        createDescriptorPool();
-        createDescriptorSets();
+        // createDescriptorPool();
+        // createDescriptorSets();
 
         createCommandBuffer();
         createComputeCommandBuffer();
@@ -210,6 +211,194 @@ namespace Engine
         }
 
 
+    void VulkanRenderer::createEntityResources() {
+        auto entities = m_EntityManager->GetAllEntities();
+        for (const auto& entity : entities) {
+            auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
+            auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+            auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
+            auto fragment_shader_data = entity->GetComponent<ShaderComponent>()->GetFragmentShader();
+            auto compute_shader_data = entity->GetComponent<ShaderComponent>()->GetComputeShader();
+
+            for (int i = 0; i < model_data->indices.size(); i++) {
+
+                Vertex vertex{};
+                vertex.pos = model_data->positions[i];
+                vertex.texCoord = model_data->uvs[i];
+                vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+                vertices.push_back(vertex);
+                }
+
+            indices.insert(indices.end(), model_data->indices.begin(), model_data->indices.end());
+
+            VkShaderModule vertShaderModule = createShaderModule(vertex_shader_data->GetShaderCode());
+            VkShaderModule fragShaderModule = createShaderModule(fragment_shader_data->GetShaderCode());
+
+            createGraphicsPipeline(vertShaderModule, fragShaderModule);
+
+            vkDestroyShaderModule(m_VulkanData.device, fragShaderModule, nullptr);
+            vkDestroyShaderModule(m_VulkanData.device, vertShaderModule, nullptr);
+
+
+
+
+            }
+
+        createVertexBuffer();
+        createIndexBuffer();
+        }
+
+    VulkanRenderer::PipelineData VulkanRenderer::createGraphicsPipeline(VkShaderModule vertshaderModule, VkShaderModule fragshaderModule) {
+        VkPipeline graphicsPipeline;
+        VkPipelineLayout pipelineLayout;
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+
+        vertShaderStageInfo.module = vertshaderModule;
+        vertShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = fragshaderModule;
+        fragShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo,
+                                              fragShaderStageInfo };
+
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+        auto bindingDescription = Vertex::getBindingDescription();
+        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+        vertexInputInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount =
+            static_cast<uint32_t>(attributeDescriptions.size());
+
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+        inputAssembly.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        VkPipelineViewportStateCreateInfo viewportState{};
+        viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.viewportCount = 1;
+        viewportState.scissorCount = 1;
+
+        VkPipelineRasterizationStateCreateInfo rasterizer{};
+        rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+        rasterizer.lineWidth = 1.0f;
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.depthBiasEnable = VK_FALSE;
+
+        VkPipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable =
+            VK_TRUE; // enable sample shading in the pipeline
+        multisampling.minSampleShading =
+            .2f; // min fraction for sample shading; closer to one is smoother
+        multisampling.rasterizationSamples = m_VulkanData.msaaSamples;
+
+
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.minDepthBounds = 0.0f; // Optional
+        depthStencil.maxDepthBounds = 1.0f; // Optional
+        depthStencil.stencilTestEnable = VK_FALSE;
+        depthStencil.front = {}; // Optional
+        depthStencil.back = {};  // Optional
+
+
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = VK_FALSE;
+
+        VkPipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY;
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.blendConstants[0] = 0.0f;
+        colorBlending.blendConstants[1] = 0.0f;
+        colorBlending.blendConstants[2] = 0.0f;
+        colorBlending.blendConstants[3] = 0.0f;
+
+        std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT,
+                                                 VK_DYNAMIC_STATE_SCISSOR };
+        VkPipelineDynamicStateCreateInfo dynamicState{};
+        dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.pDynamicStates = dynamicStates.data();
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &m_VulkanData.descriptorSetLayout;
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+        if (vkCreatePipelineLayout(m_VulkanData.device, &pipelineLayoutInfo, nullptr,
+            pipelineLayout) != VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to create pipeline layout!");
+            }
+
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pDepthStencilState = &depthStencil;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = &dynamicState;
+
+        pipelineInfo.layout = m_VulkanData.pipelineLayout;
+
+        pipelineInfo.renderPass = m_VulkanData.renderPass;
+        pipelineInfo.subpass = 0;
+
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+        pipelineInfo.basePipelineIndex = -1;              // Optional
+
+        if (vkCreateGraphicsPipelines(m_VulkanData.device, VK_NULL_HANDLE, 1,
+            &pipelineInfo, nullptr,
+            &m_VulkanData.graphicsPipeline) != VK_SUCCESS)
+            {
+            throw std::runtime_error("failed to create graphics pipeline!");
+            }
+
+        PipelineData pipelineData = PipelineData(graphicsPipeline, pipelineLayout);
+
+
+        }
+
     void VulkanRenderer::addModel(std::string model_path) {
 
 
@@ -225,7 +414,8 @@ namespace Engine
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
                 vertices.push_back(vertex);
                 }
-            indices = model_data->indices;
+            // indices = model_data->indices;
+            indices.insert(indices.end(), model_data->indices.begin(), model_data->indices.end());
             }
 
 
@@ -1357,17 +1547,34 @@ namespace Engine
 
     void VulkanRenderer::createTextureImage()
         {
-        int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight,
-            &texChannels, STBI_rgb_alpha);
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+
+        // int texWidth, texHeight, texChannels;
+        // stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight,
+        //     &texChannels, STBI_rgb_alpha);
+        // VkDeviceSize imageSize = texWidth * texHeight * 4;
+        // m_VulkanData.mipLevels = static_cast<uint32_t>(std::floor(
+        //     std::log2(std::max(texWidth, texHeight)))) +
+        //     1;
+        // if (!pixels)
+        //     {
+        //     throw std::runtime_error("failed to load texture image!");
+        //     }
+
+
+
+        auto entities = m_EntityManager->GetAllEntities();
+        std::shared_ptr<const TextureData> texture_data;
+        for (const auto& entity : entities) {
+            texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+
+            }
+        int texWidth = texture_data->width;
+        int texHeight = texture_data->height;
         m_VulkanData.mipLevels = static_cast<uint32_t>(std::floor(
             std::log2(std::max(texWidth, texHeight)))) +
             1;
-        if (!pixels)
-            {
-            throw std::runtime_error("failed to load texture image!");
-            }
+        VkDeviceSize imageSize = texture_data->width * texture_data->height * 4;
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -1378,18 +1585,22 @@ namespace Engine
             stagingBuffer, stagingBufferMemory);
         void* data;
         vkMapMemory(m_VulkanData.device, stagingBufferMemory, 0, imageSize, 0, &data);
-        memcpy(data, pixels, static_cast<size_t>(imageSize));
+        memcpy(data, texture_data->pixels, static_cast<size_t>(imageSize));
         vkUnmapMemory(m_VulkanData.device, stagingBufferMemory);
 
-        stbi_image_free(pixels);
+        // stbi_image_free(pixels);
 
-        createImage(texWidth, texHeight, m_VulkanData.mipLevels,
+
+
+        createImage(texture_data->width, texture_data->height, m_VulkanData.mipLevels,
             VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VulkanData.textureImage,
             m_VulkanData.textureImageMemory);
+
+
 
         transitionImageLayout(m_VulkanData.textureImage, VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_LAYOUT_UNDEFINED,
@@ -1404,6 +1615,13 @@ namespace Engine
 
         generateMipmaps(m_VulkanData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth,
             texHeight, m_VulkanData.mipLevels);
+
+        createTextureImageView();
+        createTextureSampler();
+
+        createDescriptorPool();
+        createDescriptorSets();
+
         }
 
     void VulkanRenderer::createTextureImageView()
@@ -1634,6 +1852,7 @@ namespace Engine
             {
             throw std::runtime_error("failed to allocate command buffers!");
             }
+        ENGINE_INFO("createCommandBuffer success");
         }
 
     void VulkanRenderer::createComputeCommandBuffer() {
@@ -1651,6 +1870,7 @@ namespace Engine
             {
             throw std::runtime_error("failed to allocate compute command buffers!");
             }
+        ENGINE_INFO("createComputeCommandBuffer success");
         }
 
     void VulkanRenderer::createSyncObjects()
@@ -1685,6 +1905,7 @@ namespace Engine
                     "failed to create synchronization objects for a frame!");
                 }
             }
+        ENGINE_INFO("createSyncObject success");
         }
 
     void VulkanRenderer::cleanupSwapChain()

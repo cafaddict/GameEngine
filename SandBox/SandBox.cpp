@@ -8,6 +8,7 @@
 #include <ModelComponent.hpp>
 #include <ShaderComponent.hpp>
 #include <TransformComponent.hpp>
+#include <TextureComponent.hpp>
 // #include <ImGuiLayer.hpp>
 // #include <Input.hpp>
 // #include <Application.hpp>
@@ -50,6 +51,9 @@ class ExampleLayer : public Engine::Layer {
             ENGINE_ERROR("Model load failed");
             }
 
+        std::string texturePath = "../../resources/models/viking_room.png";
+        auto textureData = assetManager->GetAsset<Engine::TextureData>(texturePath);
+
         std::string vertexShaderPath = "../../resources/shaders/vert.spv";
         std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
 
@@ -58,11 +62,14 @@ class ExampleLayer : public Engine::Layer {
 
         auto entity1 = entityManager->CreateEntity("entity1");
         entity1->AddComponent(std::make_shared<Engine::ModelComponent>(modelData));
+        entity1->AddComponent(std::make_shared<Engine::TextureComponent>(textureData));
         entity1->AddComponent(std::make_shared <Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr));
+
 
 
         renderer->loadModel();
         renderer->createGraphicsPipeline();
+        renderer->createTextureImage();
 
         // renderer->addModel("../../resources/models/viking_room.obj");
 

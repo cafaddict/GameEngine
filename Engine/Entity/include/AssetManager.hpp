@@ -1,6 +1,7 @@
 #pragma once
 #include "ModelData.hpp"
 #include "ShaderData.hpp"
+#include "TextureData.hpp"
 #include <unordered_map>
 #include <memory>
 #include <string>

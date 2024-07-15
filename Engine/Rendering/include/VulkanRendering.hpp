@@ -40,11 +40,13 @@
 
 #include <ModelData.hpp>
 #include <ShaderData.hpp>
+#include <TextureData.hpp>
 #include <EntityManager.hpp>
 #include <Entity.hpp>
 #include <ModelComponent.hpp>
 #include <ShaderComponent.hpp>
 #include <TransformComponent.hpp>
+#include <TextureComponent.hpp>
 
 
 namespace Engine
@@ -63,12 +65,21 @@ namespace Engine
 
     // const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
-    const std::string MODEL_PATH = "../../resources/models/viking_room.obj";
+    // const std::string MODEL_PATH = "../../resources/models/viking_room.obj";
     const std::string TEXTURE_PATH = "../../resources/models/viking_room.png";
 
     class VulkanRenderer : public Renderer
         {
+
+
+
             public:
+            struct PipelineData
+                {
+                VkPipeline graphicsPipeline;
+                VkPipelineLayout pipelineLayout;
+                };
+
             VulkanRenderer();
             VulkanRenderer(GLFWwindow* window);
             virtual ~VulkanRenderer();
@@ -95,7 +106,14 @@ namespace Engine
             VulkanData GetVulkanData() { return m_VulkanData; }
 
             void loadModel();
+
+
+            void createEntityResources();
+
+            PipelineData createGraphicsPipeline(VkShaderModule vertShaderModule, VkShaderModule frageShaderModule);
+
             void createGraphicsPipeline();
+            void createTextureImage();
 
             public:
             // Main functions
@@ -108,6 +126,8 @@ namespace Engine
 
 
             // struct
+
+
 
             struct QueueFamilyIndices
                 {
@@ -140,6 +160,8 @@ namespace Engine
 
             std::shared_ptr<EntityManager> m_EntityManager;
 
+            std::unordered_map<std::shared_ptr<Entity>, PipelineData> entityPipelines;
+
             const int MAX_FRAMES_IN_FLIGHT = 2;
 
 
@@ -170,7 +192,9 @@ namespace Engine
             void createDepthResources();
             void createFramebuffer();
             void createGUIFramebuffer();
-            void createTextureImage();
+
+
+            // void createTextureImage();
             void createTextureImageView();
             void createTextureSampler();
 
