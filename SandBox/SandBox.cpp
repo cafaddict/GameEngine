@@ -1,4 +1,3 @@
-#pragma once
 #define GLFW_INCLUDE_NONE
 #include <Engine.hpp>
 #include <AssetManager.hpp>
@@ -67,8 +66,9 @@ class ExampleLayer : public Engine::Layer {
 
 
 
-        renderer->loadModel();
-        renderer->createGraphicsPipeline();
+        // renderer->loadModel();
+        // renderer->createGraphicsPipeline();
+        renderer->createEntityResources();
         renderer->createTextureImage();
 
         // renderer->addModel("../../resources/models/viking_room.obj");

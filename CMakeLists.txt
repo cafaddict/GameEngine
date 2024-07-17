@@ -31,6 +31,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES Linux)
   endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   set(OS "mac")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl")
+  add_compile_options(-Wall -Wextra -Wpedantic)
   # set(ARCH "x86_64")
 # Set linker flags to use the GNU linker and enable the --allow-multiple-definition option
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=ld -Wl,-z,muldefs")
@@ -40,6 +42,7 @@ endif()
 # SET(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 
 add_subdirectory("external/glfw-3.3.4")
 add_subdirectory("external/glm")

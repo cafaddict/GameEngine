@@ -245,7 +245,7 @@ namespace Engine
         m_UniformBuffersMemory.resize(m_max_frame_in_flight);
         m_UniformBuffersMapped.resize(m_max_frame_in_flight);
 
-        for (size_t i = 0; i < m_max_frame_in_flight; i++)
+        for (int i = 0; i < m_max_frame_in_flight; i++)
             {
             createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -272,7 +272,7 @@ namespace Engine
         }
     void VulkanUniformBuffer::Destroy()
         {
-        for (size_t i = 0; i < m_max_frame_in_flight; i++)
+        for (int i = 0; i < m_max_frame_in_flight; i++)
             {
             vkDestroyBuffer(*m_Device, m_UniformBuffers[i], nullptr);
             vkFreeMemory(*m_Device, m_UniformBuffersMemory[i], nullptr);

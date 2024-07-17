@@ -40,7 +40,7 @@ namespace Engine {
     template <typename T>
     void VulkanShaderStorageBuffer<T>::UnBind() {}
     template <typename T>
-    void VulkanShaderStorageBuffer<T>::SetData(const void* data, uint32_t size) {};
+    void VulkanShaderStorageBuffer<T>::SetData(const void* data, uint32_t size) { data; size; };
     template <typename T> VulkanShaderStorageBuffer<T>* VulkanShaderStorageBuffer<T>::Create(VulkanData* vulkanData,
         int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector<T> objects)
         {

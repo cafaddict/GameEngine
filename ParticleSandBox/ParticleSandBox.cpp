@@ -1,4 +1,3 @@
-#pragma once
 #define GLFW_INCLUDE_NONE
 #include <Engine.hpp>
 // #include <ImGuiLayer.hpp>
