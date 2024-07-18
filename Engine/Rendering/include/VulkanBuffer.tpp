@@ -3,7 +3,7 @@ namespace Engine {
     template <typename T> VulkanShaderStorageBuffer<T>::VulkanShaderStorageBuffer() {}
 
     template <typename T> VulkanShaderStorageBuffer<T>::VulkanShaderStorageBuffer(VulkanData* vulkanData,
-        int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector<T> objects)
+        int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize)
         {
         m_Device = &vulkanData->device;
         m_PhysicalDevice = &vulkanData->physicalDevice;
@@ -14,10 +14,10 @@ namespace Engine {
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
         createBuffer(buffersize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-        void* data;
-        vkMapMemory(*m_Device, stagingBufferMemory, 0, buffersize, 0, &data);
-        memcpy(data, objects.data(), (size_t)buffersize);
-        vkUnmapMemory(*m_Device, stagingBufferMemory);
+        // void* data;
+        // vkMapMemory(*m_Device, stagingBufferMemory, 0, buffersize, 0, &data);
+        // memcpy(data, objects.data(), (size_t)buffersize);
+        // vkUnmapMemory(*m_Device, stagingBufferMemory);
 
 
         m_ShaderStorageBuffers.resize(m_max_frame_in_flight);
@@ -42,9 +42,9 @@ namespace Engine {
     template <typename T>
     void VulkanShaderStorageBuffer<T>::SetData(const void* data, uint32_t size) { data; size; };
     template <typename T> VulkanShaderStorageBuffer<T>* VulkanShaderStorageBuffer<T>::Create(VulkanData* vulkanData,
-        int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector<T> objects)
+        int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize)
         {
-        return new VulkanShaderStorageBuffer<T>(vulkanData, MAX_FRAMES_IN_FLIGHT, buffersize, objects);
+        return new VulkanShaderStorageBuffer<T>(vulkanData, MAX_FRAMES_IN_FLIGHT, buffersize);
         }
     template <typename T>
     void VulkanShaderStorageBuffer<T>::Destroy()
@@ -55,4 +55,9 @@ namespace Engine {
             vkFreeMemory(*m_Device, m_ShaderStorageBuffersMemory[i], nullptr);
             }
         }
+    template <typename T>
+    void VulkanShaderStorageBuffer<T>::Update(uint32_t currentImage, const std::vector<T>& objects) {
+        memcpy(m_ShaderStorageBuffersMapped[currentImage], objects.data(), sizeof(T) * objects.size());
+        }
+
     }

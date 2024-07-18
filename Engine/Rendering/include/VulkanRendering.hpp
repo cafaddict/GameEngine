@@ -77,6 +77,16 @@ namespace Engine
                 VkPipelineLayout pipelineLayout;
                 };
 
+            struct VulkanTextureData
+                {
+                uint32_t mipLevels;
+                VkDeviceMemory textureImageMemory;
+                VkImage textureImage;
+                VkImageView textureImageView;
+                VkSampler textureImageSampler;
+
+                };
+
             struct EntityBufferInfo
                 {
                 size_t vertexOffset;
@@ -162,6 +172,8 @@ namespace Engine
 
             std::unordered_map<std::shared_ptr<Entity>, PipelineData> entityPipelines;
             std::unordered_map<std::shared_ptr<Entity>, EntityBufferInfo> entityBufferInfos;
+            std::unordered_map<std::shared_ptr<Entity>, VulkanTextureData> entityTextures;
+            std::unordered_map<std::shared_ptr<Entity>, std::vector<VkDescriptorSet>> entityDescriptorSets;
 
             const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -200,8 +212,15 @@ namespace Engine
             void createUniformBuffers();
             void createShaderStorageBuffers(VkDeviceSize buffersize);
 
+
+
             void createDescriptorPool();
+
             void createDescriptorSets();
+
+            void createDescriptorSets(std::shared_ptr<Entity> entity, VulkanTextureData vulkanTextureData);
+
+
 
             void createCommandBuffer();
             void createComputeCommandBuffer();
@@ -284,6 +303,21 @@ namespace Engine
                     0.1f, 10.0f);
                 ubo.proj[1][1] *= -1;
                 m_UniformBuffers->Update(currentImage, ubo);
+
+                VulkanUniformBuffer::CameraUBO camera_ubo;
+                camera_ubo.proj = glm::perspective(glm::radians(45.0f),
+                    m_VulkanData.swapChainExtent.width /
+                    (float)m_VulkanData.swapChainExtent.height,
+                    0.1f, 10.0f);
+                camera_ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                    glm::vec3(0.0f, 0.0f, 1.0f));
+                m_UniformBuffers->UpdateCamera(currentImage, camera_ubo);
+
+                VulkanUniformBuffer::LightUBO light_ubo;
+                light_ubo.lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+                light_ubo.lightPos = glm::vec3(1.0f, 1.0f, 1.0f);
+                m_UniformBuffers->UpdateLight(currentImage, light_ubo);
+
                 }
         };
     } // namespace Engine

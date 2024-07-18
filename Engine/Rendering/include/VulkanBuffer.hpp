@@ -27,7 +27,7 @@ namespace Engine {
 
     class VulkanBuffer {
         public:
-        ~VulkanBuffer();
+        virtual ~VulkanBuffer() = default;
         VulkanBuffer();
         VulkanBuffer(VulkanData* vulkanData);
         void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
@@ -97,11 +97,26 @@ namespace Engine {
         };
 
     class VulkanUniformBuffer : private VulkanBuffer {
+
+
+        public:
+        struct CameraUBO {
+            glm::mat4 view;
+            glm::mat4 proj;
+            };
+
+        struct LightUBO {
+            glm::vec3 lightPos;
+            glm::vec3 lightColor;
+            };
+
         public:
         ~VulkanUniformBuffer();
         VulkanUniformBuffer();
         VulkanUniformBuffer(VulkanData* vulkanData, int MAX_FRAMES_IN_FLIGHT);
         void Update(uint32_t currentImage, UniformBufferObject ubo);
+        void UpdateCamera(uint32_t currentImage, const CameraUBO& ubo);
+        void UpdateLight(uint32_t currentImage, const LightUBO& ubo);
         void Bind();
         void UnBind();
         void SetData(const void* data, uint32_t size);
@@ -116,6 +131,14 @@ namespace Engine {
         std::vector<VkDeviceMemory> m_UniformBuffersMemory;
         std::vector<void*> m_UniformBuffersMapped;
 
+        std::vector<VkBuffer> m_CameraBuffers;
+        std::vector<VkDeviceMemory> m_CameraBuffersMemory;
+        std::vector<void*> m_CameraBuffersMapped;
+
+        std::vector<VkBuffer> m_LightBuffers;
+        std::vector<VkDeviceMemory> m_LightBuffersMemory;
+        std::vector<void*> m_LightBuffersMapped;
+
         UniformBufferObject m_Uniformbufferobject;
         int m_max_frame_in_flight;
         };
@@ -126,14 +149,15 @@ namespace Engine {
         public:
         ~VulkanShaderStorageBuffer();
         VulkanShaderStorageBuffer();
-        VulkanShaderStorageBuffer(VulkanData* vulkanData, int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector< T > objects);
+        VulkanShaderStorageBuffer(VulkanData* vulkanData, int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize);
         void Bind();
         void UnBind();
         void SetData(const void* data, uint32_t size);
         static VulkanShaderStorageBuffer* Create(VulkanData* vulkanData,
-            int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize, std::vector< T > objects);
+            int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize);
         void Destroy();
         std::vector<VkBuffer> GetShaderStorageBuffers() { return m_ShaderStorageBuffers; }
+        void Update(uint32_t currentImage, const std::vector<T>& objects);
 
         private:
         std::vector<VkBuffer> m_ShaderStorageBuffers;

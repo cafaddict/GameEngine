@@ -13,7 +13,8 @@ namespace Engine {
             TextureData();
             ~TextureData();
             bool Load(const std::string& path) override;
-            void* pixels;
+            std::shared_ptr<void> pixels;
+            // void* pixels;
             int width;
             int height;
             int channels;

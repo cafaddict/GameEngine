@@ -69,7 +69,7 @@ class ExampleLayer : public Engine::Layer {
         // renderer->loadModel();
         // renderer->createGraphicsPipeline();
         renderer->createEntityResources();
-        renderer->createTextureImage();
+        // renderer->createTextureImage();
 
         // renderer->addModel("../../resources/models/viking_room.obj");
 

@@ -39,5 +39,9 @@ namespace Engine {
                 }
             return allEntities;
             }
+
+        size_t GetEntityCount() {
+            return entities.size();
+            }
         };
     }

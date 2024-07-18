@@ -8,7 +8,7 @@ namespace Engine {
 
         }
     TextureData::~TextureData() {
-        free(this->pixels);
+        // free(this->pixels);
         }
 
     bool TextureData::Load(const std::string& texturePath) {
@@ -29,13 +29,18 @@ namespace Engine {
 
 
 
+        // this->pixels = malloc(imageSize);
 
-        this->pixels = malloc(imageSize);
+        // std::memcpy(this->pixels, pixelData, imageSize);
 
-        std::memcpy(this->pixels, pixelData, imageSize);
+        auto deleter = [](void* ptr) {
+            stbi_image_free(ptr);
+            };
+
+        this->pixels = std::shared_ptr<void>(pixelData, deleter);
 
 
-        stbi_image_free(pixelData);
+        // stbi_image_free(pixelData);
 
         return true;
         }

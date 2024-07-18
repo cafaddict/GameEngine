@@ -4,7 +4,6 @@
 namespace Engine
     {
 
-    VulkanBuffer::~VulkanBuffer() {}
     VulkanBuffer::VulkanBuffer() {}
     VulkanBuffer::VulkanBuffer(VulkanData* vulkanData)
         {
@@ -241,9 +240,20 @@ namespace Engine
 
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
+        VkDeviceSize cameraBufferSize = sizeof(CameraUBO);
+        VkDeviceSize lightBufferSize = sizeof(LightUBO);
+
         m_UniformBuffers.resize(m_max_frame_in_flight);
         m_UniformBuffersMemory.resize(m_max_frame_in_flight);
         m_UniformBuffersMapped.resize(m_max_frame_in_flight);
+
+        m_CameraBuffers.resize(m_max_frame_in_flight);
+        m_CameraBuffersMemory.resize(m_max_frame_in_flight);
+        m_CameraBuffersMapped.resize(m_max_frame_in_flight);
+
+        m_LightBuffers.resize(m_max_frame_in_flight);
+        m_LightBuffersMemory.resize(m_max_frame_in_flight);
+        m_LightBuffersMapped.resize(m_max_frame_in_flight);
 
         for (int i = 0; i < m_max_frame_in_flight; i++)
             {
@@ -253,6 +263,16 @@ namespace Engine
                 m_UniformBuffers[i], m_UniformBuffersMemory[i]);
             vkMapMemory(*m_Device, m_UniformBuffersMemory[i], 0, bufferSize, 0,
                 &m_UniformBuffersMapped[i]);
+
+            createBuffer(cameraBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                m_CameraBuffers[i], m_CameraBuffersMemory[i]);
+            vkMapMemory(*m_Device, m_CameraBuffersMemory[i], 0, cameraBufferSize, 0, &m_CameraBuffersMapped[i]);
+
+            createBuffer(lightBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                m_LightBuffers[i], m_LightBuffersMemory[i]);
+            vkMapMemory(*m_Device, m_LightBuffersMemory[i], 0, lightBufferSize, 0, &m_LightBuffersMapped[i]);
             }
         }
     void VulkanUniformBuffer::Update(uint32_t currentImage,
@@ -262,6 +282,17 @@ namespace Engine
         memcpy(m_UniformBuffersMapped[currentImage], &m_Uniformbufferobject,
             sizeof(m_Uniformbufferobject));
         }
+
+    void VulkanUniformBuffer::UpdateCamera(uint32_t currentImage, const VulkanUniformBuffer::CameraUBO& ubo) {
+        memcpy(m_CameraBuffersMapped[currentImage], &ubo, sizeof(ubo));
+        }
+
+    void VulkanUniformBuffer::UpdateLight(uint32_t currentImage, const LightUBO& ubo) {
+        memcpy(m_LightBuffersMapped[currentImage], &ubo, sizeof(ubo));
+        }
+
+
+
     void VulkanUniformBuffer::Bind() {}
     void VulkanUniformBuffer::UnBind() {}
     void VulkanUniformBuffer::SetData(const void* data, uint32_t size) {};
