@@ -61,14 +61,36 @@ class ExampleLayer : public Engine::Layer {
 
         auto transformComponent = std::make_shared<Engine::TransformComponent>();
         transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
+        // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
+        transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
         transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
+        auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
+        auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+        auto shaderComponent = std::make_shared <Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
+
         auto entity1 = entityManager->CreateEntity("entity1");
-        entity1->AddComponent(std::make_shared<Engine::ModelComponent>(modelData));
-        entity1->AddComponent(std::make_shared<Engine::TextureComponent>(textureData));
-        entity1->AddComponent(std::make_shared <Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr));
+        entity1->AddComponent(modelComponent);
+        entity1->AddComponent(textureComponent);
+        entity1->AddComponent(shaderComponent);
         entity1->AddComponent(transformComponent);
+
+
+        auto transformComponent2 = std::make_shared<Engine::TransformComponent>();
+        transformComponent2->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
+        transformComponent2->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
+        // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
+        transformComponent2->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+
+        auto entity2 = entityManager->CreateEntity("entity2");
+        entity2->AddComponent(modelComponent);
+        entity2->AddComponent(textureComponent);
+        entity2->AddComponent(shaderComponent);
+        entity2->AddComponent(transformComponent2);
+
+
+
+
 
 
 

@@ -223,6 +223,8 @@ namespace Engine
             auto fragment_shader_data = entity->GetComponent<ShaderComponent>()->GetFragmentShader();
             auto compute_shader_data = entity->GetComponent<ShaderComponent>()->GetComputeShader();
 
+            // size_t vertexCount = model_data->positions.size();
+            // size_t indexCount = model_data->indices.size();
             size_t vertexCount = model_data->positions.size();
             size_t indexCount = model_data->indices.size();
 
@@ -239,7 +241,8 @@ namespace Engine
 
                 Vertex vertex{};
                 vertex.pos = model_data->positions[i];
-                vertex.texCoord = model_data->uvs[i];
+                vertex.normal = model_data->normals.size() > i ? model_data->normals[i] : glm::vec3(0.0f, 0.0f, 1.0f);
+                vertex.texCoord = model_data->normals.size() > i ? model_data->uvs[i] : glm::vec2(0.0f);
                 vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
                 vertices.push_back(vertex);
                 }
@@ -251,8 +254,8 @@ namespace Engine
 
 
 
-            currentVertexOffset += vertexCount * sizeof(Vertex);
-            currentIndexOffset += indexCount * sizeof(uint32_t);
+            currentVertexOffset += vertexCount;
+            currentIndexOffset += indexCount;
 
 
 
@@ -2410,8 +2413,21 @@ namespace Engine
 
 
         int cnt = 0;
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(m_VulkanData.swapChainExtent.width);
+        viewport.height = static_cast<float>(m_VulkanData.swapChainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = m_VulkanData.swapChainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
         for (const auto& entity : entities) {
-            // ENGINE_WARN("ENTITY COUNT {0}", cnt);
+
             auto entityBufferInfo_it = entityBufferInfos.find(entity);
             if (entityBufferInfo_it == entityBufferInfos.end()) continue;
             auto entityPipelineInfo_it = entityPipelines.find(entity);
@@ -2420,26 +2436,27 @@ namespace Engine
 
             const EntityBufferInfo& bufferInfo = entityBufferInfo_it->second;
             const PipelineData& pipelineData = entityPipelineInfo_it->second;
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineData.graphicsPipeline);
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(m_VulkanData.swapChainExtent.width);
-            viewport.height = static_cast<float>(m_VulkanData.swapChainExtent.height);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-            VkRect2D scissor{};
-            scissor.offset = { 0, 0 };
-            scissor.extent = m_VulkanData.swapChainExtent;
-            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+            ENGINE_TRACE("Rendering entity with vertexOffset: {0}, indexOffset: {1}, vertexCount: {2}, indexCount: {3}",
+                bufferInfo.vertexOffset, bufferInfo.indexOffset, bufferInfo.vertexCount, bufferInfo.indexCount);
+
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineData.graphicsPipeline);
+
 
             VkBuffer vertexBuffers[] = { m_VertexBuffer->GetVertexBuffer() };
             VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
-            VkDeviceSize offsets[] = { 0 };
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-            vkCmdBindIndexBuffer(commandBuffer, indexBuffers, 0, VK_INDEX_TYPE_UINT32);
+            // VkDeviceSize offsets[] = { 0 };
+            VkDeviceSize vertexOffset = bufferInfo.vertexOffset * sizeof(Vertex); // Assuming Vertex is the type of your vertex
+            VkDeviceSize indexOffset = bufferInfo.indexOffset * sizeof(uint32_t); // Assuming uint32_t for index type
+
+            // Check if the offsets are valid
+            if (vertexOffset >= m_VertexBuffer->GetBufferSize() || indexOffset >= m_IndexBuffer->GetBufferSize()) {
+                ENGINE_ERROR("Vertex or Index offset is beyond buffer size");
+                continue;
+                }
+
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, &vertexOffset);
+            vkCmdBindIndexBuffer(commandBuffer, indexBuffers, indexOffset, VK_INDEX_TYPE_UINT32);
 
             // vkCmdBindDescriptorSets(
             //     commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -2452,8 +2469,17 @@ namespace Engine
                 commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pipelineData.pipelineLayout, 0, 1,
                 &entityDescriptorSets[entity][m_VulkanData.currentFrame], 0, nullptr);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0,
+
+            // Check if the draw call parameters are valid
+            if ((bufferInfo.indexCount + bufferInfo.indexOffset) * sizeof(uint32_t) > m_IndexBuffer->GetBufferSize()) {
+                ENGINE_ERROR("Index count exceeds buffer size");
+                continue;
+                }
+            // vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0,
+            //     0, 0);
+            vkCmdDrawIndexed(commandBuffer, bufferInfo.indexCount, cnt + 1, 0,
                 0, 0);
+            cnt++;
 
             }
 

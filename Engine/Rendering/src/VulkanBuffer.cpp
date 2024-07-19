@@ -123,6 +123,7 @@ namespace Engine
         m_GraphicsQueue = &vulkanData->graphicsQueue;
 
         VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
+        m_Buffersize = bufferSize;
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -181,6 +182,8 @@ namespace Engine
         m_GraphicsQueue = &vulkanData->graphicsQueue;
 
         VkDeviceSize bufferSize = sizeof(uint32_t) * indices.size();
+
+        m_Buffersize = bufferSize;
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;

@@ -41,6 +41,8 @@ namespace Engine {
         VkCommandBuffer beginSingleTimeCommands();
         void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
+        VkDeviceSize m_Buffersize;
+
 
 
         protected:
@@ -64,6 +66,7 @@ namespace Engine {
         void Destroy();
 
         VkBuffer GetVertexBuffer() { return m_VertexBuffer; };
+        VkDeviceSize GetBufferSize() { return m_Buffersize; }
 
         private:
         VkBuffer m_VertexBuffer;
@@ -88,6 +91,7 @@ namespace Engine {
         void Destroy();
 
         VkBuffer GetIndexBuffer() { return m_IndexBuffer; };
+        VkDeviceSize GetBufferSize() { return m_Buffersize; }
 
         private:
         VkBuffer m_IndexBuffer;
