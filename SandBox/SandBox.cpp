@@ -26,6 +26,16 @@ class ExampleLayer : public Engine::Layer {
         Engine::Application& app = Engine::Application::Get();
         auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
         auto vulkandata = renderer->GetVulkanData();
+        auto entity1 = entityManager->GetEntity("entity1");
+        auto transform1 = entity1->GetComponent<Engine::TransformComponent>();
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(
+            currentTime - startTime)
+            .count();
+        transform1->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, time * glm::radians(90.0f))));
+
         renderer->BeginRecord();
 
         if (Engine::Input::IsKeyPressed(GLFW_KEY_A)) {
@@ -58,6 +68,9 @@ class ExampleLayer : public Engine::Layer {
 
         auto vertexShaderData = assetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         auto fragmentShaderData = assetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
+
+
+
 
         auto transformComponent = std::make_shared<Engine::TransformComponent>();
         transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));

@@ -155,7 +155,15 @@ namespace Engine
 
         updateUniformBuffer(m_VulkanData.currentFrame);
 
-        dynamic_cast<VulkanShaderStorageBuffer<glm::mat4>*>(m_ShaderStorageBuffers.get())->Update(m_VulkanData.currentFrame, transformations);
+
+        std::vector<glm::mat4> transformations_in;
+        auto Entities = m_EntityManager->GetAllEntities();
+        for (auto entity : Entities) {
+            auto transform = entity->GetComponent<TransformComponent>()->GetTransformMatrix();
+            transformations_in.push_back(transform);
+            }
+
+        dynamic_cast<VulkanShaderStorageBuffer<glm::mat4>*>(m_ShaderStorageBuffers.get())->Update(m_VulkanData.currentFrame, transformations_in);
 
 
 
@@ -2437,8 +2445,8 @@ namespace Engine
             const EntityBufferInfo& bufferInfo = entityBufferInfo_it->second;
             const PipelineData& pipelineData = entityPipelineInfo_it->second;
 
-            ENGINE_TRACE("Rendering entity with vertexOffset: {0}, indexOffset: {1}, vertexCount: {2}, indexCount: {3}",
-                bufferInfo.vertexOffset, bufferInfo.indexOffset, bufferInfo.vertexCount, bufferInfo.indexCount);
+            // ENGINE_TRACE("Rendering entity with vertexOffset: {0}, indexOffset: {1}, vertexCount: {2}, indexCount: {3}",
+            //     bufferInfo.vertexOffset, bufferInfo.indexOffset, bufferInfo.vertexCount, bufferInfo.indexCount);
 
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineData.graphicsPipeline);
 
