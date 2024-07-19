@@ -125,6 +125,8 @@ namespace Engine {
             int MAX_FRAMES_IN_FLIGHT);
         void Destroy();
         std::vector<VkBuffer> GetUniformBuffers() { return m_UniformBuffers; }
+        std::vector<VkBuffer> GetCameraBuffers() { return m_CameraBuffers; }
+        std::vector<VkBuffer> GetLightBuffers() { return m_LightBuffers; }
 
         private:
         std::vector<VkBuffer> m_UniformBuffers;
@@ -165,6 +167,7 @@ namespace Engine {
         std::vector<void*> m_ShaderStorageBuffersMapped;
 
         int m_max_frame_in_flight;
+        VkDeviceSize m_BufferSize;
         };
     }  // namespace Engine
 

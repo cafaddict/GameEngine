@@ -155,6 +155,10 @@ namespace Engine
 
         updateUniformBuffer(m_VulkanData.currentFrame);
 
+        dynamic_cast<VulkanShaderStorageBuffer<glm::mat4>*>(m_ShaderStorageBuffers.get())->Update(m_VulkanData.currentFrame, transformations);
+
+
+
 
         // Only reset the fence if we are submitting work
         vkResetFences(m_VulkanData.device, 1,
@@ -241,6 +245,12 @@ namespace Engine
                 }
 
             indices.insert(indices.end(), model_data->indices.begin(), model_data->indices.end());
+            auto entityTransformation = entity->GetComponent<TransformComponent>();
+            glm::mat4 transformMatrix = entityTransformation->GetTransformMatrix();
+            transformations.push_back(transformMatrix);
+
+
+
             currentVertexOffset += vertexCount * sizeof(Vertex);
             currentIndexOffset += indexCount * sizeof(uint32_t);
 
@@ -330,9 +340,9 @@ namespace Engine
             entityTextures[entity] = vulkanTextureData;
             createDescriptorPool();
             createDescriptorSets(entity, vulkanTextureData);
-
-
             cnt++;
+
+
 
 
 
@@ -1266,32 +1276,40 @@ namespace Engine
         //     throw std::runtime_error("failed to create descriptor set layout!");
         //     }
 
-                // Binding 0: Uniform buffer (e.g., camera and lighting UBO)
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        // Binding 0: Uniform buffer: Camera
+        VkDescriptorSetLayoutBinding cameraUboLayoutBinding{};
+        cameraUboLayoutBinding.binding = 0;
+        cameraUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cameraUboLayoutBinding.descriptorCount = 1;
+        cameraUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        cameraUboLayoutBinding.pImmutableSamplers = nullptr;
 
-        // Binding 1: Texture sampler
+        // Binding 1: Uniform buffer: Light
+        VkDescriptorSetLayoutBinding lightUboLayoutBinding{};
+        lightUboLayoutBinding.binding = 1;
+        lightUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        lightUboLayoutBinding.descriptorCount = 1;
+        lightUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        lightUboLayoutBinding.pImmutableSamplers = nullptr;
+
+        // Binding 2: Texture sampler
         VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.binding = 2;
         samplerLayoutBinding.descriptorCount = 1;
         samplerLayoutBinding.descriptorType =
             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
         samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-        // Binding 2: SSBO for transformations
+        // Binding 3: SSBO for transformations
         VkDescriptorSetLayoutBinding storageBufferBinding{};
-        storageBufferBinding.binding = 2;
+        storageBufferBinding.binding = 3;
         storageBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         storageBufferBinding.descriptorCount = 1;
         storageBufferBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         storageBufferBinding.pImmutableSamplers = nullptr;
 
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings = { uboLayoutBinding,
+        std::array<VkDescriptorSetLayoutBinding, 4> bindings = { cameraUboLayoutBinding,lightUboLayoutBinding,
                                                                 samplerLayoutBinding, storageBufferBinding };
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -1860,18 +1878,20 @@ namespace Engine
         {
 
         m_ShaderStorageBuffers = std::unique_ptr<VulkanBuffer>(
-            VulkanShaderStorageBuffer<Engine::Particle>::Create(&m_VulkanData, MAX_FRAMES_IN_FLIGHT, buffersize));
+            VulkanShaderStorageBuffer<glm::mat4>::Create(&m_VulkanData, MAX_FRAMES_IN_FLIGHT, buffersize));
         }
 
     void VulkanRenderer::createDescriptorPool()
         {
-        std::array<VkDescriptorPoolSize, 3> poolSizes{};
+        std::array<VkDescriptorPoolSize, 4> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[3].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1908,17 +1928,31 @@ namespace Engine
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-            VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = m_UniformBuffers->GetUniformBuffers()[i];
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(UniformBufferObject);
+            // VkDescriptorBufferInfo bufferInfo{};
+            // bufferInfo.buffer = m_UniformBuffers->GetUniformBuffers()[i];
+            // bufferInfo.offset = 0;
+            // bufferInfo.range = sizeof(UniformBufferObject);
+            VkDescriptorBufferInfo cameraBufferInfo{};
+            cameraBufferInfo.buffer = m_UniformBuffers->GetCameraBuffers()[i];
+            cameraBufferInfo.offset = 0;
+            cameraBufferInfo.range = sizeof(VulkanUniformBuffer::CameraUBO);
+
+            VkDescriptorBufferInfo LightBufferInfo{};
+            LightBufferInfo.buffer = m_UniformBuffers->GetLightBuffers()[i];
+            LightBufferInfo.offset = 0;
+            LightBufferInfo.range = sizeof(VulkanUniformBuffer::LightUBO);
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             imageInfo.imageView = vulkanTextureData.textureImageView;
             imageInfo.sampler = vulkanTextureData.textureImageSampler;
 
-            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+            VkDescriptorBufferInfo ssboInfo{};
+            ssboInfo.buffer = dynamic_cast<VulkanShaderStorageBuffer<glm::mat4>*>(m_ShaderStorageBuffers.get())->GetShaderStorageBuffers()[i];
+            ssboInfo.offset = 0;
+            ssboInfo.range = VK_WHOLE_SIZE;
+
+            std::array<VkWriteDescriptorSet, 4> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorsets[i];
@@ -1926,16 +1960,32 @@ namespace Engine
             descriptorWrites[0].dstArrayElement = 0;
             descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pBufferInfo = &bufferInfo;
+            descriptorWrites[0].pBufferInfo = &cameraBufferInfo;
 
             descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[1].dstSet = descriptorsets[i];
             descriptorWrites[1].dstBinding = 1;
             descriptorWrites[1].dstArrayElement = 0;
-            descriptorWrites[1].descriptorType =
-                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[1].descriptorCount = 1;
-            descriptorWrites[1].pImageInfo = &imageInfo;
+            descriptorWrites[1].pBufferInfo = &LightBufferInfo;
+
+            descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[2].dstSet = descriptorsets[i];
+            descriptorWrites[2].dstBinding = 2;
+            descriptorWrites[2].dstArrayElement = 0;
+            descriptorWrites[2].descriptorType =
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[2].descriptorCount = 1;
+            descriptorWrites[2].pImageInfo = &imageInfo;
+
+            descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[3].dstSet = descriptorsets[i];
+            descriptorWrites[3].dstBinding = 3;
+            descriptorWrites[3].dstArrayElement = 0;
+            descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            descriptorWrites[3].descriptorCount = 1;
+            descriptorWrites[3].pBufferInfo = &ssboInfo;
 
             vkUpdateDescriptorSets(m_VulkanData.device,
                 static_cast<uint32_t>(descriptorWrites.size()),
@@ -2395,6 +2445,8 @@ namespace Engine
             //     commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             //     pipelineData.pipelineLayout, 0, 1,
             //     &m_VulkanData.descriptorSets[m_VulkanData.currentFrame], 0, nullptr);
+
+
 
             vkCmdBindDescriptorSets(
                 commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

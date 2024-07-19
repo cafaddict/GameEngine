@@ -163,6 +163,8 @@ namespace Engine
             VulkanData m_VulkanData;
             std::vector<Vertex> vertices;
             std::vector<uint32_t> indices;
+            std::vector<glm::mat4> transformations;
+
             std::unique_ptr<VulkanVertexBuffer> m_VertexBuffer;
             std::unique_ptr<VulkanIndexBuffer> m_IndexBuffer;
             std::unique_ptr<VulkanUniformBuffer> m_UniformBuffers;
@@ -282,6 +284,8 @@ namespace Engine
 
             private:
             // will be removed
+
+
             void updateUniformBuffer(uint32_t currentImage)
                 {
                 static auto startTime = std::chrono::high_resolution_clock::now();
@@ -309,6 +313,7 @@ namespace Engine
                     m_VulkanData.swapChainExtent.width /
                     (float)m_VulkanData.swapChainExtent.height,
                     0.1f, 10.0f);
+                camera_ubo.proj[1][1] *= -1;
                 camera_ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
                     glm::vec3(0.0f, 0.0f, 1.0f));
                 m_UniformBuffers->UpdateCamera(currentImage, camera_ubo);
