@@ -20,10 +20,14 @@
 #include "imgui_impl_vulkan.h"
 #include "imgui_impl_glfw.h"
 
+#include <EntityManager.hpp>
+#include <memory>
+
 namespace Editor {
     class ImGuiLayer : public Engine::Layer {
         public:
         ImGuiLayer();
+        ImGuiLayer(std::shared_ptr<Engine::EntityManager> entityMnager);
         ~ImGuiLayer();
 
         virtual void OnAttach() override;
@@ -33,6 +37,7 @@ namespace Editor {
         virtual void OnEvent(Engine::Event& event) override;
 
         private:
+        std::shared_ptr<Engine::EntityManager> m_EntityManager;
         float m_Time = 0.0f;
         VkDescriptorPool imguiPool;
         VkPipelineCache g_PipelineCache = VK_NULL_HANDLE;

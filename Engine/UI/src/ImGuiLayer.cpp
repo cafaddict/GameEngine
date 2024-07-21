@@ -1,11 +1,13 @@
 #include <ImGuiLayer.hpp>
 #include "imgui_impl_vulkan.cpp"
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace Editor
     {
 #define BIND_EVENT_FN(x) std::bind(&ImGuiLayer::x, this, std::placeholders::_1)
     ImGuiLayer::ImGuiLayer() : Engine::Layer("ImGui Layer") {}
+    ImGuiLayer::ImGuiLayer(std::shared_ptr<Engine::EntityManager> entityManager) : m_EntityManager(entityManager), Engine::Layer("ImGui Layer") {}
     ImGuiLayer::~ImGuiLayer() {}
     void ImGuiLayer::OnAttach()
         {
@@ -73,8 +75,6 @@ namespace Editor
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        // vkResetCommandBuffer(vulkandata.commandBuffers[vulkandata.currentFrame],
-        //                      /*VkCommandBufferResetFlagBits*/ 0);
 
 
         vkBeginCommandBuffer(cmd, &beginInfo);
@@ -89,47 +89,6 @@ namespace Editor
         vkQueueSubmit(vulkandata.graphicsQueue, 1, &end_info, VK_NULL_HANDLE);
         vkDeviceWaitIdle(vulkandata.device);
 
-        // VkSubmitInfo submitInfo{};
-        // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        // VkSemaphore waitSemaphores[] = {
-        //     vulkandata.imageAvailableSemaphores[vulkandata.currentFrame]};
-        // VkPipelineStageFlags waitStages[] = {
-        //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-        // submitInfo.waitSemaphoreCount = 1;
-        // submitInfo.pWaitSemaphores = waitSemaphores;
-        // submitInfo.pWaitDstStageMask = waitStages;
-
-        // submitInfo.commandBufferCount = 1;
-        // submitInfo.pCommandBuffers =
-        //     &vulkandata.commandBuffers[vulkandata.currentFrame];
-
-        // VkSemaphore signalSemaphores[] = {
-        //     vulkandata.renderFinishedSemaphores[vulkandata.currentFrame]};
-        // submitInfo.signalSemaphoreCount = 1;
-        // submitInfo.pSignalSemaphores = signalSemaphores;
-        // ENGINE_WARN("Queue submition");
-        // vkResetFences(vulkandata.device, 1,
-        //               &vulkandata.inFlightFences[vulkandata.currentFrame]);
-        // if (vkQueueSubmit(vulkandata.graphicsQueue, 1, &submitInfo,
-        //                   vulkandata.inFlightFences[vulkandata.currentFrame]) !=
-        //     VK_SUCCESS) {
-        //   ENGINE_ERROR("queue submition failed");
-        //   throw std::runtime_error("failed to submit draw command buffer!");
-        // };
-        // vkResetFences(vulkandata.device, 1,
-        //               &vulkandata.inFlightFences[vulkandata.currentFrame]);
-        // vkWaitForFences(vulkandata.device, 1,
-        //                 &vulkandata.inFlightFences[vulkandata.currentFrame], true,
-        //                 9999999999);
-        // vkResetFences(vulkandata.device, 1,
-        //               &vulkandata.inFlightFences[vulkandata.currentFrame]);
-
-        // // reset the command buffers inside the command pool
-        // vkResetCommandPool(vulkandata.device, vulkandata.commandPool, 0);
-
-        // clear font textures from cpu data
-
         ImGui_ImplVulkan_DestroyFontUploadObjects();
         ENGINE_WARN("ImGui Attach Finished");
         }
@@ -141,6 +100,23 @@ namespace Editor
         vkDestroyDescriptorPool(vulkandata.device, imguiPool, nullptr);
         ImGui_ImplVulkan_Shutdown();
         }
+
+    struct Transform {
+        glm::vec3 position;
+        glm::quat rotation;
+        glm::vec3 scale;
+        };
+
+    // Function to convert quaternion to Euler angles in degrees
+    glm::vec3 QuaternionToEuler(const glm::quat& q) {
+        return glm::degrees(glm::eulerAngles(q)); // Convert radians to degrees
+        }
+
+    // Function to convert Euler angles in degrees to quaternion
+    glm::quat EulerToQuaternion(const glm::vec3& euler) {
+        return glm::quat(glm::radians(euler)); // Convert degrees to radians
+        }
+
     void ImGuiLayer::OnUpdate()
         {
         ImGuiIO& io = ImGui::GetIO();
@@ -160,8 +136,67 @@ namespace Editor
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        static bool show = true;
-        ImGui::ShowDemoWindow(&show);
+        auto Entities = m_EntityManager->GetAllEntities();
+        float startX = 100.0f;
+        float startY = 100.0f;
+        float windowWidth = 200.0f;
+        float windowHeight = 100.0f;
+        int index = 0;
+        for (auto entity : Entities) {
+            std::string entityID = entity->GetID();
+            std::string title = "Panel : " + entityID;
+
+            float posX = startX;
+            float posY = startY + index * (windowHeight + 10); // 10 is the spacing between windows
+
+            auto entityTransformComponent = entity->GetComponent<Engine::TransformComponent>();
+            glm::vec3 entityPosition = entityTransformComponent->GetPosition();
+            glm::quat entityRotation = entityTransformComponent->GetRotation();
+            glm::vec3 entityScale = entityTransformComponent->GetScale();
+
+            Transform transform;
+            transform.position = entityPosition;
+            transform.rotation = entityRotation;
+            transform.scale = entityScale;
+
+            ImGui::SetNextWindowPos(ImVec2(posX, posY), ImGuiCond_FirstUseEver);
+            ImGui::Begin(title.c_str());
+            ImGui::Text("Entity: %s", entityID.c_str());
+            ImGui::Separator();
+
+
+
+            ImGui::Text("Position");
+            ImGui::InputFloat3("Position", glm::value_ptr(transform.position));
+
+            ImGui::Text("Rotation (Euler Angles)");
+            glm::vec3 eulerAngles = QuaternionToEuler(transform.rotation);
+            if (ImGui::InputFloat3("Rotation", glm::value_ptr(eulerAngles))) {
+                transform.rotation = EulerToQuaternion(eulerAngles);
+                }
+
+            ImGui::Text("Scale");
+            ImGui::InputFloat3("Scale", glm::value_ptr(transform.scale));
+
+            // Update the entity's transform component with the modified values only if they have changed
+            if (transform.position != entityPosition) {
+                entityTransformComponent->SetPosition(transform.position);
+                }
+            if (transform.rotation != entityRotation) {
+                entityTransformComponent->SetRotation(transform.rotation);
+                }
+            if (transform.scale != entityScale) {
+                entityTransformComponent->SetScale(transform.scale);
+                }
+
+
+            ImGui::End();
+
+            index++;
+            }
+
+        // static bool show = true;
+        // ImGui::ShowDemoWindow(&show);
 
         // Rendering
         ImGui::Render();
@@ -286,22 +321,22 @@ namespace Editor
     void ImGuiLayer::OnWait() {}
     void ImGuiLayer::OnEvent(Engine::Event& event)
         {
-        Engine::EventDispatcher dispatcher(event);
-        dispatcher.Dispatch<Engine::MouseButtonPressedEvent>(
-            BIND_EVENT_FN(OnMouseButtonPressedEvent));
-        dispatcher.Dispatch<Engine::MouseButtonReleasedEvent>(
-            BIND_EVENT_FN(OnMouseButtonReleasedEvent));
-        dispatcher.Dispatch<Engine::MouseMovedEvent>(
-            BIND_EVENT_FN(OnMouseMovedEvent));
-        dispatcher.Dispatch<Engine::MouseScrolledEvent>(
-            BIND_EVENT_FN(OnMouseScrolledEvent));
-        dispatcher.Dispatch<Engine::KeyPressedEvent>(
-            BIND_EVENT_FN(OnKeyPressedEvent));
-        dispatcher.Dispatch<Engine::KeyReleasedEvent>(
-            BIND_EVENT_FN(OnKeyReleasedEvent));
-        dispatcher.Dispatch<Engine::WindowResizeEvent>(
-            BIND_EVENT_FN(OnWindowResizeEvent));
-        dispatcher.Dispatch<Engine::KeyTypedEvent>(BIND_EVENT_FN(OnKeyTypedEvent));
+        // Engine::EventDispatcher dispatcher(event);
+        // dispatcher.Dispatch<Engine::MouseButtonPressedEvent>(
+        //     BIND_EVENT_FN(OnMouseButtonPressedEvent));
+        // dispatcher.Dispatch<Engine::MouseButtonReleasedEvent>(
+        //     BIND_EVENT_FN(OnMouseButtonReleasedEvent));
+        // dispatcher.Dispatch<Engine::MouseMovedEvent>(
+        //     BIND_EVENT_FN(OnMouseMovedEvent));
+        // dispatcher.Dispatch<Engine::MouseScrolledEvent>(
+        //     BIND_EVENT_FN(OnMouseScrolledEvent));
+        // dispatcher.Dispatch<Engine::KeyPressedEvent>(
+        //     BIND_EVENT_FN(OnKeyPressedEvent));
+        // dispatcher.Dispatch<Engine::KeyReleasedEvent>(
+        //     BIND_EVENT_FN(OnKeyReleasedEvent));
+        // dispatcher.Dispatch<Engine::WindowResizeEvent>(
+        //     BIND_EVENT_FN(OnWindowResizeEvent));
+        // dispatcher.Dispatch<Engine::KeyTypedEvent>(BIND_EVENT_FN(OnKeyTypedEvent));
         }
 
     bool ImGuiLayer::OnMouseButtonPressedEvent(Engine::MouseButtonPressedEvent& e)

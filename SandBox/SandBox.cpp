@@ -14,11 +14,14 @@
 
 class ExampleLayer : public Engine::Layer {
     public:
-    std::shared_ptr<Engine::AssetManager> assetManager;
-    std::shared_ptr<Engine::EntityManager> entityManager;
+    std::shared_ptr<Engine::AssetManager> m_AssetManager;
+    std::shared_ptr<Engine::EntityManager> m_EntityManager;
     ExampleLayer() : Layer("Example") {
-        assetManager = std::make_shared<Engine::AssetManager>();
-        entityManager = std::make_shared<Engine::EntityManager>();
+        m_AssetManager = std::make_shared<Engine::AssetManager>();
+        m_EntityManager = std::make_shared<Engine::EntityManager>();
+        }
+    ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager) : Layer("Example"), m_EntityManager(entityManager) {
+        m_AssetManager = std::make_shared<Engine::AssetManager>();
         }
     void OnUpdate() override {
         // CLIENT_INFO("ExampleLayer::Update");
@@ -26,7 +29,7 @@ class ExampleLayer : public Engine::Layer {
         Engine::Application& app = Engine::Application::Get();
         auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
         auto vulkandata = renderer->GetVulkanData();
-        auto entity1 = entityManager->GetEntity("entity1");
+        auto entity1 = m_EntityManager->GetEntity("entity1");
         auto transform1 = entity1->GetComponent<Engine::TransformComponent>();
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -34,13 +37,13 @@ class ExampleLayer : public Engine::Layer {
         float time = std::chrono::duration<float, std::chrono::seconds::period>(
             currentTime - startTime)
             .count();
-        transform1->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, time * glm::radians(90.0f))));
+        // transform1->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, time * glm::radians(90.0f))));
 
         renderer->BeginRecord();
 
-        if (Engine::Input::IsKeyPressed(GLFW_KEY_A)) {
-            CLIENT_TRACE("A key is pressed");
-            }
+        // if (Engine::Input::IsKeyPressed(GLFW_KEY_A)) {
+        //     CLIENT_TRACE("A key is pressed");
+        //     }
         }
     void OnEvent(Engine::Event& event) override {
         // CLIENT_INFO("{0}", event);
@@ -49,10 +52,10 @@ class ExampleLayer : public Engine::Layer {
     void OnAttach() override {
         Engine::Application& app = Engine::Application::Get();
         auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
-        renderer->SetEntityManager(entityManager);
+        renderer->SetEntityManager(m_EntityManager);
 
         std::string modelPah = "../../resources/models/viking_room.obj";
-        auto modelData = assetManager->GetAsset<Engine::ModelData>(modelPah);
+        auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
         if (modelData) {
             ENGINE_INFO("Model loaded");
             }
@@ -61,13 +64,13 @@ class ExampleLayer : public Engine::Layer {
             }
 
         std::string texturePath = "../../resources/models/viking_room.png";
-        auto textureData = assetManager->GetAsset<Engine::TextureData>(texturePath);
+        auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
 
         std::string vertexShaderPath = "../../resources/shaders/vert.spv";
         std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
 
-        auto vertexShaderData = assetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
-        auto fragmentShaderData = assetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
+        auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
+        auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
 
 
 
@@ -82,7 +85,7 @@ class ExampleLayer : public Engine::Layer {
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
         auto shaderComponent = std::make_shared <Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
 
-        auto entity1 = entityManager->CreateEntity("entity1");
+        auto entity1 = m_EntityManager->CreateEntity("entity1");
         entity1->AddComponent(modelComponent);
         entity1->AddComponent(textureComponent);
         entity1->AddComponent(shaderComponent);
@@ -95,7 +98,7 @@ class ExampleLayer : public Engine::Layer {
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
         transformComponent2->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
-        auto entity2 = entityManager->CreateEntity("entity2");
+        auto entity2 = m_EntityManager->CreateEntity("entity2");
         entity2->AddComponent(modelComponent);
         entity2->AddComponent(textureComponent);
         entity2->AddComponent(shaderComponent);
@@ -120,9 +123,10 @@ class ExampleLayer : public Engine::Layer {
 class Sandbox : public Engine::Application {
     public:
     Sandbox() {
-        PushLayer(new Editor::ImGuiLayer());
+        auto EntityManager = std::make_shared<Engine::EntityManager>();
+        PushLayer(new Editor::ImGuiLayer(EntityManager));
 
-        PushLayer(new ExampleLayer());
+        PushLayer(new ExampleLayer(EntityManager));
         // PushOverlay(new Editor::ImGuiLayer());
         }
     ~Sandbox() {}
