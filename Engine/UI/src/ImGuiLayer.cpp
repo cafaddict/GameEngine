@@ -3,12 +3,15 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
+
 namespace Editor
     {
 #define BIND_EVENT_FN(x) std::bind(&ImGuiLayer::x, this, std::placeholders::_1)
     ImGuiLayer::ImGuiLayer() : Engine::Layer("ImGui Layer") {}
     ImGuiLayer::ImGuiLayer(std::shared_ptr<Engine::EntityManager> entityManager) : m_EntityManager(entityManager), Engine::Layer("ImGui Layer") {}
     ImGuiLayer::~ImGuiLayer() {}
+
+
     void ImGuiLayer::OnAttach()
         {
         ENGINE_WARN("ImGuiLayer");
@@ -30,7 +33,8 @@ namespace Editor
             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
             {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
-            {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000} };
+            {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}
+            };
 
         VkDescriptorPoolCreateInfo pool_info = {};
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -142,6 +146,33 @@ namespace Editor
         float windowWidth = 200.0f;
         float windowHeight = 100.0f;
         int index = 0;
+
+        ImGui::Begin("OBJ File Loader");
+        static char filePath[256] = "";
+        ImGui::InputText("File Path", filePath, IM_ARRAYSIZE(filePath));
+        if (ImGui::Button("Load OBJ")) {
+            // Native file dialog
+            nfdchar_t* outPath = NULL;
+            nfdresult_t result = NFD_OpenDialog("obj", NULL, &outPath);
+
+            if (result == NFD_OKAY) {
+                std::string filePath(outPath);
+                free(outPath); // Don't forget to free the allocated memory
+                // Handle the file loading here
+                ENGINE_INFO("Selected File: %s", filePath.c_str());
+                // Example: LoadOBJ(filePath); // Implement this function to handle the OBJ file
+                }
+            else if (result == NFD_CANCEL) {
+                ENGINE_INFO("File dialog cancelled.");
+                }
+            else {
+                ENGINE_ERROR("Error occurred while opening file dialog.");
+                }
+            }
+
+        ImGui::End();
+
+
         for (auto entity : Entities) {
             std::string entityID = entity->GetID();
             std::string title = "Panel : " + entityID;
@@ -167,16 +198,17 @@ namespace Editor
 
 
             ImGui::Text("Position");
-            ImGui::InputFloat3("Position", glm::value_ptr(transform.position));
+            // ImGui::InputFloat3("Position", glm::value_ptr(transform.position));
+            ImGui::InputFloat3("", glm::value_ptr(transform.position));
 
             ImGui::Text("Rotation (Euler Angles)");
             glm::vec3 eulerAngles = QuaternionToEuler(transform.rotation);
-            if (ImGui::InputFloat3("Rotation", glm::value_ptr(eulerAngles))) {
+            if (ImGui::InputFloat3("", glm::value_ptr(eulerAngles))) {
                 transform.rotation = EulerToQuaternion(eulerAngles);
                 }
 
             ImGui::Text("Scale");
-            ImGui::InputFloat3("Scale", glm::value_ptr(transform.scale));
+            ImGui::InputFloat3("", glm::value_ptr(transform.scale));
 
             // Update the entity's transform component with the modified values only if they have changed
             if (transform.position != entityPosition) {

@@ -23,6 +23,8 @@
 #include <EntityManager.hpp>
 #include <memory>
 
+#include <nfd.h>
+
 namespace Editor {
     class ImGuiLayer : public Engine::Layer {
         public:
