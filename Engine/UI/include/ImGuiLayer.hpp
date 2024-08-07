@@ -64,5 +64,6 @@ namespace Editor
     private:
         std::string selectedObjFilePath;
         std::string selectedTextureFilePath;
+        char textBuffer[256] = "test";
     };
 } // namespace Editor

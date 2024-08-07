@@ -1852,6 +1852,7 @@ namespace Engine
 
     void VulkanRenderer::createVertexBuffer()
     {
+
         m_VertexBuffer = std::unique_ptr<VulkanVertexBuffer>(
             VulkanVertexBuffer::Create(&m_VulkanData, vertices));
         // m_VertexBuffer->Bind();
@@ -1859,6 +1860,7 @@ namespace Engine
 
     void VulkanRenderer::createIndexBuffer()
     {
+
         m_IndexBuffer = std::unique_ptr<VulkanIndexBuffer>(
             VulkanIndexBuffer::Create(&m_VulkanData, indices));
     }

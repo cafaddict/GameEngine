@@ -194,8 +194,12 @@ namespace Editor
                 ENGINE_ERROR("Error occurred while opening file dialog.");
             }
         }
+
+        ImGui::InputText("Entity name", textBuffer, sizeof(textBuffer));
+
         ImGui::Text("Selected Obj File: %s", selectedObjFilePath.c_str());
         ImGui::Text("Selected Texture File: %s", selectedTextureFilePath.c_str());
+        ImGui::Text("Entity name: %s", textBuffer);
 
         if (ImGui::Button("Load Model"))
         {
@@ -217,7 +221,7 @@ namespace Editor
                 auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
                 auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
                 auto transformComponent = std::make_shared<Engine::TransformComponent>();
-                transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+                transformComponent->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
                 transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
                 transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -225,11 +229,13 @@ namespace Editor
                 auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
                 auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
 
-                auto entity1 = m_EntityManager->CreateEntity("test");
+                auto entity1 = m_EntityManager->CreateEntity(textBuffer);
                 entity1->AddComponent(modelComponent);
                 entity1->AddComponent(textureComponent);
                 entity1->AddComponent(shaderComponent);
                 entity1->AddComponent(transformComponent);
+
+                renderer->createEntityResources();
             }
         }
 

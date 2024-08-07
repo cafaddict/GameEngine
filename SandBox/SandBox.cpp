@@ -73,7 +73,9 @@ public:
         auto modelData2 = m_AssetManager->GetAsset<Engine::ModelData>(modelPath2);
 
         std::string texturePath = "../../resources/models/viking_room.png";
+        std::string texturePath2 = "../../resources/models/bunny-atlas.jpg";
         auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
+        auto textureData2 = m_AssetManager->GetAsset<Engine::TextureData>(texturePath2);
 
         std::string vertexShaderPath = "../../resources/shaders/vert.spv";
         std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
@@ -90,6 +92,7 @@ public:
         auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
         auto modelComponent2 = std::make_shared<Engine::ModelComponent>(modelData2);
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+        auto textureComponent2 = std::make_shared<Engine::TextureComponent>(textureData2);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
 
         auto entity1 = m_EntityManager->CreateEntity("entity1");
@@ -102,7 +105,7 @@ public:
         transformComponent2->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
         transformComponent2->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent2->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+        transformComponent2->SetScale(glm::vec3(0.005f, 0.005f, 0.005f));
 
         // auto entity2 = m_EntityManager->CreateEntity("entity2");
         // entity2->AddComponent(modelComponent2);
