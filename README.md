@@ -61,4 +61,4 @@ cd build/SandBox
 
 ## Authors
 
-- **Hyunyul Cho** - [@cafaddict](https://github.com/filipdutescu)
+- **Hyunyul Cho** - [@cafaddict](https://github.com/cafaddict)
