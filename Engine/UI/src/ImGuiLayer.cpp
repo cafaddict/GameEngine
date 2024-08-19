@@ -221,7 +221,7 @@ namespace Editor
                 auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
                 auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
                 auto transformComponent = std::make_shared<Engine::TransformComponent>();
-                transformComponent->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
+                transformComponent->SetPosition(glm::vec3(2.0f, 0.0f, 0.0f));
                 transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
                 transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 

@@ -320,5 +320,16 @@ namespace Engine
             light_ubo.lightPos = glm::vec3(1.0f, 1.0f, 1.0f);
             m_UniformBuffers->UpdateLight(currentImage, light_ubo);
         }
+
+        void cleanupDescriptorSets()
+        {
+            // Free all allocated descriptor sets
+            vkFreeDescriptorSets(m_VulkanData.device, m_VulkanData.descriptorPool,
+                                 static_cast<uint32_t>(m_VulkanData.descriptorSets.size()),
+                                 m_VulkanData.descriptorSets.data());
+
+            // Optionally clear the descriptor sets vector
+            m_VulkanData.descriptorSets.clear();
+        }
     };
 } // namespace Engine

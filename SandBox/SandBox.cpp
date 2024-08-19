@@ -62,6 +62,7 @@ public:
         std::string modelPah = "../../resources/models/viking_room.obj";
         std::string modelPath2 = "../../resources/models/bunny.obj";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
+
         if (modelData)
         {
             ENGINE_INFO("Model loaded");
@@ -107,14 +108,16 @@ public:
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
         transformComponent2->SetScale(glm::vec3(0.005f, 0.005f, 0.005f));
 
-        // auto entity2 = m_EntityManager->CreateEntity("entity2");
-        // entity2->AddComponent(modelComponent2);
-        // entity2->AddComponent(textureComponent);
-        // entity2->AddComponent(shaderComponent);
-        // entity2->AddComponent(transformComponent2);
+        auto entity2 = m_EntityManager->CreateEntity("entity2");
+        entity2->AddComponent(modelComponent2);
+        entity2->AddComponent(textureComponent2);
+        entity2->AddComponent(shaderComponent);
+        entity2->AddComponent(transformComponent2);
 
         // renderer->loadModel();
         // renderer->createGraphicsPipeline();
+        ENGINE_TRACE("modelData1 size : {0}", modelData->positions.size());
+        ENGINE_TRACE("modelData2 size : {0}", modelData2->positions.size());
         renderer->createEntityResources();
         // renderer->createTextureImage();
 
