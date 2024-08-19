@@ -8,111 +8,176 @@
 #include <chrono>
 #include <cstring>
 #include <vector>
+#include <memory>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+// #include <Particle.hpp>
 
-namespace Engine {
+namespace Engine
+{
 
-struct UniformBufferObject {
-  alignas(16) glm::mat4 model;
-  alignas(16) glm::mat4 view;
-  alignas(16) glm::mat4 proj;
-};
+    struct UniformBufferObject
+    {
+        alignas(16) glm::mat4 model;
+        alignas(16) glm::mat4 view;
+        alignas(16) glm::mat4 proj;
+    };
 
-class VulkanBuffer {
- public:
-  ~VulkanBuffer();
-  VulkanBuffer();
-  VulkanBuffer(VulkanData *vulkanData);
-  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                    VkDeviceMemory &bufferMemory);
+    class VulkanBuffer
+    {
+    public:
+        virtual ~VulkanBuffer() = default;
+        VulkanBuffer();
+        VulkanBuffer(VulkanData *vulkanData);
+        void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                          VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                          VkDeviceMemory &bufferMemory);
 
-  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-  uint32_t findMemoryType(uint32_t typeFilter,
-                          VkMemoryPropertyFlags properties);
+        void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        uint32_t findMemoryType(uint32_t typeFilter,
+                                VkMemoryPropertyFlags properties);
 
-  VkCommandBuffer beginSingleTimeCommands();
-  void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+        VkCommandBuffer beginSingleTimeCommands();
+        void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
- protected:
-  VkDevice *m_Device;
-  VkCommandPool *m_CommandPool;
-  VkPhysicalDevice *m_PhysicalDevice;
-  VkQueue *m_GraphicsQueue;
-};
+        VkDeviceSize m_Buffersize;
 
-class VulkanVertexBuffer : public VertexBuffer, private VulkanBuffer {
- public:
-  virtual ~VulkanVertexBuffer();
-  VulkanVertexBuffer();
-  VulkanVertexBuffer(VulkanData *vulkanData, std::vector<Vertex> vertices);
-  virtual void Bind() const override;
-  virtual void UnBind() const override;
-  virtual void SetData(const void *data, uint32_t size) override;
+    protected:
+        VkDevice *m_Device;
+        VkCommandPool *m_CommandPool;
+        VkPhysicalDevice *m_PhysicalDevice;
+        VkQueue *m_GraphicsQueue;
+    };
 
-  static VulkanVertexBuffer *Create(VulkanData *vulkanData,
-                                    std::vector<Vertex> vertices);
-  void Destroy();
+    class VulkanVertexBuffer : public VertexBuffer, public VulkanBuffer
+    {
+    public:
+        virtual ~VulkanVertexBuffer();
+        VulkanVertexBuffer();
+        VulkanVertexBuffer(VulkanData *vulkanData, std::vector<Vertex> vertices);
+        virtual void Bind() const override;
+        virtual void UnBind() const override;
+        virtual void SetData(const void *data, uint32_t size) override;
 
-  VkBuffer GetVertexBuffer() { return m_VertexBuffer; };
+        static VulkanVertexBuffer *Create(VulkanData *vulkanData,
+                                          std::vector<Vertex> vertices);
+        void Destroy();
 
- private:
-  VkBuffer m_VertexBuffer;
-  VkDeviceMemory m_VertexBufferMemory;
+        VkBuffer GetVertexBuffer() { return m_VertexBuffer; };
+        VkDeviceSize GetBufferSize() { return m_Buffersize; }
 
-  std::vector<Vertex> m_vertices;
+    private:
+        VkBuffer m_VertexBuffer;
+        VkDeviceMemory m_VertexBufferMemory;
 
-  uint32_t findMemoryType(uint32_t typeFilter,
-                          VkMemoryPropertyFlags properties);
-};
-class VulkanIndexBuffer : public IndexBuffer, private VulkanBuffer {
- public:
-  virtual ~VulkanIndexBuffer();
-  VulkanIndexBuffer();
-  VulkanIndexBuffer(VulkanData *vulkanData, std::vector<uint32_t> indices);
-  virtual void Bind() const override;
-  virtual void UnBind() const override;
-  virtual void SetData(const void *data, uint32_t size) override;
+        std::vector<Vertex> m_vertices;
 
-  static VulkanIndexBuffer *Create(VulkanData *vulkanData,
-                                   std::vector<uint32_t> indices);
-  void Destroy();
+        uint32_t findMemoryType(uint32_t typeFilter,
+                                VkMemoryPropertyFlags properties);
+    };
+    class VulkanIndexBuffer : public IndexBuffer, public VulkanBuffer
+    {
+    public:
+        virtual ~VulkanIndexBuffer();
+        VulkanIndexBuffer();
+        VulkanIndexBuffer(VulkanData *vulkanData, std::vector<uint32_t> indices);
+        virtual void Bind() const override;
+        virtual void UnBind() const override;
+        virtual void SetData(const void *data, uint32_t size) override;
 
-  VkBuffer GetIndexBuffer() { return m_IndexBuffer; };
+        static VulkanIndexBuffer *Create(VulkanData *vulkanData,
+                                         std::vector<uint32_t> indices);
+        void Destroy();
 
- private:
-  VkBuffer m_IndexBuffer;
-  VkDeviceMemory m_IndexBufferMemory;
+        VkBuffer GetIndexBuffer() { return m_IndexBuffer; };
+        VkDeviceSize GetBufferSize() { return m_Buffersize; }
 
-  std::vector<uint32_t> m_indices;
-};
+    private:
+        VkBuffer m_IndexBuffer;
+        VkDeviceMemory m_IndexBufferMemory;
 
-class VulkanUniformBuffer : private VulkanBuffer {
- public:
-  ~VulkanUniformBuffer();
-  VulkanUniformBuffer();
-  VulkanUniformBuffer(VulkanData *vulkanData, int MAX_FRAMES_IN_FLIGHT);
-  void Update(uint32_t currentImage, UniformBufferObject ubo);
-  void Bind();
-  void UnBind();
-  void SetData(const void *data, uint32_t size);
-  static VulkanUniformBuffer *Create(VulkanData *vulkanData,
+        std::vector<uint32_t> m_indices;
+    };
 
-                                     int MAX_FRAMES_IN_FLIGHT);
-  void Destroy();
-  std::vector<VkBuffer> GetUniformBuffers() { return m_UniformBuffers; }
+    class VulkanUniformBuffer : public VulkanBuffer
+    {
 
- private:
-  std::vector<VkBuffer> m_UniformBuffers;
-  std::vector<VkDeviceMemory> m_UniformBuffersMemory;
-  std::vector<void *> m_UniformBuffersMapped;
+    public:
+        struct CameraUBO
+        {
+            glm::mat4 view;
+            glm::mat4 proj;
+        };
 
-  UniformBufferObject m_Uniformbufferobject;
-  int m_max_frame_in_flight;
-};
-}  // namespace Engine
+        struct LightUBO
+        {
+            glm::vec3 lightPos;
+            glm::vec3 lightColor;
+        };
+
+    public:
+        ~VulkanUniformBuffer();
+        VulkanUniformBuffer();
+        VulkanUniformBuffer(VulkanData *vulkanData, int MAX_FRAMES_IN_FLIGHT);
+        void Update(uint32_t currentImage, UniformBufferObject ubo);
+        void UpdateCamera(uint32_t currentImage, const CameraUBO &ubo);
+        void UpdateLight(uint32_t currentImage, const LightUBO &ubo);
+        void Bind();
+        void UnBind();
+        void SetData(const void *data, uint32_t size);
+        static VulkanUniformBuffer *Create(VulkanData *vulkanData,
+
+                                           int MAX_FRAMES_IN_FLIGHT);
+        void Destroy();
+        std::vector<VkBuffer> GetUniformBuffers() { return m_UniformBuffers; }
+        std::vector<VkBuffer> GetCameraBuffers() { return m_CameraBuffers; }
+        std::vector<VkBuffer> GetLightBuffers() { return m_LightBuffers; }
+
+    private:
+        std::vector<VkBuffer> m_UniformBuffers;
+        std::vector<VkDeviceMemory> m_UniformBuffersMemory;
+        std::vector<void *> m_UniformBuffersMapped;
+
+        std::vector<VkBuffer> m_CameraBuffers;
+        std::vector<VkDeviceMemory> m_CameraBuffersMemory;
+        std::vector<void *> m_CameraBuffersMapped;
+
+        std::vector<VkBuffer> m_LightBuffers;
+        std::vector<VkDeviceMemory> m_LightBuffersMemory;
+        std::vector<void *> m_LightBuffersMapped;
+
+        UniformBufferObject m_Uniformbufferobject;
+        int m_max_frame_in_flight;
+    };
+
+    template <typename T>
+    class VulkanShaderStorageBuffer : public VulkanBuffer
+    {
+    public:
+        ~VulkanShaderStorageBuffer();
+        VulkanShaderStorageBuffer();
+        VulkanShaderStorageBuffer(VulkanData *vulkanData, int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize);
+        void Bind();
+        void UnBind();
+        void SetData(const void *data, uint32_t size);
+        static VulkanShaderStorageBuffer *Create(VulkanData *vulkanData,
+                                                 int MAX_FRAMES_IN_FLIGHT, VkDeviceSize buffersize);
+        void Destroy();
+        std::vector<VkBuffer> GetShaderStorageBuffers() { return m_ShaderStorageBuffers; }
+        void Update(uint32_t currentImage, const std::vector<T> &objects);
+
+    private:
+        std::vector<VkBuffer> m_ShaderStorageBuffers;
+        std::vector<VkDeviceMemory> m_ShaderStorageBuffersMemory;
+        std::vector<void *> m_ShaderStorageBuffersMapped;
+
+        int m_max_frame_in_flight;
+        VkDeviceSize m_BufferSize;
+    };
+} // namespace Engine
+
+#include "VulkanBuffer.tpp"
