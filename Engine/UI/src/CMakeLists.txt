@@ -15,5 +15,5 @@ file(GLOB SRC "*.hpp" "*.cpp")
 file(GLOB SRC_C "*.h")
 
 add_library(UI ${SRC} ${IMGUI_HEADERS} ${SRC_C})
-target_link_libraries(UI UTILS PHYSICS RENDERING EVENTS CORE ENTITY)
-target_include_directories(UI PUBLIC ../include ../../../external/imgui)
+target_link_libraries(UI UTILS PHYSICS RENDERING EVENTS CORE ENTITY nativefiledialog)
+target_include_directories(UI PUBLIC ../include ../../../external/imgui ../../../external/nativefiledialog/include)

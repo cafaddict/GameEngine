@@ -15,7 +15,7 @@ namespace Engine {
         ~EntityManager() {}
 
         std::shared_ptr<Entity> CreateEntity(const std::string& id) {
-            auto entity = std::make_shared<Entity>();
+            auto entity = std::make_shared<Entity>(id);
             entities[id] = entity;
             return entity;
             }

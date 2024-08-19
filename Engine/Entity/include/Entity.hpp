@@ -7,12 +7,17 @@ namespace Engine {
         {
             private:
             std::vector<std::shared_ptr<Component>> components;
+            const std::string m_ID;
             public:
-            Entity(/* args */) {};
+            Entity(std::string id) : m_ID(id) {};
             ~Entity() {};
 
             void AddComponent(std::shared_ptr<Component> component) {
                 components.push_back(component);
+                }
+
+            std::string GetID() {
+                return m_ID;
                 }
 
             template<typename T>
