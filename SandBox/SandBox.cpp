@@ -12,21 +12,18 @@
 // #include <Input.hpp>
 // #include <Application.hpp>
 
-class ExampleLayer : public Engine::Layer
-{
-public:
+class ExampleLayer : public Engine::Layer {
+    public:
     std::shared_ptr<Engine::AssetManager> m_AssetManager;
     std::shared_ptr<Engine::EntityManager> m_EntityManager;
-    ExampleLayer() : Layer("Example")
-    {
+    ExampleLayer() : Layer("Example") {
         m_AssetManager = std::make_shared<Engine::AssetManager>();
         m_EntityManager = std::make_shared<Engine::EntityManager>();
     }
-    ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager, std::shared_ptr<Engine::AssetManager> assetManager) : Layer("Example"), m_EntityManager(entityManager), m_AssetManager(assetManager)
-    {
-    }
-    void OnUpdate() override
-    {
+    ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager,
+                 std::shared_ptr<Engine::AssetManager> assetManager)
+        : Layer("Example"), m_EntityManager(entityManager), m_AssetManager(assetManager) {}
+    void OnUpdate() override {
         // CLIENT_INFO("ExampleLayer::Update");
 
         Engine::Application &app = Engine::Application::Get();
@@ -48,13 +45,11 @@ public:
         //     CLIENT_TRACE("A key is pressed");
         //     }
     }
-    void OnEvent(Engine::Event &event) override
-    {
+    void OnEvent(Engine::Event &event) override {
         // CLIENT_INFO("{0}", event);
     }
 
-    void OnAttach() override
-    {
+    void OnAttach() override {
         Engine::Application &app = Engine::Application::Get();
         auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
         renderer->SetEntityManager(m_EntityManager);
@@ -63,15 +58,17 @@ public:
         std::string modelPath2 = "../../resources/models/bunny.obj";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
 
-        if (modelData)
-        {
+        if (modelData) {
             ENGINE_INFO("Model loaded");
-        }
-        else
-        {
+        } else {
             ENGINE_ERROR("Model load failed");
         }
         auto modelData2 = m_AssetManager->GetAsset<Engine::ModelData>(modelPath2);
+        if (modelData2) {
+            ENGINE_INFO("Model loaded");
+        } else {
+            ENGINE_ERROR("Model load failed");
+        }
 
         std::string texturePath = "../../resources/models/viking_room.png";
         std::string texturePath2 = "../../resources/models/bunny-atlas.jpg";
@@ -96,15 +93,15 @@ public:
         auto textureComponent2 = std::make_shared<Engine::TextureComponent>(textureData2);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
 
-        auto entity1 = m_EntityManager->CreateEntity("entity1");
-        entity1->AddComponent(modelComponent);
-        entity1->AddComponent(textureComponent);
-        entity1->AddComponent(shaderComponent);
-        entity1->AddComponent(transformComponent);
+        // auto entity1 = m_EntityManager->CreateEntity("entity1");
+        // entity1->AddComponent(modelComponent);
+        // entity1->AddComponent(textureComponent);
+        // entity1->AddComponent(shaderComponent);
+        // entity1->AddComponent(transformComponent);
 
         auto transformComponent2 = std::make_shared<Engine::TransformComponent>();
-        transformComponent2->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
-        transformComponent2->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
+        transformComponent2->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+        transformComponent2->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(0.0f), 0.0f)));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
         transformComponent2->SetScale(glm::vec3(0.005f, 0.005f, 0.005f));
 
@@ -114,10 +111,8 @@ public:
         entity2->AddComponent(shaderComponent);
         entity2->AddComponent(transformComponent2);
 
-        // renderer->loadModel();
-        // renderer->createGraphicsPipeline();
         ENGINE_TRACE("modelData1 size : {0}", modelData->positions.size());
-        ENGINE_TRACE("modelData2 size : {0}", modelData2->positions.size());
+        // ENGINE_TRACE("modelData2 size : {0}", modelData2->positions.size());
         renderer->createEntityResources();
         // renderer->createTextureImage();
 
@@ -125,11 +120,9 @@ public:
     }
 };
 
-class Sandbox : public Engine::Application
-{
-public:
-    Sandbox()
-    {
+class Sandbox : public Engine::Application {
+    public:
+    Sandbox() {
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
         PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
