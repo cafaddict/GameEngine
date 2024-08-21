@@ -15,13 +15,12 @@ ModelData::ModelData() {}
 ModelData::~ModelData() {}
 
 bool ModelData::Load(const std::string &modelPath) {
-
-  // Create an instance of the Importer class
+    // Create an instance of the Importer class
     Assimp::Importer importer;
 
     // Load the model
-    const aiScene* scene = importer.ReadFile(modelPath, 
-        aiProcess_Triangulate | 
+    const aiScene* scene = importer.ReadFile(modelPath,
+        aiProcess_Triangulate |
         aiProcess_GenNormals |
         aiProcess_FlipUVs);
 
@@ -31,17 +30,18 @@ bool ModelData::Load(const std::string &modelPath) {
         return false;
     }
 
-    // Process the model
-    // Assuming you want to process the first mesh in the model
+    // Clear previous data
+    positions.clear();
+    normals.clear();
+    uvs.clear();
+    indices.clear();
     size_t assimp_index_cnt = 0;
-    if (scene->mNumMeshes > 0) {
-        aiMesh* mesh = scene->mMeshes[0];
 
-        // Clear previous data
-        positions.clear();
-        normals.clear();
-        uvs.clear();
+    // Process each mesh
+    for (unsigned int m = 0; m < scene->mNumMeshes; ++m) {
+        aiMesh* mesh = scene->mMeshes[m];
 
+ 
         // Process vertices
         positions.reserve(mesh->mNumVertices);
         for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
@@ -53,8 +53,8 @@ bool ModelData::Load(const std::string &modelPath) {
         }
 
         // Process normals
-        normals.reserve(mesh->mNumVertices);
         if (mesh->HasNormals()) {
+            normals.reserve(mesh->mNumVertices);
             for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
                 const aiVector3D& norm = mesh->mNormals[i];
                 glm::vec3 vertexNormal = {norm.x, norm.y, norm.z};
@@ -65,8 +65,8 @@ bool ModelData::Load(const std::string &modelPath) {
         }
 
         // Process UV coordinates
-        uvs.reserve(mesh->mNumVertices);
         if (mesh->HasTextureCoords(0)) { // Assuming texture coordinates are in channel 0
+            uvs.reserve(mesh->mNumVertices);
             for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
                 const aiVector3D& uv = mesh->mTextureCoords[0][i];
                 glm::vec2 vertexUV = {uv.x, uv.y};
@@ -75,11 +75,20 @@ bool ModelData::Load(const std::string &modelPath) {
         } else {
             ENGINE_WARN("Mesh does not contain UV coordinates.");
         }
-    } else {
-        ENGINE_ERROR( "No meshes found in the model.");
-        return false;
+
+        // Optionally: Handle indices if needed
+        // Process mesh indices (assuming triangles)
+        if (mesh->HasFaces()) {
+            for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+                const aiFace& face = mesh->mFaces[i];
+                for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+                    indices.push_back(face.mIndices[j]);
+                }
+            }
+        }
     }
 
     return true;
 }
+
 } // namespace Engine

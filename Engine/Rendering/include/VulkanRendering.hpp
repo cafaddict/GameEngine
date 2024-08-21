@@ -278,11 +278,11 @@ class VulkanRenderer : public Renderer {
 
         VulkanUniformBuffer::CameraUBO camera_ubo;
         camera_ubo.proj = glm::perspective(
-            glm::radians(45.0f), m_VulkanData.swapChainExtent.width / (float)m_VulkanData.swapChainExtent.height, 0.1f,
-            10.0f);
+            glm::radians(45.0f), m_VulkanData.swapChainExtent.width / (float)m_VulkanData.swapChainExtent.height, 0.01f,
+            1000.0f);
         // camera_ubo.proj[1][1] *= -1;
         camera_ubo.view =
-            glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         m_UniformBuffers->UpdateCamera(currentImage, camera_ubo);
 
         VulkanUniformBuffer::LightUBO light_ubo;
