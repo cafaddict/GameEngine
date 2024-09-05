@@ -54,69 +54,72 @@ class ExampleLayer : public Engine::Layer {
         auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
         renderer->SetEntityManager(m_EntityManager);
 
-        std::string modelPah = "../../resources/models/viking_room.obj";
-        std::string modelPath2 = "../../resources/models/bunny.obj";
-        auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
+        // std::string modelPah = "../../resources/models/viking_room.obj";
+        // std::string modelPath2 = "../../resources/models/bunny.obj";
+        // auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
 
-        if (modelData) {
-            ENGINE_INFO("Model loaded");
-        } else {
-            ENGINE_ERROR("Model load failed");
-        }
-        auto modelData2 = m_AssetManager->GetAsset<Engine::ModelData>(modelPath2);
-        if (modelData2) {
-            ENGINE_INFO("Model loaded");
-        } else {
-            ENGINE_ERROR("Model load failed");
-        }
+        // if (modelData) {
+        //     ENGINE_INFO("Model loaded");
+        // } else {
+        //     ENGINE_ERROR("Model load failed");
+        // }
+        // auto modelData2 = m_AssetManager->GetAsset<Engine::ModelData>(modelPath2);
+        // if (modelData2) {
+        //     ENGINE_INFO("Model loaded");
+        // } else {
+        //     ENGINE_ERROR("Model load failed");
+        // }
 
-        std::string texturePath = "../../resources/models/viking_room.png";
-        std::string texturePath2 = "../../resources/models/bunny-atlas.jpg";
-        auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
-        auto textureData2 = m_AssetManager->GetAsset<Engine::TextureData>(texturePath2);
+        // std::string texturePath = "../../resources/models/viking_room.png";
+        // std::string texturePath2 = "../../resources/models/bunny-atlas.jpg";
+        // auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
+        // auto textureData2 = m_AssetManager->GetAsset<Engine::TextureData>(texturePath2);
 
-        std::string vertexShaderPath = "../../resources/shaders/vert.spv";
-        std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
+        // std::string vertexShaderPath = "../../resources/shaders/vert.spv";
+        // std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
 
-        auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
-        auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
+        // auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
+        // auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
 
-        auto transformComponent = std::make_shared<Engine::TransformComponent>();
-        transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
-        transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-
-        auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
-        auto modelComponent2 = std::make_shared<Engine::ModelComponent>(modelData2);
-        auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
-        auto textureComponent2 = std::make_shared<Engine::TextureComponent>(textureData2);
-        auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
-
-        // auto entity1 = m_EntityManager->CreateEntity("entity1");
-        // entity1->AddComponent(modelComponent);
-        // entity1->AddComponent(textureComponent);
-        // entity1->AddComponent(shaderComponent);
-        // entity1->AddComponent(transformComponent);
-
-        auto transformComponent2 = std::make_shared<Engine::TransformComponent>();
-        transformComponent2->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        transformComponent2->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(0.0f), 0.0f)));
+        // auto transformComponent = std::make_shared<Engine::TransformComponent>();
+        // transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+        // // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent2->SetScale(glm::vec3(0.005f, 0.005f, 0.005f));
+        // transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
-        auto entity2 = m_EntityManager->CreateEntity("entity2");
-        entity2->AddComponent(modelComponent2);
-        entity2->AddComponent(textureComponent2);
-        entity2->AddComponent(shaderComponent);
-        entity2->AddComponent(transformComponent2);
+        // auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
+        // auto modelComponent2 = std::make_shared<Engine::ModelComponent>(modelData2);
+        // auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+        // auto textureComponent2 = std::make_shared<Engine::TextureComponent>(textureData2);
+        // auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
 
-        ENGINE_TRACE("modelData1 size : {0}", modelData->positions.size());
+        // // auto entity1 = m_EntityManager->CreateEntity("entity1");
+        // // entity1->AddComponent(modelComponent);
+        // // entity1->AddComponent(textureComponent);
+        // // entity1->AddComponent(shaderComponent);
+        // // entity1->AddComponent(transformComponent);
+
+        // auto transformComponent2 = std::make_shared<Engine::TransformComponent>();
+        // transformComponent2->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+        // transformComponent2->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(0.0f), 0.0f)));
+        // // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
+        // transformComponent2->SetScale(glm::vec3(0.005f, 0.005f, 0.005f));
+
+        // // auto entity2 = m_EntityManager->CreateEntity("entity2");
+        // // entity2->AddComponent(modelComponent2);
+        // // entity2->AddComponent(textureComponent2);
+        // // entity2->AddComponent(shaderComponent);
+        // // entity2->AddComponent(transformComponent2);
+
+        // ENGINE_TRACE("modelData1 size : {0}", modelData->positions.size());
         // ENGINE_TRACE("modelData2 size : {0}", modelData2->positions.size());
-        renderer->createEntityResources();
+        // renderer->createEntityResources();
         // renderer->createTextureImage();
 
         // renderer->addModel("../../resources/models/viking_room.obj");
+
+        // renderer->createEntityResources();
+
     }
 };
 

@@ -1,9 +1,10 @@
+#include "Log.hpp"
 #include <VulkanRendering.hpp>
 #include <cstddef>
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
-const bool enableValidationLayers = true;
+const bool enableValidationLayers = false;
 #endif
 
 #include <random>
@@ -11,12 +12,7 @@ const bool enableValidationLayers = true;
 #include <tinyobjloader/tiny_obj_loader.h>
 
 namespace Engine {
-// This is only for testing remove it
-// const std::vector<Vertex> vertices = {
-//     {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
-//     {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
-//     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}}};
-// debugCallback
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                     VkDebugUtilsMessageTypeFlagsEXT messageType,
                                                     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
@@ -123,6 +119,7 @@ void VulkanRenderer::recreateSwapChain() {
 }
 
 void VulkanRenderer::BeginRecord() {
+   
     vkWaitForFences(m_VulkanData.device, 1, &m_VulkanData.inFlightFences[m_VulkanData.currentFrame], VK_TRUE,
                     UINT64_MAX);
 
@@ -150,6 +147,9 @@ void VulkanRenderer::BeginRecord() {
         transformations_in.push_back(transform);
     }
 
+
+
+
     dynamic_cast<VulkanShaderStorageBuffer<glm::mat4> *>(m_ShaderStorageBuffers.get())
         ->Update(m_VulkanData.currentFrame, transformations_in);
 
@@ -169,6 +169,7 @@ void VulkanRenderer::BeginRecord() {
     }
 
     recordCommandBuffer(m_VulkanData.commandBuffers[m_VulkanData.currentFrame], m_VulkanData.image_index);
+
 
     // VkSubmitInfo submitInfo{};
     // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -495,7 +496,6 @@ void VulkanRenderer::addModel(std::string model_path) {
 }
 
 void VulkanRenderer::Draw() {
-
     if (vkEndCommandBuffer(m_VulkanData.commandBuffers[m_VulkanData.currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     }
@@ -630,7 +630,8 @@ void VulkanRenderer::createInstance() {
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
     bool portabilitySubsetSupported = false;
     for (const auto &extension : extensions) {
-        std::cout << '\t' << extension.extensionName << std::endl;
+        ENGINE_INFO('\t' + extension.extensionName);
+        // std::cout << '\t' << extension.extensionName << std::endl;
         if (strcmp(extension.extensionName, "VK_KHR_portability_subset") == 0) {
             portabilitySubsetSupported = true;
             break;
@@ -1984,10 +1985,14 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     scissor.extent = m_VulkanData.swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     VkDeviceSize offsets[] = {0};
-    VkBuffer vertexBuffers[] = {m_VertexBuffer->GetVertexBuffer()};
-    VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffers, 0, VK_INDEX_TYPE_UINT32);
+
+    if(entities.size() > 0) {
+        VkBuffer vertexBuffers[] = {m_VertexBuffer->GetVertexBuffer()};
+        VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffers, 0, VK_INDEX_TYPE_UINT32);
+    }
+
     for (const auto &entity : entities) {
         // if (cnt == 0)
         // {
@@ -2039,42 +2044,6 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
         cnt++;
     }
 
-    // vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    //     m_VulkanData.graphicsPipeline);
-
-    // VkViewport viewport{};
-    // viewport.x = 0.0f;
-    // viewport.y = 0.0f;
-    // viewport.width = static_cast<float>(m_VulkanData.swapChainExtent.width);
-    // viewport.height = static_cast<float>(m_VulkanData.swapChainExtent.height);
-    // viewport.minDepth = 0.0f;
-    // viewport.maxDepth = 1.0f;
-    // vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-    // VkRect2D scissor{};
-    // scissor.offset = { 0, 0 };
-    // scissor.extent = m_VulkanData.swapChainExtent;
-    // vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-    // VkBuffer vertexBuffers[] = { m_VertexBuffer->GetVertexBuffer() };
-    // VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
-    // VkDeviceSize offsets[] = { 0 };
-    // vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-    // vkCmdBindIndexBuffer(commandBuffer, indexBuffers, 0, VK_INDEX_TYPE_UINT32);
-
-    // vkCmdBindDescriptorSets(
-    //     commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-    //     m_VulkanData.pipelineLayout, 0, 1,
-    //     &m_VulkanData.descriptorSets[m_VulkanData.currentFrame], 0, nullptr);
-    // vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0,
-    //     0, 0);
-
-    // vkCmdEndRenderPass(commandBuffer);
-
-    // if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
-    //     {
-    //     throw std::runtime_error("failed to record command buffer!");
-    //     }
 }
 
 void VulkanRenderer::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,

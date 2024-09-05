@@ -1,4 +1,5 @@
 #include <ImGuiLayer.hpp>
+#include "imgui.h"
 #include "imgui_impl_vulkan.cpp"
 #include <glm/gtc/type_ptr.hpp>
 
@@ -195,6 +196,8 @@ namespace Editor
             }
         }
 
+
+
         ImGui::InputText("Entity name", textBuffer, sizeof(textBuffer));
 
         ImGui::Text("Selected Obj File: %s", selectedObjFilePath.c_str());
@@ -290,6 +293,10 @@ namespace Editor
             if (transform.scale != entityScale)
             {
                 entityTransformComponent->SetScale(transform.scale);
+            }
+
+            if(ImGui::SmallButton("delete")) {
+                m_EntityManager->RemoveEntity(entity->GetID());
             }
 
             ImGui::End();

@@ -30,13 +30,8 @@ class ExampleLayer : public Engine::Layer {
     void OnAttach() override {
         Engine::Application& app = Engine::Application::Get();
         auto renderer = static_cast<Engine::VulkanRenderer*>(app.GetRenderer());
-        // std::vector<Engine::Particle> particles;
-        // int numParticles = 1000;
-        // particles.reserve(numParticles);
-        // for (int i = 0; i < numParticles; i++) {
-        //     particles.emplace_back();
-        //     }
-        renderer->addModel("../../resources/models/viking_room.obj");
+
+
         }
 
     };
