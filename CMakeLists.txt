@@ -52,6 +52,7 @@ add_subdirectory("external/nativefiledialog")
 add_subdirectory("external/assimp")
 add_subdirectory(Engine)
 add_subdirectory(SandBox)
+add_subdirectory(SandBoxRefac)
 add_subdirectory(ParticleSandBox)
 
 # add_subdirectory(ScriptingLanguage)

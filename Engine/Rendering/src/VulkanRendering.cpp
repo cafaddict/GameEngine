@@ -119,7 +119,7 @@ void VulkanRenderer::recreateSwapChain() {
 }
 
 void VulkanRenderer::BeginRecord() {
-   
+
     vkWaitForFences(m_VulkanData.device, 1, &m_VulkanData.inFlightFences[m_VulkanData.currentFrame], VK_TRUE,
                     UINT64_MAX);
 
@@ -147,9 +147,6 @@ void VulkanRenderer::BeginRecord() {
         transformations_in.push_back(transform);
     }
 
-
-
-
     dynamic_cast<VulkanShaderStorageBuffer<glm::mat4> *>(m_ShaderStorageBuffers.get())
         ->Update(m_VulkanData.currentFrame, transformations_in);
 
@@ -169,7 +166,6 @@ void VulkanRenderer::BeginRecord() {
     }
 
     recordCommandBuffer(m_VulkanData.commandBuffers[m_VulkanData.currentFrame], m_VulkanData.image_index);
-
 
     // VkSubmitInfo submitInfo{};
     // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -828,11 +824,12 @@ void VulkanRenderer::createSwapChain() {
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     QueueFamilyIndices indices = findQueueFamilies(m_VulkanData.physicalDevice);
-    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value(),
+                                     indices.computeFamily.value()};
 
-    if (indices.graphicsFamily != indices.presentFamily) {
+    if (indices.graphicsFamily != indices.presentFamily || indices.computeFamily != indices.graphicsFamily) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
+        createInfo.queueFamilyIndexCount = 3;
         createInfo.pQueueFamilyIndices = queueFamilyIndices;
     } else {
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -1827,29 +1824,43 @@ VulkanRenderer::QueueFamilyIndices VulkanRenderer::findQueueFamilies(VkPhysicalD
 
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
     int i = 0;
     for (const auto &queueFamily : queueFamilies) {
+        // Find graphics queue
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
         }
-        if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-            // Prefer a separate compute queue, but fall back to the same as graphics queue if necessary
-            if (!indices.computeFamily.has_value() ||
-                !(queueFamilies[indices.computeFamily.value()].queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
-                indices.computeFamily = i;
-            }
+
+        // Find dedicated compute queue (skip queues that also have VK_QUEUE_GRAPHICS_BIT)
+        if ((queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+            indices.computeFamily = i;
         }
+
+        // Find present queue
         VkBool32 presentSupport = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_VulkanData.surface, &presentSupport);
-
         if (presentSupport) {
             indices.presentFamily = i;
         }
+
+        // Check if we've found all required queue families
         if (indices.isComplete()) {
             break;
         }
         i++;
     }
+
+    // Fallback: If no dedicated compute queue was found, use the graphics queue for compute
+    if (!indices.computeFamily.has_value()) {
+        for (size_t j = 0; j < queueFamilies.size(); ++j) {
+            if (queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+                indices.computeFamily = j;
+                break;
+            }
+        }
+    }
+
     return indices;
 }
 
@@ -1986,7 +1997,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     VkDeviceSize offsets[] = {0};
 
-    if(entities.size() > 0) {
+    if (entities.size() > 0) {
         VkBuffer vertexBuffers[] = {m_VertexBuffer->GetVertexBuffer()};
         VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
@@ -2043,7 +2054,6 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
         // vkCmdDrawIndexed(commandBuffer, bufferInfo.indexCount, 1, 0, 0, 0);
         cnt++;
     }
-
 }
 
 void VulkanRenderer::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,
