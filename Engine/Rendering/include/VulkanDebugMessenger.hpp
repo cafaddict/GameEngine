@@ -25,10 +25,6 @@ class VulkanDebugMessenger {
                                        const VkAllocationCallbacks *pAllocator);
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
-#ifdef NDEBUG
-    const bool enableValidationLayers = false;
-#else
     const bool enableValidationLayers = true;
-#endif
 };
 } // namespace Engine

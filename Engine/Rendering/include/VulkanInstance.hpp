@@ -15,11 +15,9 @@ class VulkanInstance {
 
     private:
     VkInstance m_Instance;
-#ifdef NDEBUG
-    const bool enableValidationLayers = false;
-#else
+
     const bool enableValidationLayers = true;
-#endif
+#
     const std::vector<const char *> m_ValidationLayers = {"VK_LAYER_KHRONOS_validation"};
     bool checkValidationLayerSupport();
     std::vector<const char *> getRequiredExtensions();
