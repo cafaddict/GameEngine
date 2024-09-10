@@ -36,16 +36,16 @@ class ExampleLayer : public Engine::Layer {
     }
 };
 
-class Sandbox : public Engine::Application {
+class SandboxRefac : public Engine::Application {
     public:
-    Sandbox() {
+    SandboxRefac() {
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
 
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());
     }
-    ~Sandbox() {}
+    ~SandboxRefac() {}
 };
 extern Engine::Application *Engine::CreateApplication();
-Engine::Application *Engine::CreateApplication() { return new Sandbox(); }
+Engine::Application *Engine::CreateApplication() { return new SandboxRefac(); }

@@ -1,5 +1,4 @@
 #pragma once
-#include "vulkan/vulkan_core.h"
 #include <VulkanInstance.hpp>
 #include <memory>
 #include <vulkan/vulkan.h>

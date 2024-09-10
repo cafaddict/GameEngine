@@ -1,3 +1,4 @@
+#include "Log.hpp"
 #include "VulkanDebugMessenger.hpp"
 #include "VulkanInstance.hpp"
 #include <VulkanRenderer.hpp>
@@ -23,8 +24,15 @@ VulkanRenderer_refac::~VulkanRenderer_refac() {
 
 // Init implementation to set up Vulkan instance and debug messenger
 void VulkanRenderer_refac::Init() {
+    ENGINE_WARN("Vulkan Renderer Init");
     m_Instance = std::make_shared<VulkanInstance>();
+    ENGINE_WARN("Vulkan Instance Created");
     m_DebugMessenger = std::make_shared<VulkanDebugMessenger>(m_Instance);
+    ENGINE_WARN("Vulkan Debug Messenger Created");
+    m_Device = std::make_shared<VulkanDevice>(m_Instance, m_Window);
+    ENGINE_WARN("Vulkan Device Created");
+    m_SwapChain = std::make_shared<VulkanSwapChain>(m_Device, m_Window);
+    ENGINE_WARN("Vulkan Swap Chain Created");
 }
 
 // Implement pure virtual function from Renderer
@@ -40,11 +48,6 @@ void VulkanRenderer_refac::SetWindowMinimized(bool minimized) {
 // Implement pure virtual function from Renderer
 void VulkanRenderer_refac::WaitIdle() {
     // Implement Vulkan logic to wait for GPU operations to finish
-}
-
-// Implement pure virtual function from Renderer (empty for now)
-void VulkanRenderer_refac::addModel(std::string model_path) {
-    // Logic to load a model can be added here
 }
 
 // Implement pure virtual function from Renderer
