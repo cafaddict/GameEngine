@@ -68,6 +68,7 @@ class VulkanDevice {
     int rateDeviceSuitability(const VkPhysicalDevice &device);
     queueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device);
     VkSampleCountFlagBits getMaxUsableSampleCount(const VkPhysicalDevice &device);
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
 
 } // namespace Engine

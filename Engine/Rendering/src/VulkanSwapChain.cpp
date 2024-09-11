@@ -122,7 +122,7 @@ VkImageView VulkanSwapChain::createImageView(VkImage image, VkFormat format, VkI
     viewInfo.subresourceRange.layerCount = 1;
     VkImageView imageView;
     if (vkCreateImageView(m_Device->getLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create texture image view!");
+        throw std::runtime_error("Failed to create image view!");
     }
     return imageView;
 }

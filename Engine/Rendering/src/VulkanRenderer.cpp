@@ -33,6 +33,10 @@ void VulkanRenderer_refac::Init() {
     ENGINE_WARN("Vulkan Device Created");
     m_SwapChain = std::make_shared<VulkanSwapChain>(m_Device, m_Window);
     ENGINE_WARN("Vulkan Swap Chain Created");
+    m_RenderPass = std::make_shared<VulkanRenderPass>(m_Device, m_SwapChain);
+    ENGINE_WARN("Vulkan Render Pass Created");
+    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain, m_RenderPass);
+    ENGINE_WARN("Vulkan Frame Buffer Created");
 }
 
 // Implement pure virtual function from Renderer

@@ -11,6 +11,9 @@ class VulkanRenderPass {
 
     VkRenderPass getRenderPass() { return m_RenderPass; }
 
+    VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
+                                 VkFormatFeatureFlags features);
+
     private:
     void createRenderPass();
     std::shared_ptr<VulkanDevice> m_Device;

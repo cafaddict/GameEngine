@@ -1,6 +1,4 @@
 #pragma once
-
-#include "VulkanSwapChain.hpp"
 #define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE
 
@@ -12,6 +10,9 @@
 #include <VulkanDebugMessenger.hpp>
 #include <VulkanInstance.hpp>
 #include "VulkanDevice.hpp"
+#include "VulkanRenderPass.hpp"
+#include "VulkanSwapChain.hpp"
+#include "VulkanFrameBuffer.hpp"
 
 #include <memory>
 
@@ -23,6 +24,8 @@ class VulkanRenderer_refac : public Renderer {
     GLFWwindow *m_Window = nullptr;
     std::shared_ptr<VulkanDevice> m_Device;
     std::shared_ptr<VulkanSwapChain> m_SwapChain;
+    std::shared_ptr<VulkanRenderPass> m_RenderPass;
+    std::shared_ptr<VulkanFrameBuffer> m_FrameBuffer;
 
     public:
     // Constructor that initializes the window and Vulkan objects
