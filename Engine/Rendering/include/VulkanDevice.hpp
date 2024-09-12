@@ -39,12 +39,14 @@ class VulkanDevice {
     VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice; }
     VkSurfaceKHR getSurface() const { return m_Surface; }
     VkSampleCountFlagBits getMsaaSamples() const { return m_MsaaSamples; }
+    queueFamilyIndices getQueueFamilyIndices() const { return m_QueueFamilyIndices; }
 
     private:
     VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
     VkDevice m_LogicalDevice;
     VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
     VkSampleCountFlagBits m_MsaaSamples;
+    queueFamilyIndices m_QueueFamilyIndices;
 
     VkQueue m_GraphicsQueue;
     VkQueue m_ComputeQueue;

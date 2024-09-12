@@ -38,10 +38,10 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 }
 
 // With window
-Renderer *Renderer::Create(GLFWwindow *window) {
-    ENGINE_WARN("Vulkan Renderer Creation");
-    return new VulkanRenderer(window);
-}
+// Renderer *Renderer::Create(GLFWwindow *window) {
+//     ENGINE_WARN("Vulkan Renderer Creation");
+//     return new VulkanRenderer(window);
+// }
 
 VulkanRenderer::VulkanRenderer(GLFWwindow *window) {
     SetWindow(window);

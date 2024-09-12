@@ -13,12 +13,19 @@
 #include "VulkanRenderPass.hpp"
 #include "VulkanSwapChain.hpp"
 #include "VulkanFrameBuffer.hpp"
+#include "EntityManager.hpp"
+#include "VulkanCommandBuffer.hpp"
+#include "VulkanGraphicsPipeline.hpp"
 
 #include <memory>
 
 namespace Engine {
 class VulkanRenderer_refac : public Renderer {
     private:
+    std::shared_ptr<EntityManager> m_EntityManager;
+    std::unordered_map<VulkanShadersData, VulkanGraphicsPipeline, ShaderDataHash> m_PipelineCache;
+    std::unordered_map<std::shared_ptr<Entity>, VulkanGraphicsPipeline> m_EntityPipelines;
+
     std::shared_ptr<VulkanInstance> m_Instance;
     std::shared_ptr<VulkanDebugMessenger> m_DebugMessenger;
     GLFWwindow *m_Window = nullptr;
@@ -26,10 +33,14 @@ class VulkanRenderer_refac : public Renderer {
     std::shared_ptr<VulkanSwapChain> m_SwapChain;
     std::shared_ptr<VulkanRenderPass> m_RenderPass;
     std::shared_ptr<VulkanFrameBuffer> m_FrameBuffer;
+    std::shared_ptr<VulkanCommandBuffer> m_CommandBuffer;
+    std::shared_ptr<VulkanCommandBuffer> m_ComputeCommandBuffer;
+    std::shared_ptr<VulkanCommandBuffer> m_TransferCommandBuffer;
 
     public:
     // Constructor that initializes the window and Vulkan objects
     VulkanRenderer_refac(GLFWwindow *window);
+    void createEntityResources();
 
     // Destructor
     virtual ~VulkanRenderer_refac();
@@ -40,6 +51,7 @@ class VulkanRenderer_refac : public Renderer {
     virtual void SetWindowResized(bool resized) override;
     virtual void SetWindowMinimized(bool minimized) override;
     virtual void WaitIdle() override;
+    void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) { m_EntityManager = entitymanager; }
 
     private:
     // Initializes Vulkan instance and debug messenger

@@ -43,6 +43,7 @@ void VulkanDevice::pickPhysicalDevice() {
 
 void VulkanDevice::createLogicalDevice() {
     queueFamilyIndices indices = findQueueFamilies(m_PhysicalDevice);
+    m_QueueFamilyIndices = indices;
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.computeFamily.value(),
                                               indices.transferFamily.value()};
