@@ -3,12 +3,15 @@
 #include "VulkanDevice.hpp"
 #include "VulkanRenderPass.hpp"
 #include "VulkanSwapChain.hpp"
+#include "vulkan/vulkan_core.h"
 namespace Engine {
 class VulkanFrameBuffer {
     public:
     VulkanFrameBuffer(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanSwapChain> swapChain,
                       std::shared_ptr<VulkanRenderPass> renderPass);
     ~VulkanFrameBuffer();
+
+    std::vector<VkFramebuffer> getFrameBuffers() { return m_FrameBuffers; }
 
     private:
     std::shared_ptr<VulkanDevice> m_Device;

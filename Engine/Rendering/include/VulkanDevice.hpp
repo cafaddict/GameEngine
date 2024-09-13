@@ -41,6 +41,11 @@ class VulkanDevice {
     VkSampleCountFlagBits getMsaaSamples() const { return m_MsaaSamples; }
     queueFamilyIndices getQueueFamilyIndices() const { return m_QueueFamilyIndices; }
 
+    VkQueue getGraphicsQueue() const { return m_GraphicsQueue; }
+    VkQueue getComputeQueue() const { return m_ComputeQueue; }
+    VkQueue getTransferQueue() const { return m_TransferQueue; }
+    VkQueue getPresentQueue() const { return m_PresentQueue; }
+
     private:
     VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
     VkDevice m_LogicalDevice;

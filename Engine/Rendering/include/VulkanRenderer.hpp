@@ -1,4 +1,6 @@
 #pragma once
+#include "VulkanBuffer.hpp"
+#include <_types/_uint32_t.h>
 #define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE
 
@@ -16,6 +18,7 @@
 #include "EntityManager.hpp"
 #include "VulkanCommandBuffer.hpp"
 #include "VulkanGraphicsPipeline.hpp"
+#include "VulkanSyncObject.hpp"
 
 #include <memory>
 
@@ -36,6 +39,18 @@ class VulkanRenderer_refac : public Renderer {
     std::shared_ptr<VulkanCommandBuffer> m_CommandBuffer;
     std::shared_ptr<VulkanCommandBuffer> m_ComputeCommandBuffer;
     std::shared_ptr<VulkanCommandBuffer> m_TransferCommandBuffer;
+    std::shared_ptr<VulkanSemaphore> m_ImageAvailableSemaphore;
+    std::shared_ptr<VulkanSemaphore> m_RenderFinishedSemaphore;
+    std::shared_ptr<VulkanSemaphore> m_ComputeFinishedSemaphore;
+    std::shared_ptr<VulkanSemaphore> m_TransferFinishedSemaphore;
+    std::shared_ptr<VulkanFence> m_InFlightFences;
+    std::shared_ptr<VulkanFence> m_ComputeFences;
+    uint32_t m_CurrentFrame = 0;
+    uint32_t m_ImageIndex = 0;
+
+    std::shared_ptr<VulkanVertexBuffer> m_VertexBuffer;
+    std::shared_ptr<VulkanIndexBuffer> m_IndexBuffer;
+    std::shared_ptr<VulkanUniformBuffer> m_UniformBuffers;
 
     public:
     // Constructor that initializes the window and Vulkan objects
@@ -47,6 +62,8 @@ class VulkanRenderer_refac : public Renderer {
 
     // Pure virtual functions from Renderer that must be overridden
     virtual void Draw() override;
+    virtual void BeginRecord() override;
+    virtual void EndRecord() override;
     virtual void SetWindow(GLFWwindow *window) override { m_Window = window; }
     virtual void SetWindowResized(bool resized) override;
     virtual void SetWindowMinimized(bool minimized) override;

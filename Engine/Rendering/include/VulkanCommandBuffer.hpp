@@ -23,5 +23,7 @@ class VulkanCommandBuffer {
     void createCommandPool(std::shared_ptr<VulkanDevice> device, uint32_t queueFamiliyValue);
 
     void createCommandBuffers(uint32_t max_frames_in_flight);
+
+    void recordCommandBuffers();
 };
 } // namespace Engine

@@ -16,7 +16,6 @@ VulkanSwapChain::~VulkanSwapChain() {
 }
 
 void VulkanSwapChain::createSwapChain() {
-    ENGINE_WARN("Creating swap chain");
     SwapChainSupportDetails swapChainSupport = m_Device->querySwapChainSupport(m_Device->getPhysicalDevice());
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);

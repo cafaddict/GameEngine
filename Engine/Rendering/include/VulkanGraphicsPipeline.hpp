@@ -5,6 +5,8 @@
 #include "VulkanDevice.hpp"
 #include "VulkanRenderPass.hpp"
 #include "vulkan/vulkan_core.h"
+#include "VulkanBaseVertex.hpp"
+#include "VulkanVertex.hpp"
 namespace Engine {
 
 struct VulkanShadersData {
@@ -43,20 +45,29 @@ struct ShaderDataHash {
 class VulkanGraphicsPipeline {
     public:
     VulkanGraphicsPipeline() = default; // Default constructor
+
     VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
-                           VulkanShadersData shaders);
+                           VulkanShadersData shaders, VulkanBaseVertex &vertexType);
     ~VulkanGraphicsPipeline();
 
     private:
     std::shared_ptr<VulkanDevice> m_Device;
     std::shared_ptr<VulkanRenderPass> m_RenderPass;
+    VulkanShadersData m_Shaders;
 
-    VkPipeline m_GraphicsPipeline;
-    VkPipelineLayout m_PipelineLayout;
-    // VkDescriptorSetLayout m_DescriptorsetLayout;
+    VkPipeline m_GraphicsPipeline = VK_NULL_HANDLE;
+    VkPipeline m_ComputePipeline = VK_NULL_HANDLE;
+    VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+    VkPipelineLayout m_ComputePipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout m_DescriptorsetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout m_ComputeDescriptorsetLayout = VK_NULL_HANDLE;
 
-    void createGraphicsPipeline(VulkanShadersData shaders);
+    void createGraphicsPipeline(VulkanShadersData shaders, VulkanBaseVertex &vertexType);
+    void createComputePipeline(VulkanShadersData shaders);
+
     VkShaderModule createShaderModule(const std::vector<char> &code);
-    void createPipelineLayout();
+    void createPipelineLayout(VkDescriptorSetLayout &descriptorSetLayout);
+    void createDescriptorSetLayout();
+    void createComputeDescriptorSetLayout();
 };
 } // namespace Engine

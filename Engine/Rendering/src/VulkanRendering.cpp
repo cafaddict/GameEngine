@@ -117,7 +117,7 @@ void VulkanRenderer::recreateSwapChain() {
     createFramebuffer();
     createGUIFramebuffer();
 }
-
+void VulkanRenderer::EndRecord() {}
 void VulkanRenderer::BeginRecord() {
 
     vkWaitForFences(m_VulkanData.device, 1, &m_VulkanData.inFlightFences[m_VulkanData.currentFrame], VK_TRUE,

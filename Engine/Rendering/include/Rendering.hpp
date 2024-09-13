@@ -11,6 +11,8 @@ class Renderer {
     virtual ~Renderer() {}
     virtual void Init() = 0;
     virtual void Draw() = 0;
+    virtual void BeginRecord() = 0;
+    virtual void EndRecord() = 0;
 
     // virtual void addParticles(std::vector<Particle> particles) = 0;
     virtual void SetWindow(GLFWwindow *window) = 0;

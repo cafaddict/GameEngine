@@ -97,6 +97,9 @@ class VulkanRenderer : public Renderer {
     void addModel(std::string model_path);
     // virtual void addParticles(std::vector<Particle> particles) override;
     virtual void Draw() override;
+    virtual void EndRecord() override;
+    // virtual void BeginRecord() override;
+
     void SetWindow(GLFWwindow *window) override { m_VulkanData.window = window; }
     virtual void SetWindowResized(bool resized) override { m_VulkanData.framebufferResized = resized; }
     virtual void SetWindowMinimized(bool minimized) override { m_VulkanData.minimized = minimized; }
