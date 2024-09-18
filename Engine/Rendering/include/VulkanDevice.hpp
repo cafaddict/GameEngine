@@ -8,8 +8,8 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
-#include <vulkan/vulkan.h>
 #include <optional>
+#include <vulkan/vulkan.h>
 
 struct queueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -18,8 +18,8 @@ struct queueFamilyIndices {
     std::optional<uint32_t> presentFamily;
 
     bool isComplete() {
-        return graphicsFamily.has_value() && computeFamily.has_value() && transferFamily.has_value() &&
-               presentFamily.has_value();
+        return graphicsFamily.has_value() && computeFamily.has_value() &&
+               transferFamily.has_value() && presentFamily.has_value();
     }
 };
 
@@ -31,7 +31,7 @@ struct SwapChainSupportDetails {
 
 namespace Engine {
 class VulkanDevice {
-    public:
+  public:
     VulkanDevice(std::shared_ptr<VulkanInstance> instance, GLFWwindow *window);
     ~VulkanDevice();
 
@@ -39,14 +39,16 @@ class VulkanDevice {
     VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice; }
     VkSurfaceKHR getSurface() const { return m_Surface; }
     VkSampleCountFlagBits getMsaaSamples() const { return m_MsaaSamples; }
-    queueFamilyIndices getQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+    queueFamilyIndices getQueueFamilyIndices() const {
+        return m_QueueFamilyIndices;
+    }
 
     VkQueue getGraphicsQueue() const { return m_GraphicsQueue; }
     VkQueue getComputeQueue() const { return m_ComputeQueue; }
     VkQueue getTransferQueue() const { return m_TransferQueue; }
     VkQueue getPresentQueue() const { return m_PresentQueue; }
 
-    private:
+  private:
     VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
     VkDevice m_LogicalDevice;
     VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
@@ -61,21 +63,25 @@ class VulkanDevice {
     std::shared_ptr<VulkanInstance> m_Instance;
     GLFWwindow *m_Window;
 
-    const std::vector<const char *> m_DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    const std::vector<const char *> m_DeviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
-    private:
+  private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createSurface();
 
-    public:
+  public:
     bool isDeviceSuitable(const VkPhysicalDevice &device);
     bool checkDeviceExtensionSupport(const VkPhysicalDevice &device);
-    SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice &device);
+    SwapChainSupportDetails
+    querySwapChainSupport(const VkPhysicalDevice &device);
     int rateDeviceSuitability(const VkPhysicalDevice &device);
     queueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device);
-    VkSampleCountFlagBits getMaxUsableSampleCount(const VkPhysicalDevice &device);
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    VkSampleCountFlagBits
+    getMaxUsableSampleCount(const VkPhysicalDevice &device);
+    uint32_t findMemoryType(uint32_t typeFilter,
+                            VkMemoryPropertyFlags properties);
 };
 
 } // namespace Engine

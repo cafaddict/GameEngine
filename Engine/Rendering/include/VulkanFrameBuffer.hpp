@@ -1,6 +1,9 @@
+#pragma once
+#include <cstddef>
 #include <vulkan/vulkan.h>
 #include <memory>
 #include "VulkanDevice.hpp"
+#include "VulkanImage.hpp"
 #include "VulkanRenderPass.hpp"
 #include "VulkanSwapChain.hpp"
 #include "vulkan/vulkan_core.h"
@@ -20,6 +23,8 @@ class VulkanFrameBuffer {
 
     std::vector<VkFramebuffer> m_FrameBuffers;
     VkExtent2D m_Extent;
+    std::shared_ptr<VulkanImage> m_ColorImage;
+    std::shared_ptr<VulkanImage> m_DepthImage;
 
     void createFrameBuffer();
 };

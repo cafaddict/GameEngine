@@ -1,5 +1,7 @@
 #include "VulkanGraphicsPipeline.hpp"
 #include "vulkan/vulkan_core.h"
+#include "Log.hpp"
+#include <array>
 namespace Engine {
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device,
@@ -16,6 +18,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> dev
     createGraphicsPipeline(shaders, inputStruct);
 }
 VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
+    ENGINE_INFO("VulaknGraphicsPipeline is destroyed");
     vkDestroyPipeline(m_Device->getLogicalDevice(), m_GraphicsPipeline, nullptr);
     vkDestroyPipelineLayout(m_Device->getLogicalDevice(), m_PipelineLayout, nullptr);
     vkDestroyDescriptorSetLayout(m_Device->getLogicalDevice(), m_DescriptorsetLayout, nullptr);

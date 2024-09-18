@@ -35,24 +35,24 @@ class ExampleLayer : public Engine::Layer {
 
         renderer->SetEntityManager(m_EntityManager);
 
-        std::string modelPah = "../../resources/models/viking_room.obj";
-        auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
-        auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
+        // std::string modelPah = "../../resources/models/viking_room.obj";
+        // auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
+        // auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
 
-        std::string texturePath = "../../resources/models/viking_room.png";
-        auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
-        auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+        // std::string texturePath = "../../resources/models/viking_room.png";
+        // auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
+        // auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
-        std::string vertexShaderPath = "../../resources/shaders/vert.spv";
-        std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
-        auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
-        auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
-        auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
+        // std::string vertexShaderPath = "../../resources/shaders/vert.spv";
+        // std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
+        // auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
+        // auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
+        // auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
 
-        auto entity1 = m_EntityManager->CreateEntity("entity1");
-        entity1->AddComponent(modelComponent);
-        entity1->AddComponent(textureComponent);
-        entity1->AddComponent(shaderComponent);
+        // auto entity1 = m_EntityManager->CreateEntity("entity1");
+        // entity1->AddComponent(modelComponent);
+        // entity1->AddComponent(textureComponent);
+        // entity1->AddComponent(shaderComponent);
 
         renderer->createEntityResources();
     }

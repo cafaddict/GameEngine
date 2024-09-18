@@ -1,5 +1,5 @@
 #include "VulkanImage.hpp"
-#include "vulkan/vulkan_core.h"
+#include "Log.hpp"
 namespace Engine {
 VulkanImage::VulkanImage(std::shared_ptr<VulkanDevice> device, VkImageCreateInfo imageInfo,
                          VkMemoryPropertyFlags property, VkImageAspectFlags aspectFlags)
@@ -8,6 +8,7 @@ VulkanImage::VulkanImage(std::shared_ptr<VulkanDevice> device, VkImageCreateInfo
     m_ImageView = createImageView(m_Image, imageInfo.format, aspectFlags, imageInfo.mipLevels);
 }
 VulkanImage::~VulkanImage() {
+    ENGINE_INFO("Vulkan Image Destroyted");
     vkDestroyImageView(m_Device->getLogicalDevice(), m_ImageView, nullptr);
     vkDestroyImage(m_Device->getLogicalDevice(), m_Image, nullptr);
     vkFreeMemory(m_Device->getLogicalDevice(), m_ImageMemory, nullptr);
@@ -42,7 +43,7 @@ VkImageView VulkanImage::createImageView(VkImage image, VkFormat format, VkImage
     viewInfo.subresourceRange.layerCount = 1;
     VkImageView imageView;
     if (vkCreateImageView(m_Device->getLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create texture image view!");
+        throw std::runtime_error("Failed to create image view!");
     }
     return imageView;
 }

@@ -6,6 +6,7 @@
 namespace Engine {
 class VulkanImage {
     public:
+    VulkanImage() = default;
     VulkanImage(std::shared_ptr<VulkanDevice> device, VkImageCreateInfo imageInfo, VkMemoryPropertyFlags property,
                 VkImageAspectFlags aspectFlags);
     ~VulkanImage();

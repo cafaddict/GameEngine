@@ -33,10 +33,10 @@ void Application::OnEvent(Event &e) {
 
 void Application::run() {
     while (m_Running) {
-        // m_Renderer->BeginRecord();
+        m_Renderer->BeginRecord();
         for (Layer *layer : m_LayerStack)
             layer->OnUpdate();
-        // m_Renderer->EndRecord();
+        m_Renderer->EndRecord();
 
         m_Window->OnUpdate();
 

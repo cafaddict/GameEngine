@@ -48,6 +48,7 @@ VulkanDebugMessenger::VulkanDebugMessenger(std::shared_ptr<VulkanInstance> insta
 }
 
 VulkanDebugMessenger::~VulkanDebugMessenger() {
+    ENGINE_INFO("VulkanDebugMessenger destroyed");
     if (enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(m_Instance->getInstance(), m_DebugMessenger, nullptr);
     }

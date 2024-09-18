@@ -14,6 +14,7 @@ VulkanDevice::VulkanDevice(std::shared_ptr<VulkanInstance> instance, GLFWwindow 
 }
 
 VulkanDevice::~VulkanDevice() {
+    ENGINE_TRACE("VulkanDevice is destroyed");
     vkDestroyDevice(m_LogicalDevice, nullptr);
     vkDestroySurfaceKHR(m_Instance->getInstance(), m_Surface, nullptr);
 }

@@ -9,6 +9,7 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<VulkanDevice> device, GLFWwindo
     createImageViews();
 }
 VulkanSwapChain::~VulkanSwapChain() {
+    ENGINE_INFO("VulkanSwapChain is destroyed");
     for (auto imageView : m_SwapChainImageViews) {
         vkDestroyImageView(m_Device->getLogicalDevice(), imageView, nullptr);
     }
@@ -26,6 +27,7 @@ void VulkanSwapChain::createSwapChain() {
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
         imageCount = swapChainSupport.capabilities.maxImageCount;
     }
+  
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = m_Device->getSurface();
@@ -53,12 +55,12 @@ void VulkanSwapChain::createSwapChain() {
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
-    m_SwapChain;
     if (vkCreateSwapchainKHR(m_Device->getLogicalDevice(), &createInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create swap chain!");
     }
 
     vkGetSwapchainImagesKHR(m_Device->getLogicalDevice(), m_SwapChain, &imageCount, nullptr);
+    m_SwapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(m_Device->getLogicalDevice(), m_SwapChain, &imageCount, m_SwapChainImages.data());
 
     m_SwapChainImageFormat = surfaceFormat.format;

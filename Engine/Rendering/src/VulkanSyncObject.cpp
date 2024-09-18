@@ -1,6 +1,7 @@
 #include "VulkanSyncObject.hpp"
 #include "VulkanDevice.hpp"
 #include <memory>
+#include "Log.hpp"
 namespace Engine {
 VulkanSemaphore::VulkanSemaphore(std::shared_ptr<VulkanDevice> device, uint32_t max_frames_in_flight)
     : m_Device(device) {
@@ -14,6 +15,7 @@ VulkanSemaphore::VulkanSemaphore(std::shared_ptr<VulkanDevice> device, uint32_t 
     }
 }
 VulkanSemaphore::~VulkanSemaphore() {
+    ENGINE_INFO("VulkanSemaphore is destroyed");
     for (auto semaphore : m_Semaphores) {
         vkDestroySemaphore(m_Device->getLogicalDevice(), semaphore, nullptr);
     }
@@ -30,6 +32,7 @@ VulkanFence::VulkanFence(std::shared_ptr<VulkanDevice> device, uint32_t max_fram
     }
 }
 VulkanFence::~VulkanFence() {
+    ENGINE_INFO("VulkanFence is destroyed");
     for (auto fence : m_Fences) {
         vkDestroyFence(m_Device->getLogicalDevice(), fence, nullptr);
     }

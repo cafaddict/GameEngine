@@ -47,6 +47,8 @@ class VulkanRenderer_refac : public Renderer {
     std::shared_ptr<VulkanFence> m_ComputeFences;
     uint32_t m_CurrentFrame = 0;
     uint32_t m_ImageIndex = 0;
+    bool m_Minimizied = false;
+    bool m_Resized = false;
 
     std::shared_ptr<VulkanVertexBuffer> m_VertexBuffer;
     std::shared_ptr<VulkanIndexBuffer> m_IndexBuffer;
@@ -69,6 +71,7 @@ class VulkanRenderer_refac : public Renderer {
     virtual void SetWindowMinimized(bool minimized) override;
     virtual void WaitIdle() override;
     void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) { m_EntityManager = entitymanager; }
+    void recreateSwapChain();
 
     private:
     // Initializes Vulkan instance and debug messenger
