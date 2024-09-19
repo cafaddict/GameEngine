@@ -49,6 +49,8 @@ class VulkanGraphicsPipeline {
     VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
                            VulkanShadersData shaders, VulkanBaseVertex &vertexType);
     ~VulkanGraphicsPipeline();
+    VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorsetLayout; }
+    VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
 
     private:
     std::shared_ptr<VulkanDevice> m_Device;
@@ -61,6 +63,7 @@ class VulkanGraphicsPipeline {
     VkPipelineLayout m_ComputePipelineLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_DescriptorsetLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_ComputeDescriptorsetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 
     void createGraphicsPipeline(VulkanShadersData shaders, VulkanBaseVertex &vertexType);
     void createComputePipeline(VulkanShadersData shaders);
@@ -68,6 +71,7 @@ class VulkanGraphicsPipeline {
     VkShaderModule createShaderModule(const std::vector<char> &code);
     void createPipelineLayout(VkDescriptorSetLayout &descriptorSetLayout);
     void createDescriptorSetLayout();
+    void createDescriptorPool();
     void createComputeDescriptorSetLayout();
 };
 } // namespace Engine

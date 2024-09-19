@@ -1,4 +1,5 @@
 #include "VulkanRenderer.hpp"
+#include <memory>
 #define GLFW_INCLUDE_NONE
 #include <AssetManager.hpp>
 #include <Engine.hpp>
@@ -47,7 +48,8 @@ class ExampleLayer : public Engine::Layer {
         // std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
         // auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         // auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
-        // auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
+        // auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData,
+        // nullptr);
 
         // auto entity1 = m_EntityManager->CreateEntity("entity1");
         // entity1->AddComponent(modelComponent);

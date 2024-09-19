@@ -2,6 +2,7 @@
 #include "ModelComponent.hpp"
 #include "ShaderComponent.hpp"
 #include "TextureComponent.hpp"
+#include "TransformComponent.hpp"
 #include "VulkanDebugMessenger.hpp"
 #include "VulkanGraphicsPipeline.hpp"
 #include "VulkanInstance.hpp"
@@ -11,7 +12,9 @@
 #include "VulkanVertex.hpp"
 #include "vulkan/vulkan_core.h"
 #include <VulkanRenderer.hpp>
+#include <cstddef>
 #include <memory>
+#include "VulkanBuffer_refac.hpp"
 #define MAX_FRAMES_IN_FLIGHT 2
 namespace Engine {
 
@@ -51,44 +54,37 @@ void VulkanRenderer_refac::Init() {
     m_RenderPass = std::make_shared<VulkanRenderPass>(m_Device, m_SwapChain);
     ENGINE_INFO("Vulkan Render Pass Created");
 
-    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain,
-                                                        m_RenderPass);
+    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain, m_RenderPass);
     ENGINE_INFO("Vulkan Frame Buffer Created");
 
-    m_CommandBuffer = std::make_shared<VulkanCommandBuffer>(
-        m_Device, m_Device->getQueueFamilyIndices().graphicsFamily.value());
+    m_CommandBuffer =
+        std::make_shared<VulkanCommandBuffer>(m_Device, m_Device->getQueueFamilyIndices().graphicsFamily.value());
     ENGINE_INFO("Vulkan Command Buffer Created");
 
-    m_ComputeCommandBuffer = std::make_shared<VulkanCommandBuffer>(
-        m_Device, m_Device->getQueueFamilyIndices().computeFamily.value());
+    m_ComputeCommandBuffer =
+        std::make_shared<VulkanCommandBuffer>(m_Device, m_Device->getQueueFamilyIndices().computeFamily.value());
     ENGINE_INFO("Vulkan Compute Command Buffer Created");
 
-    m_TransferCommandBuffer = std::make_shared<VulkanCommandBuffer>(
-        m_Device, m_Device->getQueueFamilyIndices().transferFamily.value());
+    m_TransferCommandBuffer =
+        std::make_shared<VulkanCommandBuffer>(m_Device, m_Device->getQueueFamilyIndices().transferFamily.value());
     ENGINE_INFO("Vulkan Transfer Command Buffer Created");
 
-    m_ImageAvailableSemaphore =
-        std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
+    m_ImageAvailableSemaphore = std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Image Available Semaphore Created");
 
-    m_RenderFinishedSemaphore =
-        std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
+    m_RenderFinishedSemaphore = std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Render Finished Semaphore Created");
 
-    m_ComputeFinishedSemaphore =
-        std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
+    m_ComputeFinishedSemaphore = std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Compute Finished Semaphore Created");
 
-    m_TransferFinishedSemaphore =
-        std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
+    m_TransferFinishedSemaphore = std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Transfer Finished Semaphore Created");
 
-    m_InFlightFences =
-        std::make_shared<VulkanFence>(m_Device, MAX_FRAMES_IN_FLIGHT);
+    m_InFlightFences = std::make_shared<VulkanFence>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan In Flight Fences Created");
 
-    m_ComputeFences =
-        std::make_shared<VulkanFence>(m_Device, MAX_FRAMES_IN_FLIGHT);
+    m_ComputeFences = std::make_shared<VulkanFence>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Compute Fences Created");
 }
 
@@ -112,13 +108,11 @@ void VulkanRenderer_refac::WaitIdle() {
 // Implement pure virtual function from Renderer
 void VulkanRenderer_refac::Draw() {}
 void VulkanRenderer_refac::BeginRecord() {
-    vkWaitForFences(m_Device->getLogicalDevice(), 1,
-                    &m_InFlightFences->getFence()[m_CurrentFrame], VK_TRUE,
+    vkWaitForFences(m_Device->getLogicalDevice(), 1, &m_InFlightFences->getFence()[m_CurrentFrame], VK_TRUE,
                     UINT64_MAX);
-    VkResult result = vkAcquireNextImageKHR(
-        m_Device->getLogicalDevice(), m_SwapChain->getSwapChain(), UINT64_MAX,
-        m_ImageAvailableSemaphore->getSemaphore()[m_CurrentFrame],
-        VK_NULL_HANDLE, &m_ImageIndex);
+    VkResult result =
+        vkAcquireNextImageKHR(m_Device->getLogicalDevice(), m_SwapChain->getSwapChain(), UINT64_MAX,
+                              m_ImageAvailableSemaphore->getSemaphore()[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapChain();
         return;
@@ -126,19 +120,15 @@ void VulkanRenderer_refac::BeginRecord() {
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
-    vkResetFences(m_Device->getLogicalDevice(), 1,
-                  &m_InFlightFences->getFence()[m_CurrentFrame]);
-    vkResetCommandBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
-                         0);
+    vkResetFences(m_Device->getLogicalDevice(), 1, &m_InFlightFences->getFence()[m_CurrentFrame]);
+    vkResetCommandBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0);
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = 0;                  // Optional
     beginInfo.pInheritanceInfo = nullptr; // Optional
 
-    if (vkBeginCommandBuffer(
-            m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], &beginInfo) !=
-        VK_SUCCESS) {
+    if (vkBeginCommandBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
 
@@ -154,38 +144,31 @@ void VulkanRenderer_refac::BeginRecord() {
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
 
-    vkCmdBeginRenderPass(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
-                         &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], &renderPassInfo,
+                         VK_SUBPASS_CONTENTS_INLINE);
 }
 void VulkanRenderer_refac::EndRecord() {
     vkCmdEndRenderPass(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame]);
-    if (vkEndCommandBuffer(
-            m_CommandBuffer->getCommandBuffers()[m_CurrentFrame]) !=
-        VK_SUCCESS) {
+    if (vkEndCommandBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");
     }
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    VkSemaphore waitSemaphores[] = {
-        m_ImageAvailableSemaphore->getSemaphore()[m_CurrentFrame]};
-    VkPipelineStageFlags waitStages[] = {
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    VkSemaphore waitSemaphores[] = {m_ImageAvailableSemaphore->getSemaphore()[m_CurrentFrame]};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
 
-    submitInfo.pCommandBuffers =
-        &m_CommandBuffer->getCommandBuffers()[m_CurrentFrame];
+    submitInfo.pCommandBuffers = &m_CommandBuffer->getCommandBuffers()[m_CurrentFrame];
 
-    VkSemaphore signalSemaphores[] = {
-        m_RenderFinishedSemaphore->getSemaphore()[m_CurrentFrame]};
+    VkSemaphore signalSemaphores[] = {m_RenderFinishedSemaphore->getSemaphore()[m_CurrentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(m_Device->getGraphicsQueue(), 1, &submitInfo,
-                      m_InFlightFences->getFence()[m_CurrentFrame]) !=
+    if (vkQueueSubmit(m_Device->getGraphicsQueue(), 1, &submitInfo, m_InFlightFences->getFence()[m_CurrentFrame]) !=
         VK_SUCCESS) {
         throw std::runtime_error("Failed to submit draw command buffer!");
     }
@@ -201,11 +184,9 @@ void VulkanRenderer_refac::EndRecord() {
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &m_ImageIndex;
     presentInfo.pResults = nullptr; // Optional
-    VkResult result =
-        vkQueuePresentKHR(m_Device->getPresentQueue(), &presentInfo);
+    VkResult result = vkQueuePresentKHR(m_Device->getPresentQueue(), &presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-        m_Resized) {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_Resized) {
         m_Resized = false;
         recreateSwapChain();
     } else if (result != VK_SUCCESS) {
@@ -230,8 +211,7 @@ void VulkanRenderer_refac::recreateSwapChain() {
     m_RenderPass = std::make_shared<VulkanRenderPass>(m_Device, m_SwapChain);
     ENGINE_INFO("Vulkan Render Pass ReCreated");
 
-    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain,
-                                                        m_RenderPass);
+    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain, m_RenderPass);
     ENGINE_INFO("Vulkan Frame Buffer ReCreated");
 }
 
@@ -241,37 +221,29 @@ void VulkanRenderer_refac::createEntityResources() {
     uint32_t currentIndexOffset = 0;
 
     auto entities = m_EntityManager->GetAllEntities();
-
+    std::vector<VulkanVertex> vertices;
+    std::vector<uint32_t> indices;
+    std::vector<glm::mat4> transformations;
     for (auto &entity : entities) {
-        auto model_data =
-            entity->GetComponent<ModelComponent>()->GetModelData();
-        auto texture_data =
-            entity->GetComponent<TextureComponent>()->GetTextureData();
-        auto vertex_shader_data =
-            entity->GetComponent<ShaderComponent>()->GetVertexShader();
-        auto fragment_shader_data =
-            entity->GetComponent<ShaderComponent>()->GetFragmentShader();
-        auto compute_shader_data =
-            entity->GetComponent<ShaderComponent>()->GetComputeShader();
+        auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
+        auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+        auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
+        auto fragment_shader_data = entity->GetComponent<ShaderComponent>()->GetFragmentShader();
+        auto compute_shader_data = entity->GetComponent<ShaderComponent>()->GetComputeShader();
+        auto transform = entity->GetComponent<TransformComponent>()->GetTransformMatrix();
 
         size_t vertexCount = model_data->positions.size();
         size_t indexCount = model_data->indices.size();
 
         VulkanShadersData shaders;
         shaders.vertexShader =
-            vertex_shader_data
-                ? std::make_optional(vertex_shader_data->GetShaderCode())
-                : std::nullopt;
+            vertex_shader_data ? std::make_optional(vertex_shader_data->GetShaderCode()) : std::nullopt;
 
         shaders.fragShader =
-            fragment_shader_data
-                ? std::make_optional(fragment_shader_data->GetShaderCode())
-                : std::nullopt;
+            fragment_shader_data ? std::make_optional(fragment_shader_data->GetShaderCode()) : std::nullopt;
 
         shaders.computeShader =
-            compute_shader_data
-                ? std::make_optional(compute_shader_data->GetShaderCode())
-                : std::nullopt;
+            compute_shader_data ? std::make_optional(compute_shader_data->GetShaderCode()) : std::nullopt;
 
         auto it = m_PipelineCache.find(shaders);
 
@@ -279,10 +251,20 @@ void VulkanRenderer_refac::createEntityResources() {
             m_EntityPipelines[entity] = it->second;
         } else {
             VulkanVertex vertex;
-            m_EntityPipelines[entity] =
-                VulkanGraphicsPipeline(m_Device, m_RenderPass, shaders, vertex);
+            m_EntityPipelines[entity] = VulkanGraphicsPipeline(m_Device, m_RenderPass, shaders, vertex);
             m_PipelineCache[shaders] = m_EntityPipelines[entity];
         }
+
+        for (size_t i = 0; i < vertexCount; i++) {
+            VulkanVertex vertex;
+            vertex.pos = model_data->positions[i];
+            vertex.normal = model_data->normals.size() > i ? model_data->normals[i] : glm::vec3(0.0f, 0.0f, 1.0f);
+            vertex.texCoord = model_data->uvs.size() > i ? model_data->uvs[i] : glm::vec2(0.0f);
+            vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
+            vertices.push_back(vertex);
+        }
+        indices.insert(indices.end(), model_data->indices.begin(), model_data->indices.end());
+        transformations.push_back(transform);
     }
 }
 
