@@ -51,6 +51,7 @@ class VulkanGraphicsPipeline {
     ~VulkanGraphicsPipeline();
     VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorsetLayout; }
     VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
+    VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
 
     private:
     std::shared_ptr<VulkanDevice> m_Device;

@@ -14,7 +14,9 @@
 #include <VulkanRenderer.hpp>
 #include <cstddef>
 #include <memory>
-#include "VulkanBuffer_refac.hpp"
+#include <unordered_map>
+#include "VulkanDescriptorSet.hpp"
+
 #define MAX_FRAMES_IN_FLIGHT 2
 namespace Engine {
 
@@ -86,6 +88,16 @@ void VulkanRenderer_refac::Init() {
 
     m_ComputeFences = std::make_shared<VulkanFence>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Compute Fences Created");
+
+    // TEMPORARY : Hardcoded camera and light data
+    m_Camera = VulkanCamera(glm::mat4(1.0f), glm::mat4(1.0f));
+    m_Light = VulkanLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+    std::unordered_map<Entity, size_t> offsets;
+    m_CameraUniformBuffer = std::make_shared<VulkanBuffer_refac<VulkanCamera>>(
+        m_Camera, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    m_LightUniformBuffer = std::make_shared<VulkanBuffer_refac<VulkanLight>>(
+        m_Light, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    ENGINE_INFO("Vulkan Camera and Light Uniform Buffers Created");
 }
 
 // Implement pure virtual function from Renderer
@@ -106,7 +118,42 @@ void VulkanRenderer_refac::WaitIdle() {
 }
 
 // Implement pure virtual function from Renderer
-void VulkanRenderer_refac::Draw() {}
+void VulkanRenderer_refac::Draw() {
+    auto entities = m_EntityManager->GetAllEntities();
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_SwapChain->getSwapChainExtent().width);
+    viewport.height = static_cast<float>(m_SwapChain->getSwapChainExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = m_SwapChain->getSwapChainExtent();
+    vkCmdSetScissor(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, &scissor);
+    VkDeviceSize offsets[] = {0};
+
+    if (!entities.empty()) {
+        VkBuffer vertexBuffers[] = {std::get<VkBuffer>(m_VertexBuffer->getBuffer())};
+        vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
+                             std::get<VkBuffer>(m_IndexBuffer->getBuffer()), 0, VK_INDEX_TYPE_UINT32);
+    }
+
+    for (const auto &entity : entities) {
+        const auto graphicsPipeline = m_EntityPipelines[entity];
+        vkCmdBindPipeline(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          graphicsPipeline->getGraphicsPipeline());
+        VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity] * m_VertexBuffer->getDataSize();
+        VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
+
+        vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                graphicsPipeline->getPipelineLayout(), 0, 1, &graphicsPipeline->getDescriptorSet(), 0,
+                                nullptr);
+    }
+}
 void VulkanRenderer_refac::BeginRecord() {
     vkWaitForFences(m_Device->getLogicalDevice(), 1, &m_InFlightFences->getFence()[m_CurrentFrame], VK_TRUE,
                     UINT64_MAX);
@@ -224,12 +271,20 @@ void VulkanRenderer_refac::createEntityResources() {
     std::vector<VulkanVertex> vertices;
     std::vector<uint32_t> indices;
     std::vector<glm::mat4> transformations;
+    std::unordered_map<std::shared_ptr<Entity>, size_t> vertexOffsets;
+    std::unordered_map<std::shared_ptr<Entity>, size_t> indexOffsets;
+
     for (auto &entity : entities) {
         auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
+
         auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+
         auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
+
         auto fragment_shader_data = entity->GetComponent<ShaderComponent>()->GetFragmentShader();
+
         auto compute_shader_data = entity->GetComponent<ShaderComponent>()->GetComputeShader();
+
         auto transform = entity->GetComponent<TransformComponent>()->GetTransformMatrix();
 
         size_t vertexCount = model_data->positions.size();
@@ -248,11 +303,15 @@ void VulkanRenderer_refac::createEntityResources() {
         auto it = m_PipelineCache.find(shaders);
 
         if (it != m_PipelineCache.end()) {
-            m_EntityPipelines[entity] = it->second;
+            m_EntityPipelines[entity] = it->second; // Assign shared pointer to entity pipeline
         } else {
             VulkanVertex vertex;
-            m_EntityPipelines[entity] = VulkanGraphicsPipeline(m_Device, m_RenderPass, shaders, vertex);
-            m_PipelineCache[shaders] = m_EntityPipelines[entity];
+            // Create a shared pointer for the new pipeline
+            auto pipeline = std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex);
+
+            // Store the pipeline in both maps
+            m_EntityPipelines[entity] = pipeline;
+            m_PipelineCache[shaders] = pipeline;
         }
 
         for (size_t i = 0; i < vertexCount; i++) {
@@ -265,7 +324,23 @@ void VulkanRenderer_refac::createEntityResources() {
         }
         indices.insert(indices.end(), model_data->indices.begin(), model_data->indices.end());
         transformations.push_back(transform);
+        vertexOffsets[entity] = currentVertexOffset;
+        indexOffsets[entity] = currentIndexOffset;
+        currentVertexOffset += vertexCount;
+        currentIndexOffset += indexCount;
+        VkImageView textureImageView;
+        VkSampler textureSampler;
+        std::vector<VkDescriptorBufferInfo> bufferInfo;
+        VulkanDescriptorSet descriptorSet(m_Device, m_EntityPipelines[entity], textureImageView, textureSampler,
+                                          bufferInfo);
     }
+
+    m_VertexBuffer = std::make_shared<VulkanBuffer_refac<std::vector<VulkanVertex>>>(
+        vertices, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    m_IndexBuffer = std::make_shared<VulkanBuffer_refac<std::vector<uint32_t>>>(
+        indices, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    m_ModelStorageBuffer = std::make_shared<VulkanBuffer_refac<std::vector<glm::mat4>>>(
+        transformations, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 }
 
 } // namespace Engine

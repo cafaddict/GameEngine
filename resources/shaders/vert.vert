@@ -4,18 +4,19 @@
 layout(set = 0, binding = 0) uniform CameraUBO {
     mat4 view;
     mat4 proj;
-} camera;
+}
+camera;
 
 // UBO for lighting parameters
 layout(set = 0, binding = 1) uniform LightUBO {
     vec3 lightPos;
     vec3 lightColor;
-} light;
+}
+light;
 
 // SSBO for transformation matrices
-layout(set = 0, binding = 3) buffer StorageBufferObject {
-    mat4 transformations[];
-} ssbo;
+layout(set = 0, binding = 3) readonly buffer StorageBufferObject { mat4 transformations[]; }
+ssbo;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;

@@ -1,5 +1,7 @@
 #pragma once
 #include "VulkanBuffer.hpp"
+#include "VulkanVertex.hpp"
+#include "glm/fwd.hpp"
 #include <_types/_uint32_t.h>
 #define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE
@@ -19,6 +21,9 @@
 #include "VulkanCommandBuffer.hpp"
 #include "VulkanGraphicsPipeline.hpp"
 #include "VulkanSyncObject.hpp"
+#include "VulkanCamera.hpp"
+#include "VulkanLight.hpp"
+#include "VulkanBuffer_refac.hpp"
 
 #include <memory>
 
@@ -26,8 +31,8 @@ namespace Engine {
 class VulkanRenderer_refac : public Renderer {
     private:
     std::shared_ptr<EntityManager> m_EntityManager;
-    std::unordered_map<VulkanShadersData, VulkanGraphicsPipeline, ShaderDataHash> m_PipelineCache;
-    std::unordered_map<std::shared_ptr<Entity>, VulkanGraphicsPipeline> m_EntityPipelines;
+    std::unordered_map<VulkanShadersData, std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash> m_PipelineCache;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanGraphicsPipeline>> m_EntityPipelines;
 
     std::shared_ptr<VulkanInstance> m_Instance;
     std::shared_ptr<VulkanDebugMessenger> m_DebugMessenger;
@@ -50,9 +55,15 @@ class VulkanRenderer_refac : public Renderer {
     bool m_Minimizied = false;
     bool m_Resized = false;
 
-    std::shared_ptr<VulkanVertexBuffer> m_VertexBuffer;
-    std::shared_ptr<VulkanIndexBuffer> m_IndexBuffer;
-    std::shared_ptr<VulkanUniformBuffer> m_UniformBuffers;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>> m_VertexBuffer;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<uint32_t>>> m_IndexBuffer;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<glm::mat4>>> m_ModelStorageBuffer;
+
+    // TEMPORARY : Hardcoded camera and light data
+    VulkanCamera m_Camera;
+    VulkanLight m_Light;
+    std::shared_ptr<VulkanBuffer_refac<VulkanCamera>> m_CameraUniformBuffer;
+    std::shared_ptr<VulkanBuffer_refac<VulkanLight>> m_LightUniformBuffer;
 
     public:
     // Constructor that initializes the window and Vulkan objects
