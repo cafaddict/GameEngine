@@ -1,5 +1,6 @@
 #pragma once
 #include "VulkanBuffer.hpp"
+#include "VulkanDescriptorSet.hpp"
 #include "VulkanVertex.hpp"
 #include "glm/fwd.hpp"
 #include <_types/_uint32_t.h>
@@ -9,30 +10,37 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
+#include "EntityManager.hpp"
+#include "VulkanBuffer_refac.hpp"
+#include "VulkanCamera.hpp"
+#include "VulkanCommandBuffer.hpp"
+#include "VulkanDevice.hpp"
+#include "VulkanFrameBuffer.hpp"
+#include "VulkanGraphicsPipeline.hpp"
+#include "VulkanLight.hpp"
+#include "VulkanRenderPass.hpp"
+#include "VulkanSwapChain.hpp"
+#include "VulkanSyncObject.hpp"
 #include <Log.hpp>
 #include <Rendering.hpp>
 #include <VulkanDebugMessenger.hpp>
 #include <VulkanInstance.hpp>
-#include "VulkanDevice.hpp"
-#include "VulkanRenderPass.hpp"
-#include "VulkanSwapChain.hpp"
-#include "VulkanFrameBuffer.hpp"
-#include "EntityManager.hpp"
-#include "VulkanCommandBuffer.hpp"
-#include "VulkanGraphicsPipeline.hpp"
-#include "VulkanSyncObject.hpp"
-#include "VulkanCamera.hpp"
-#include "VulkanLight.hpp"
-#include "VulkanBuffer_refac.hpp"
 
 #include <memory>
 
 namespace Engine {
 class VulkanRenderer_refac : public Renderer {
-    private:
+  private:
     std::shared_ptr<EntityManager> m_EntityManager;
-    std::unordered_map<VulkanShadersData, std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash> m_PipelineCache;
-    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanGraphicsPipeline>> m_EntityPipelines;
+    std::unordered_map<VulkanShadersData,
+                       std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash>
+        m_PipelineCache;
+    std::unordered_map<std::shared_ptr<Entity>,
+                       std::shared_ptr<VulkanGraphicsPipeline>>
+        m_EntityPipelines;
+    std::unordered_map<std::shared_ptr<Entity>,
+                       std::shared_ptr<VulkanDescriptorSet>>
+        m_EntityDescriptorSets;
 
     std::shared_ptr<VulkanInstance> m_Instance;
     std::shared_ptr<VulkanDebugMessenger> m_DebugMessenger;
@@ -55,9 +63,11 @@ class VulkanRenderer_refac : public Renderer {
     bool m_Minimizied = false;
     bool m_Resized = false;
 
-    std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>> m_VertexBuffer;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>>
+        m_VertexBuffer;
     std::shared_ptr<VulkanBuffer_refac<std::vector<uint32_t>>> m_IndexBuffer;
-    std::shared_ptr<VulkanBuffer_refac<std::vector<glm::mat4>>> m_ModelStorageBuffer;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<glm::mat4>>>
+        m_ModelStorageBuffer;
 
     // TEMPORARY : Hardcoded camera and light data
     VulkanCamera m_Camera;
@@ -65,7 +75,7 @@ class VulkanRenderer_refac : public Renderer {
     std::shared_ptr<VulkanBuffer_refac<VulkanCamera>> m_CameraUniformBuffer;
     std::shared_ptr<VulkanBuffer_refac<VulkanLight>> m_LightUniformBuffer;
 
-    public:
+  public:
     // Constructor that initializes the window and Vulkan objects
     VulkanRenderer_refac(GLFWwindow *window);
     void createEntityResources();
@@ -81,10 +91,12 @@ class VulkanRenderer_refac : public Renderer {
     virtual void SetWindowResized(bool resized) override;
     virtual void SetWindowMinimized(bool minimized) override;
     virtual void WaitIdle() override;
-    void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) { m_EntityManager = entitymanager; }
+    void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) {
+        m_EntityManager = entitymanager;
+    }
     void recreateSwapChain();
 
-    private:
+  private:
     // Initializes Vulkan instance and debug messenger
     virtual void Init() override;
 };

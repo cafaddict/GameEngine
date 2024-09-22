@@ -16,6 +16,9 @@ class VulkanCommandBuffer {
         return m_CommandBuffers;
     }
 
+    void beginSingleTimeCommands();
+    void endSingleTimeCommands();
+
   private:
     std::shared_ptr<VulkanDevice> m_Device;
 

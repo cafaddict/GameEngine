@@ -40,7 +40,7 @@ void Application::run() {
 
         m_Window->OnUpdate();
 
-        m_Renderer->Draw();
+        // m_Renderer->Draw();
     }
 
     m_Renderer->WaitIdle();

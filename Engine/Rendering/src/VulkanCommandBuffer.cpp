@@ -1,6 +1,7 @@
 #include "VulkanCommandBuffer.hpp"
 #include "Log.hpp"
 #include "VulkanDevice.hpp"
+#include "vulkan/vulkan_core.h"
 #include <_types/_uint32_t.h>
 #include <iostream>
 
@@ -46,5 +47,33 @@ void VulkanCommandBuffer::createCommandBuffers(uint32_t max_frames_in_flight) {
                                  m_CommandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
+}
+
+void VulkanCommandBuffer::beginSingleTimeCommands() {
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    if (vkBeginCommandBuffer(m_CommandBuffers[0], &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+}
+void VulkanCommandBuffer::endSingleTimeCommands() {
+    if (vkEndCommandBuffer(m_CommandBuffers[0]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &m_CommandBuffers[0];
+
+    if (vkQueueSubmit(m_Device->getTransferQueue(), 1, &submitInfo,
+                      VK_NULL_HANDLE) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+
+    vkQueueWaitIdle(m_Device->getTransferQueue());
+    vkResetCommandBuffer(m_CommandBuffers[0], 0);
 }
 } // namespace Engine
