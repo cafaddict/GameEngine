@@ -1,5 +1,6 @@
 #include "Application.hpp"
 #include "Input.hpp"
+#include "Log.hpp"
 
 namespace Engine {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
@@ -21,6 +22,7 @@ Application::~Application() {}
 void Application::OnEvent(Event &e) {
     EventDispatcher dispatcher(e);
     dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+    dispatcher.Dispatch<WindowIconifyEvent>(BIND_EVENT_FN(OnWindowMinimize));
     dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(OnESC));
     dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(OnWindowResize));
     // ENGINE_INFO("{0}", e);
@@ -87,6 +89,25 @@ bool Application::OnWindowResize(WindowResizeEvent &e) {
     if (e.GetWidth() == 0 || e.GetHeight() == 0) {
         m_Renderer->SetWindowMinimized(true);
     } else {
+        m_Renderer->SetWindowMinimized(false);
+    }
+    return true;
+}
+
+bool Application::OnWindowMinimize(WindowIconifyEvent &e) {
+    bool Handled = e.IsHandled();
+    if (Handled) {
+        ENGINE_ASSERT(!Handled, "It is handled somewhere bug");
+    }
+
+    if (e.IsMinimized()) {
+        // Window was minimized
+        ENGINE_INFO("Window is minimized");
+        m_Renderer->SetWindowMinimized(true);
+
+    } else {
+        // Window was restored
+        ENGINE_INFO("Window is restored");
         m_Renderer->SetWindowMinimized(false);
     }
     return true;
