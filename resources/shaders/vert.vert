@@ -26,18 +26,29 @@ layout(location = 3) in vec2 inTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 layout(location = 2) out vec3 fragNormal;
+layout(location = 3) out vec2 fragUV;
 
 void main() {
-    uint instanceIndex = gl_InstanceIndex; // Ensure instance index is used correctly
-    mat4 model = ssbo.transformations[instanceIndex];
+    // uint instanceIndex = gl_InstanceIndex; // Ensure instance index is used correctly
+    // mat4 model = ssbo.transformations[instanceIndex];
 
-    gl_Position = camera.proj * camera.view * model * vec4(inPosition, 1.0);
-    fragColor = inColor;
-    fragTexCoord = inTexCoord;
-    vec3 normal = inNormal;
-    if (length(normal) == 0.0) {
-        normal = vec3(0.0, 0.0, 1.0); // Default normal
-    }
+    // gl_Position = camera.proj * camera.view * model * vec4(inPosition, 1.0);
+    // fragColor = inColor;
+    // fragTexCoord = inTexCoord;
+    // vec3 normal = inNormal;
+    // if (length(normal) == 0.0) {
+    //     normal = vec3(0.0, 0.0, 1.0); // Default normal
+    // }
 
-    fragNormal = mat3(model) * normal;
+    // fragNormal = mat3(model) * normal;
+    // Define positions for a full-screen triangle
+    // These positions are in Normalized Device Coordinates (NDC)
+    vec2 positions[3] = vec2[](vec2(-1.0, -1.0), // Bottom-left
+                               vec2(3.0, -1.0),  // Bottom-right beyond the screen
+                               vec2(-1.0, 3.0)   // Top-left beyond the screen
+    );
+
+    fragUV = (positions[gl_VertexIndex] + 1.0) * 0.5; // Convert NDC to UV coordinates
+
+    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
 }

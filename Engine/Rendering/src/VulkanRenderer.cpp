@@ -157,7 +157,7 @@ void VulkanRenderer_refac::Draw() {
                              std::get<VkBuffer>(m_IndexBuffer->getBuffer()), 0, VK_INDEX_TYPE_UINT32);
     }
     for (const auto &entity : entities) {
-        const auto graphicsPipeline = m_EntityPipelines[entity];
+        auto graphicsPipeline = m_EntityPipelines[entity];
         auto descriptorSet = m_EntityDescriptorSets[entity];
         vkCmdBindPipeline(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
                           graphicsPipeline->getGraphicsPipeline());
@@ -172,6 +172,7 @@ void VulkanRenderer_refac::Draw() {
                          vertexOffset, 0);
     }
 }
+
 void VulkanRenderer_refac::BeginRecord() {
     vkWaitForFences(m_Device->getLogicalDevice(), 1, &m_InFlightFences->getFence()[m_CurrentFrame], VK_TRUE,
                     UINT64_MAX);
@@ -239,7 +240,6 @@ void VulkanRenderer_refac::EndRecord() {
     }
 
     VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
@@ -314,12 +314,21 @@ void VulkanRenderer_refac::createEntityResources() {
         VulkanShadersData shaders;
         shaders.vertexShader =
             vertex_shader_data ? std::make_optional(vertex_shader_data->GetShaderCode()) : std::nullopt;
+        if (!vertex_shader_data) {
+            ENGINE_WARN("Vertex Shader Data is null");
+        }
 
         shaders.fragShader =
             fragment_shader_data ? std::make_optional(fragment_shader_data->GetShaderCode()) : std::nullopt;
+        if (!fragment_shader_data) {
+            ENGINE_WARN("Fragment Shader Data is null");
+        }
 
         shaders.computeShader =
             compute_shader_data ? std::make_optional(compute_shader_data->GetShaderCode()) : std::nullopt;
+        if (!compute_shader_data) {
+            ENGINE_WARN("Compute Shader Data is null");
+        }
 
         auto it = m_PipelineCache.find(shaders);
 

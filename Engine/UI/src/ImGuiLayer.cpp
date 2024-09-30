@@ -1,4 +1,7 @@
 #include <ImGuiLayer.hpp>
+#include "Log.hpp"
+#include "VulkanRenderer.hpp"
+#include "VulkanRendering.hpp"
 #include "imgui.h"
 #include "imgui_impl_vulkan.cpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -11,11 +14,89 @@ ImGuiLayer::ImGuiLayer(std::shared_ptr<Engine::EntityManager> entityManager,
     : Engine::Layer("ImGui Layer"), m_EntityManager(entityManager), m_AssetManager(assetManager) {}
 ImGuiLayer::~ImGuiLayer() {}
 
+// void ImGuiLayer::OnAttach() {
+//     ENGINE_WARN("ImGuiLayer");
+//     Engine::Application &app = Engine::Application::Get();
+//     auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
+//     auto vulkandata = renderer->GetVulkanData();
+//     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
+//     // 1: create descriptor pool for IMGUI
+//     //  the size of the pool is very oversize, but it's copied from imgui demo
+//     //  itself.
+//     VkDescriptorPoolSize pool_sizes[] = {{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
+//                                          {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}};
+
+//     VkDescriptorPoolCreateInfo pool_info = {};
+//     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+//     pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+//     pool_info.maxSets = 1000;
+//     pool_info.poolSizeCount = std::size(pool_sizes);
+//     pool_info.pPoolSizes = pool_sizes;
+//     ENGINE_WARN("CreateDescriptorPool");
+//     vkCreateDescriptorPool(vulkandata.device, &pool_info, nullptr, &imguiPool);
+//     // 2: initialize imgui library
+
+//     // this initializes the core structures of imgui
+//     ImGui::CreateContext();
+//     ImGuiIO &io = ImGui::GetIO();
+//     (void)io;
+//     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+//     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+
+//     ImGui::StyleColorsDark();
+
+//     // this initializes imgui for SDL
+//     ENGINE_WARN("InitForGLFW_Vulkan");
+//     ImGui_ImplGlfw_InitForVulkan(window, true);
+
+//     // this initializes imgui for Vulkan
+//     ImGui_ImplVulkan_InitInfo init_info = {};
+//     init_info.Instance = vulkandata.instance;
+//     init_info.PhysicalDevice = vulkandata.physicalDevice;
+//     init_info.Device = vulkandata.device;
+//     init_info.Queue = vulkandata.graphicsQueue;
+//     init_info.DescriptorPool = imguiPool;
+//     init_info.MinImageCount = 3;
+//     init_info.ImageCount = 3;
+//     init_info.MSAASamples = vulkandata.msaaSamples;
+//     init_info.PipelineCache = g_PipelineCache;
+//     ENGINE_WARN("Vulkan_Init");
+//     ImGui_ImplVulkan_Init(&init_info, vulkandata.renderPass);
+
+//     VkCommandBuffer cmd = vulkandata.commandBuffers[vulkandata.currentFrame];
+//     VkCommandBufferBeginInfo beginInfo{};
+//     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+//     beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+//     vkBeginCommandBuffer(cmd, &beginInfo);
+//     ENGINE_WARN("ImGui_ImplVulakn");
+//     ImGui_ImplVulkan_CreateFontsTexture(cmd);
+//     VkSubmitInfo end_info = {};
+//     end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+//     end_info.commandBufferCount = 1;
+//     end_info.pCommandBuffers = &cmd;
+
+//     vkEndCommandBuffer(cmd);
+//     vkQueueSubmit(vulkandata.graphicsQueue, 1, &end_info, VK_NULL_HANDLE);
+//     vkDeviceWaitIdle(vulkandata.device);
+
+//     ImGui_ImplVulkan_DestroyFontUploadObjects();
+//     ENGINE_WARN("ImGui Attach Finished");
+// }
+
 void ImGuiLayer::OnAttach() {
     ENGINE_WARN("ImGuiLayer");
     Engine::Application &app = Engine::Application::Get();
-    auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
-    auto vulkandata = renderer->GetVulkanData();
+    auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
     // 1: create descriptor pool for IMGUI
     //  the size of the pool is very oversize, but it's copied from imgui demo
@@ -39,7 +120,7 @@ void ImGuiLayer::OnAttach() {
     pool_info.poolSizeCount = std::size(pool_sizes);
     pool_info.pPoolSizes = pool_sizes;
     ENGINE_WARN("CreateDescriptorPool");
-    vkCreateDescriptorPool(vulkandata.device, &pool_info, nullptr, &imguiPool);
+    vkCreateDescriptorPool(renderer->GetDevice()->getLogicalDevice(), &pool_info, nullptr, &imguiPool);
     // 2: initialize imgui library
 
     // this initializes the core structures of imgui
@@ -57,19 +138,19 @@ void ImGuiLayer::OnAttach() {
 
     // this initializes imgui for Vulkan
     ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.Instance = vulkandata.instance;
-    init_info.PhysicalDevice = vulkandata.physicalDevice;
-    init_info.Device = vulkandata.device;
-    init_info.Queue = vulkandata.graphicsQueue;
+    init_info.Instance = renderer->GetVulkanInstance()->getInstance();
+    init_info.PhysicalDevice = renderer->GetDevice()->getPhysicalDevice();
+    init_info.Device = renderer->GetDevice()->getLogicalDevice();
+    init_info.Queue = renderer->GetDevice()->getGraphicsQueue();
     init_info.DescriptorPool = imguiPool;
     init_info.MinImageCount = 3;
     init_info.ImageCount = 3;
-    init_info.MSAASamples = vulkandata.msaaSamples;
+    init_info.MSAASamples = renderer->GetDevice()->getMsaaSamples();
     init_info.PipelineCache = g_PipelineCache;
     ENGINE_WARN("Vulkan_Init");
-    ImGui_ImplVulkan_Init(&init_info, vulkandata.renderPass);
+    ImGui_ImplVulkan_Init(&init_info, renderer->GetRenderPass()->getRenderPass());
 
-    VkCommandBuffer cmd = vulkandata.commandBuffers[vulkandata.currentFrame];
+    VkCommandBuffer cmd = renderer->GetCommandBuffer()->getCommandBuffers()[renderer->GetCurrentFrame()];
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -83,12 +164,13 @@ void ImGuiLayer::OnAttach() {
     end_info.pCommandBuffers = &cmd;
 
     vkEndCommandBuffer(cmd);
-    vkQueueSubmit(vulkandata.graphicsQueue, 1, &end_info, VK_NULL_HANDLE);
-    vkDeviceWaitIdle(vulkandata.device);
+    vkQueueSubmit(renderer->GetDevice()->getGraphicsQueue(), 1, &end_info, VK_NULL_HANDLE);
+    vkDeviceWaitIdle(renderer->GetDevice()->getLogicalDevice());
 
     ImGui_ImplVulkan_DestroyFontUploadObjects();
     ENGINE_WARN("ImGui Attach Finished");
 }
+
 void ImGuiLayer::OnDetach() {
     Engine::Application &app = Engine::Application::Get();
     auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
@@ -114,10 +196,10 @@ glm::quat EulerToQuaternion(const glm::vec3 &euler) {
 }
 
 void ImGuiLayer::OnUpdate() {
+
     ImGuiIO &io = ImGui::GetIO();
     Engine::Application &app = Engine::Application::Get();
-    auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
-    auto vulkandata = renderer->GetVulkanData();
+    auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
     io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
@@ -277,6 +359,7 @@ void ImGuiLayer::OnUpdate() {
     // ImGui::ShowDemoWindow(&show);
 
     // Rendering
+
     ImGui::Render();
     // ENGINE_WARN("Rendering data");
     ImDrawData *draw_data = ImGui::GetDrawData();
@@ -284,17 +367,16 @@ void ImGuiLayer::OnUpdate() {
 }
 void ImGuiLayer::FrameRender(ImDrawData *draw_data) {
     Engine::Application &app = Engine::Application::Get();
-    auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
-    auto vulkandata = renderer->GetVulkanData();
+    auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
     VkResult err;
 
     {
         VkRenderPassBeginInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        info.renderPass = vulkandata.renderPass;
+        info.renderPass = renderer->GetRenderPass()->getRenderPass();
         // info.framebuffer = vulkandata.swapChainFramebuffers[imageIndex];
-        info.framebuffer = vulkandata.swapChainGUIFramebuffers[vulkandata.image_index];
+        info.framebuffer = renderer->GetFrameBuffer()->getFrameBuffers()[renderer->GetCurrentFrame()];
 
         info.renderArea.extent.width = app.GetWindow().GetWidth();
         info.renderArea.extent.height = app.GetWindow().GetHeight();
@@ -305,18 +387,22 @@ void ImGuiLayer::FrameRender(ImDrawData *draw_data) {
         info.pClearValues = clearValues.data();
 
         ImGui_ImplVulkan_Data *gui_vulkandata = ImGui_ImplVulkan_GetBackendData();
-        vkCmdBindPipeline(vulkandata.commandBuffers[vulkandata.currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          gui_vulkandata->Pipeline);
+        // vkCmdBindPipeline(vulkandata.commandBuffers[vulkandata.currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+        //                   gui_vulkandata->Pipeline);
+
+        vkCmdBindPipeline(renderer->GetCommandBuffer()->getCommandBuffers()[renderer->GetCurrentFrame()],
+                          VK_PIPELINE_BIND_POINT_GRAPHICS, gui_vulkandata->Pipeline);
 
         // vkCmdBeginRenderPass(vulkandata.commandBuffers[vulkandata.currentFrame],
         //     &info, VK_SUBPASS_CONTENTS_INLINE);
     }
 
     // Record dear imgui primitives into command buffer
-    ImGui_ImplVulkan_RenderDrawData(draw_data, vulkandata.commandBuffers[vulkandata.currentFrame]);
+    ImGui_ImplVulkan_RenderDrawData(draw_data,
+                                    renderer->GetCommandBuffer()->getCommandBuffers()[renderer->GetCurrentFrame()]);
 
     // Submit command buffer
-    vkCmdEndRenderPass(vulkandata.commandBuffers[vulkandata.currentFrame]);
+    // vkCmdEndRenderPass(renderer->GetCommandBuffer()->getCommandBuffers()[renderer->GetCurrentFrame()]);
     // {
     // VkPipelineStageFlags wait_stage =
     //     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;

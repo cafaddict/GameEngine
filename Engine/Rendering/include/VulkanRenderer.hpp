@@ -4,6 +4,7 @@
 #include "VulkanVertex.hpp"
 #include "glm/fwd.hpp"
 #include <_types/_uint32_t.h>
+#include <sys/types.h>
 #define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE
 
@@ -30,17 +31,11 @@
 
 namespace Engine {
 class VulkanRenderer_refac : public Renderer {
-  private:
+    private:
     std::shared_ptr<EntityManager> m_EntityManager;
-    std::unordered_map<VulkanShadersData,
-                       std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash>
-        m_PipelineCache;
-    std::unordered_map<std::shared_ptr<Entity>,
-                       std::shared_ptr<VulkanGraphicsPipeline>>
-        m_EntityPipelines;
-    std::unordered_map<std::shared_ptr<Entity>,
-                       std::shared_ptr<VulkanDescriptorSet>>
-        m_EntityDescriptorSets;
+    std::unordered_map<VulkanShadersData, std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash> m_PipelineCache;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanGraphicsPipeline>> m_EntityPipelines;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanDescriptorSet>> m_EntityDescriptorSets;
 
     std::shared_ptr<VulkanInstance> m_Instance;
     std::shared_ptr<VulkanDebugMessenger> m_DebugMessenger;
@@ -63,11 +58,9 @@ class VulkanRenderer_refac : public Renderer {
     bool m_Minimizied = false;
     bool m_Resized = false;
 
-    std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>>
-        m_VertexBuffer;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>> m_VertexBuffer;
     std::shared_ptr<VulkanBuffer_refac<std::vector<uint32_t>>> m_IndexBuffer;
-    std::shared_ptr<VulkanBuffer_refac<std::vector<glm::mat4>>>
-        m_ModelStorageBuffer;
+    std::shared_ptr<VulkanBuffer_refac<std::vector<glm::mat4>>> m_ModelStorageBuffer;
 
     // TEMPORARY : Hardcoded camera and light data
     VulkanCamera m_Camera;
@@ -75,7 +68,7 @@ class VulkanRenderer_refac : public Renderer {
     std::shared_ptr<VulkanBuffer_refac<VulkanCamera>> m_CameraUniformBuffer;
     std::shared_ptr<VulkanBuffer_refac<VulkanLight>> m_LightUniformBuffer;
 
-  public:
+    public:
     // Constructor that initializes the window and Vulkan objects
     VulkanRenderer_refac(GLFWwindow *window);
     void createEntityResources();
@@ -91,12 +84,19 @@ class VulkanRenderer_refac : public Renderer {
     virtual void SetWindowResized(bool resized) override;
     virtual void SetWindowMinimized(bool minimized) override;
     virtual void WaitIdle() override;
-    void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) {
-        m_EntityManager = entitymanager;
-    }
+    void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) { m_EntityManager = entitymanager; }
     void recreateSwapChain();
 
-  private:
+    std::shared_ptr<VulkanInstance> GetVulkanInstance() { return m_Instance; }
+    std::shared_ptr<VulkanSwapChain> GetSwapChain() { return m_SwapChain; }
+    std::shared_ptr<VulkanFrameBuffer> GetFrameBuffer() { return m_FrameBuffer; }
+    std::shared_ptr<VulkanDevice> GetDevice() { return m_Device; }
+    std::shared_ptr<VulkanRenderPass> GetRenderPass() { return m_RenderPass; }
+    std::shared_ptr<VulkanCommandBuffer> GetCommandBuffer() { return m_CommandBuffer; }
+    uint32_t GetCurrentFrame() { return m_CurrentFrame; }
+    uint32_t GetImageIndex() { return m_ImageIndex; }
+
+    private:
     // Initializes Vulkan instance and debug messenger
     virtual void Init() override;
 };

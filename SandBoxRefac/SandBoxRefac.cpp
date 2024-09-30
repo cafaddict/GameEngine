@@ -75,7 +75,7 @@ class SandboxRefac : public Engine::Application {
     SandboxRefac() {
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
-
+        PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());
     }
