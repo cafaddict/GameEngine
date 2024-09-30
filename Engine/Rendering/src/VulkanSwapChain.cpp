@@ -10,10 +10,21 @@ VulkanSwapChain::VulkanSwapChain(std::shared_ptr<VulkanDevice> device, GLFWwindo
 }
 VulkanSwapChain::~VulkanSwapChain() {
     ENGINE_INFO("VulkanSwapChain is destroyed");
+    if (destroyed)
+        return;
+
     for (auto imageView : m_SwapChainImageViews) {
         vkDestroyImageView(m_Device->getLogicalDevice(), imageView, nullptr);
     }
     vkDestroySwapchainKHR(m_Device->getLogicalDevice(), m_SwapChain, nullptr);
+}
+
+void VulkanSwapChain::destroy() {
+    for (auto imageView : m_SwapChainImageViews) {
+        vkDestroyImageView(m_Device->getLogicalDevice(), imageView, nullptr);
+    }
+    vkDestroySwapchainKHR(m_Device->getLogicalDevice(), m_SwapChain, nullptr);
+    destroyed = true;
 }
 
 void VulkanSwapChain::createSwapChain() {
@@ -27,7 +38,7 @@ void VulkanSwapChain::createSwapChain() {
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
         imageCount = swapChainSupport.capabilities.maxImageCount;
     }
-  
+
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface = m_Device->getSurface();

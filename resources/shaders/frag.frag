@@ -10,4 +10,5 @@ layout(set = 0, binding = 2) uniform sampler2D texSampler;
 void main() {
     vec4 texColor = texture(texSampler, fragTexCoord);
     outColor = texColor * fragColor; // Combine texture color with vertex color
+    
 }

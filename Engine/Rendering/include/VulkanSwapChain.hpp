@@ -6,6 +6,7 @@ class VulkanSwapChain {
     public:
     VulkanSwapChain(std::shared_ptr<VulkanDevice> device, GLFWwindow *window);
     ~VulkanSwapChain();
+    void destroy();
 
     VkSwapchainKHR getSwapChain() { return m_SwapChain; }
     std::vector<VkImageView> getSwapChainImageViews() { return m_SwapChainImageViews; }
@@ -20,6 +21,7 @@ class VulkanSwapChain {
     std::vector<VkImageView> m_SwapChainImageViews;
     VkFormat m_SwapChainImageFormat;
     VkExtent2D m_SwapChainExtent;
+    bool destroyed = false;
 
     void createSwapChain();
     void createImageViews();

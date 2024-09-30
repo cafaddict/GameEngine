@@ -9,6 +9,8 @@ class VulkanCamera {
     VulkanCamera() = default;
     VulkanCamera(glm::mat4 view, glm::mat4 projection);
     ~VulkanCamera();
+    glm::mat4 getView() { return m_View; }
+    glm::mat4 getProjection() { return m_Projection; }
 
     private:
     glm::mat4 m_View;

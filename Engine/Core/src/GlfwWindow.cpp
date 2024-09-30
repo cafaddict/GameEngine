@@ -48,7 +48,6 @@ void GlfwWindow::Init(const WindowProps &props) {
 
     // // Set GLFW callbacks
     glfwSetWindowSizeCallback(m_Window, [](GLFWwindow *window, int width, int height) {
-        ENGINE_INFO("TEST");
         WindowData &data = *(WindowData *)glfwGetWindowUserPointer(window);
         data.Width = width;
         data.Height = height;

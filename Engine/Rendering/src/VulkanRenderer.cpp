@@ -91,16 +91,24 @@ void VulkanRenderer_refac::Init() {
     ENGINE_INFO("Vulkan Compute Fences Created");
 
     // TEMPORARY : Hardcoded camera and light data
-    m_Camera = VulkanCamera(glm::mat4(1.0f), glm::mat4(1.0f));
+    m_Camera = VulkanCamera(
+        glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::perspective(glm::radians(45.0f),
+                         (float)m_SwapChain->getSwapChainExtent().width /
+                             (float)m_SwapChain->getSwapChainExtent().height,
+                         0.01f, 1000.0f));
     m_Light = VulkanLight(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
     std::unordered_map<std::shared_ptr<Entity>, size_t> offsets;
     m_CameraUniformBuffer = std::make_shared<VulkanBuffer_refac<VulkanCamera>>(
         m_Camera, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+
     m_LightUniformBuffer = std::make_shared<VulkanBuffer_refac<VulkanLight>>(
         m_Light, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+
     std::vector<glm::mat4> transformations;
     m_ModelStorageBuffer = std::make_shared<VulkanBuffer_refac<std::vector<glm::mat4>>>(
         transformations, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+
     ENGINE_INFO("Vulkan Camera and Light Uniform Buffers Created");
 }
 
@@ -196,7 +204,7 @@ void VulkanRenderer_refac::BeginRecord() {
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = m_SwapChain->getSwapChainExtent();
     std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
@@ -261,13 +269,15 @@ void VulkanRenderer_refac::recreateSwapChain() {
 
     vkDeviceWaitIdle(m_Device->getLogicalDevice());
     m_FrameBuffer.reset();
-    m_RenderPass.reset();
+    // m_RenderPass.reset();
+    m_SwapChain->destroy();
     m_SwapChain.reset();
+
     m_SwapChain = std::make_shared<VulkanSwapChain>(m_Device, m_Window);
     ENGINE_INFO("Vulkan Swap Chain ReCreated");
 
-    m_RenderPass = std::make_shared<VulkanRenderPass>(m_Device, m_SwapChain);
-    ENGINE_INFO("Vulkan Render Pass ReCreated");
+    // m_RenderPass = std::make_shared<VulkanRenderPass>(m_Device, m_SwapChain);
+    // ENGINE_INFO("Vulkan Render Pass ReCreated");
 
     m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain, m_RenderPass, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Frame Buffer ReCreated");
