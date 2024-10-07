@@ -170,9 +170,7 @@ void VulkanRenderer_refac::Draw() {
             // VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
             VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity];
             VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity];
-            ENGINE_WARN("Vertex Offset: {0}", vertexOffset);
-            ENGINE_WARN("Index Offset: {0}", indexOffset);
-
+            std::cout << &descriptorSet->getDescriptorSets()[m_CurrentFrame] << std::endl;
             vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                                     VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,
                                     &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
@@ -326,6 +324,10 @@ void VulkanRenderer_refac::createEntityResources() {
 
         size_t vertexCount = model_data->positions.size();
         size_t indexCount = model_data->indices.size();
+
+        ENGINE_TRACE("model_data->positions.size() = {0}", model_data->positions.size());
+        ENGINE_TRACE("model_data->normals.size() = {0}", model_data->normals.size());
+        ENGINE_TRACE("model_data->uvs.size() = {0}", model_data->uvs.size());
 
         VulkanShadersData shaders;
         shaders.vertexShader =

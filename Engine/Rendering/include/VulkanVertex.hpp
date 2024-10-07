@@ -1,4 +1,5 @@
 #pragma once
+#include "Log.hpp"
 #include "VulkanBaseVertex.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
