@@ -124,6 +124,8 @@ class VulkanRenderer : public Renderer {
     void Shutdown();
 
     void SetEntityManager(std::shared_ptr<EntityManager> entitymanager) { m_EntityManager = entitymanager; }
+    bool GetEntityUpdate() { return false; }
+    void SetEntityUpdate(bool update) {}
 
     // struct
 

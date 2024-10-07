@@ -1,4 +1,5 @@
 #pragma once
+#include "TextureData.hpp"
 #include "VulkanBuffer.hpp"
 #include "VulkanDescriptorSet.hpp"
 #include "VulkanVertex.hpp"
@@ -34,6 +35,8 @@ class VulkanRenderer_refac : public Renderer {
     private:
     std::shared_ptr<EntityManager> m_EntityManager;
     std::unordered_map<VulkanShadersData, std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash> m_PipelineCache;
+    std::unordered_map<std::shared_ptr<const TextureData>, std::shared_ptr<VulkanDescriptorSet>, DescriptorSetDataHash>
+        m_DescriptorSetCache;
     std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanGraphicsPipeline>> m_EntityPipelines;
     std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanDescriptorSet>> m_EntityDescriptorSets;
 
@@ -57,6 +60,7 @@ class VulkanRenderer_refac : public Renderer {
     uint32_t m_ImageIndex = 0;
     bool m_Minimizied = false;
     bool m_Resized = false;
+    bool m_EntityUpdate = false;
 
     std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>> m_VertexBuffer;
     std::shared_ptr<VulkanBuffer_refac<std::vector<uint32_t>>> m_IndexBuffer;
@@ -95,6 +99,8 @@ class VulkanRenderer_refac : public Renderer {
     std::shared_ptr<VulkanCommandBuffer> GetCommandBuffer() { return m_CommandBuffer; }
     uint32_t GetCurrentFrame() { return m_CurrentFrame; }
     uint32_t GetImageIndex() { return m_ImageIndex; }
+    void SetEntityUpdate(bool update) { m_EntityUpdate = update; }
+    bool GetEntityUpdate() { return m_EntityUpdate; }
 
     private:
     // Initializes Vulkan instance and debug messenger

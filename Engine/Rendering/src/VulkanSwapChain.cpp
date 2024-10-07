@@ -48,16 +48,54 @@ void VulkanSwapChain::createSwapChain() {
     createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    // queueFamilyIndices indices = m_Device->findQueueFamilies(m_Device->getPhysicalDevice());
+    // uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+    // if (indices.graphicsFamily != indices.presentFamily) {
+    //     createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    //     createInfo.queueFamilyIndexCount = 2;
+    //     createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    //     ENGINE_WARN("Concurrent Sharing Mode");
+    // } else {
+    //     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    //     createInfo.queueFamilyIndexCount = 0;     // Optional
+    //     createInfo.pQueueFamilyIndices = nullptr; // Optional
+    //     ENGINE_WARN("Exclusive Sharing Mode");
+    // }
     queueFamilyIndices indices = m_Device->findQueueFamilies(m_Device->getPhysicalDevice());
-    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
-    if (indices.graphicsFamily != indices.presentFamily) {
+
+    // Ensure that both graphics and present families are valid
+    if (!indices.graphicsFamily.has_value() || !indices.presentFamily.has_value()) {
+        throw std::runtime_error("Failed to find required queue families!");
+    }
+
+    // Use an appropriately named array for queue family indices
+    uint32_t familyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+    // Check if the graphics and present families are different, use concurrent sharing mode if needed
+    // if (indices.graphicsFamily != indices.presentFamily) {
+    //     createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    //     createInfo.queueFamilyIndexCount = 2;
+    //     createInfo.pQueueFamilyIndices = familyIndices;
+    //     ENGINE_WARN("Using Concurrent Sharing Mode");
+    // } else {
+    //     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    //     createInfo.queueFamilyIndexCount = 0;     // Optional
+    //     createInfo.pQueueFamilyIndices = nullptr; // Optional
+    //     ENGINE_WARN("Using Exclusive Sharing Mode");
+    // }
+
+    std::vector<uint32_t> uniqueQueueFamilyIndices = indices.getUniqueFamilies();
+
+    if (uniqueQueueFamilyIndices.size() > 1) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
+        createInfo.queueFamilyIndexCount = static_cast<uint32_t>(uniqueQueueFamilyIndices.size());
+        createInfo.pQueueFamilyIndices = uniqueQueueFamilyIndices.data();
+        ENGINE_WARN("Using Concurrent Sharing Mode with Multiple Queue Families");
     } else {
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        createInfo.queueFamilyIndexCount = 0;     // Optional
-        createInfo.pQueueFamilyIndices = nullptr; // Optional
+        createInfo.queueFamilyIndexCount = 0;
+        createInfo.pQueueFamilyIndices = nullptr;
+        ENGINE_WARN("Using Exclusive Sharing Mode");
     }
 
     createInfo.preTransform = swapChainSupport.capabilities.currentTransform;

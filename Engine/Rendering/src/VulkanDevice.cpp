@@ -104,6 +104,67 @@ int VulkanDevice::rateDeviceSuitability(const VkPhysicalDevice &device) {
     return score;
 }
 
+// queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &device) {
+//     queueFamilyIndices indices;
+//     uint32_t queueFamilyCount = 0;
+//     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+//     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+//     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+//     int i = 0;
+//     for (const auto &queueFamily : queueFamilies) {
+//         // Dedicated queue for compute
+//         if ((queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)
+//         {
+//             indices.computeFamily = i;
+//         }
+
+//         // Dedicated queue for transfer
+//         if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) ==
+//         0) {
+//             indices.transferFamily = i;
+//         }
+
+//         // For other queue types or if no separate compute queue is present, we use the same queue
+//         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+//             indices.graphicsFamily = i;
+//         }
+
+//         VkBool32 presentSupport = false;
+//         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &presentSupport);
+
+//         if (presentSupport) {
+//             indices.presentFamily = i;
+//         }
+
+//         if (indices.isComplete()) {
+//             break;
+//         }
+//         i++;
+//     }
+//     // Fallback: If no dedicated compute queue was found, use the graphics queue for compute
+//     if (!indices.computeFamily.has_value()) {
+//         for (size_t j = 0; j < queueFamilies.size(); ++j) {
+//             if (queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+//                 indices.computeFamily = j;
+//                 break;
+//             }
+//         }
+//     }
+
+//     if (!indices.transferFamily.has_value()) {
+//         for (size_t j = 0; j < queueFamilies.size(); ++j) {
+//             if (queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+//                 indices.transferFamily = j;
+//                 break;
+//             }
+//         }
+//     }
+
+//     return indices;
+// }
+
 queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &device) {
     queueFamilyIndices indices;
     uint32_t queueFamilyCount = 0;
@@ -114,50 +175,64 @@ queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &devic
 
     int i = 0;
     for (const auto &queueFamily : queueFamilies) {
-        // Dedicated queue for compute
-        if ((queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) {
-            indices.computeFamily = i;
-        }
-
-        // Dedicated queue for transfer
-        if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) {
-            indices.transferFamily = i;
-        }
-
-        // For other queue types or if no separate compute queue is present, we use the same queue
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        // Check for graphics queue family
+        if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !indices.graphicsFamily.has_value()) {
             indices.graphicsFamily = i;
         }
 
+        // Check for compute-only queue family
+        if ((queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+            !indices.computeFamily.has_value()) {
+            indices.computeFamily = i; // Dedicated compute queue
+        }
+
+        // Check for transfer-only queue family
+        if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+            !indices.transferFamily.has_value()) {
+            indices.transferFamily = i; // Dedicated transfer queue
+        }
+
+        // Check for present support
         VkBool32 presentSupport = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &presentSupport);
-
-        if (presentSupport) {
+        if (presentSupport && !indices.presentFamily.has_value()) {
             indices.presentFamily = i;
         }
 
-        if (indices.isComplete()) {
-            break;
-        }
         i++;
     }
-    // Fallback: If no dedicated compute queue was found, use the graphics queue for compute
+
+    // Attempt to find a dedicated compute queue if one wasn't found initially
     if (!indices.computeFamily.has_value()) {
         for (size_t j = 0; j < queueFamilies.size(); ++j) {
-            if (queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+            if ((queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) && j != indices.graphicsFamily) {
                 indices.computeFamily = j;
                 break;
             }
         }
     }
 
+    // Attempt to find a dedicated transfer queue if one wasn't found initially
     if (!indices.transferFamily.has_value()) {
         for (size_t j = 0; j < queueFamilies.size(); ++j) {
-            if (queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+            if ((queueFamilies[j].queueFlags & VK_QUEUE_TRANSFER_BIT) && j != indices.graphicsFamily) {
                 indices.transferFamily = j;
                 break;
             }
         }
+    }
+
+    // If no dedicated compute or transfer queue was found, use the graphics queue as fallback
+    if (!indices.computeFamily.has_value()) {
+        indices.computeFamily = indices.graphicsFamily; // Reuse graphics queue for compute
+    }
+    if (!indices.transferFamily.has_value()) {
+        indices.transferFamily = indices.graphicsFamily; // Reuse graphics queue for transfer
+    }
+
+    // If no present queue was found, use the graphics queue as fallback (uncommon case)
+    if (!indices.presentFamily.has_value()) {
+        indices.presentFamily = indices.graphicsFamily; // Reuse graphics queue for present support
     }
 
     return indices;

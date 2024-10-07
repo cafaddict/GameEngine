@@ -293,8 +293,7 @@ void ImGuiLayer::OnUpdate() {
             entity1->AddComponent(textureComponent);
             entity1->AddComponent(shaderComponent);
             entity1->AddComponent(transformComponent);
-
-            renderer->createEntityResources();
+            renderer->SetEntityUpdate(true);
         }
     }
 

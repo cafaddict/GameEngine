@@ -59,7 +59,10 @@ template <typename T> class VulkanBuffer_refac {
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
         bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        std::vector<uint32_t> queueFamilyIndices = m_Device->getQueueFamilyIndices().getUniqueFamilies();
+        bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilyIndices.size());
+        bufferInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+        bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
 
         if (vkCreateBuffer(m_Device->getLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
@@ -116,13 +119,8 @@ VulkanBuffer_refac<T>::VulkanBuffer_refac(T &data, std::unordered_map<std::share
                                           VkBufferUsageFlagBits usage)
     : m_Data(data), m_EntityOffsets(entityOffsets), m_Device(device), m_TransferCommandBuffer(transferCommandBuffer),
       m_Usage(usage) {
-    bool T_is_vecotr = false;
-    if constexpr (is_vector<T>::value) {
-        T_is_vecotr = true;
-    }
-    // if ((m_Usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT || m_Usage ==
-    // VK_BUFFER_USAGE_INDEX_BUFFER_BIT) && T_is_vecotr)
-    // {
+    ENGINE_WARN("VulkanBuffer_refac Constructor");
+
     if constexpr (is_vector<T>::value) {
         if (m_Usage == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
             using ElementType = typename T::value_type;
@@ -178,6 +176,7 @@ VulkanBuffer_refac<T>::VulkanBuffer_refac(T &data, std::unordered_map<std::share
     }
 }
 template <typename T> VulkanBuffer_refac<T>::~VulkanBuffer_refac() {
+    ENGINE_WARN("VulkanBuffer_refac Destructor");
     for (int i = 0; i < MAX_FRAME_IN_FLIGHT; i++) {
         vkDestroyBuffer(m_Device->getLogicalDevice(), m_Buffers[i], nullptr);
         vkFreeMemory(m_Device->getLogicalDevice(), m_BuffersMemory[i], nullptr);

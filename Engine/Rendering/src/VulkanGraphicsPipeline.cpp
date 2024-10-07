@@ -17,14 +17,12 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> dev
     createDescriptorSetLayout();
     createPipelineLayout(m_DescriptorsetLayout);
     createGraphicsPipeline(shaders, inputStruct);
-    createDescriptorPool();
 }
 VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
     ENGINE_INFO("VulaknGraphicsPipeline is destroyed");
     vkDestroyPipeline(m_Device->getLogicalDevice(), m_GraphicsPipeline, nullptr);
     vkDestroyPipelineLayout(m_Device->getLogicalDevice(), m_PipelineLayout, nullptr);
     vkDestroyDescriptorSetLayout(m_Device->getLogicalDevice(), m_DescriptorsetLayout, nullptr);
-    vkDestroyDescriptorPool(m_Device->getLogicalDevice(), m_DescriptorPool, nullptr);
 }
 
 void VulkanGraphicsPipeline::createGraphicsPipeline(VulkanShadersData shaders, VulkanBaseVertex &inputStruct) {
@@ -232,28 +230,6 @@ void VulkanGraphicsPipeline::createDescriptorSetLayout() {
     if (vkCreateDescriptorSetLayout(m_Device->getLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorsetLayout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
-    }
-}
-
-void VulkanGraphicsPipeline::createDescriptorPool() {
-    std::array<VkDescriptorPoolSize, 4> poolSizes{};
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-    poolSizes[3].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-    if (vkCreateDescriptorPool(m_Device->getLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor pool!");
     }
 }
 

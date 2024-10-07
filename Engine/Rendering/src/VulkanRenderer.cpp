@@ -57,9 +57,6 @@ void VulkanRenderer_refac::Init() {
     m_RenderPass = std::make_shared<VulkanRenderPass>(m_Device, m_SwapChain);
     ENGINE_INFO("Vulkan Render Pass Created");
 
-    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain, m_RenderPass, m_TransferCommandBuffer);
-    ENGINE_INFO("Vulkan Frame Buffer Created");
-
     m_CommandBuffer =
         std::make_shared<VulkanCommandBuffer>(m_Device, m_Device->getQueueFamilyIndices().graphicsFamily.value());
     ENGINE_INFO("Vulkan Command Buffer Created");
@@ -71,6 +68,9 @@ void VulkanRenderer_refac::Init() {
     m_TransferCommandBuffer =
         std::make_shared<VulkanCommandBuffer>(m_Device, m_Device->getQueueFamilyIndices().transferFamily.value());
     ENGINE_INFO("Vulkan Transfer Command Buffer Created");
+
+    m_FrameBuffer = std::make_shared<VulkanFrameBuffer>(m_Device, m_SwapChain, m_RenderPass, m_TransferCommandBuffer);
+    ENGINE_INFO("Vulkan Frame Buffer Created");
 
     m_ImageAvailableSemaphore = std::make_shared<VulkanSemaphore>(m_Device, MAX_FRAMES_IN_FLIGHT);
     ENGINE_INFO("Vulkan Image Available Semaphore Created");
@@ -109,6 +109,8 @@ void VulkanRenderer_refac::Init() {
     m_ModelStorageBuffer = std::make_shared<VulkanBuffer_refac<std::vector<glm::mat4>>>(
         transformations, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
+    // createEntityResources();
+
     ENGINE_INFO("Vulkan Camera and Light Uniform Buffers Created");
 }
 
@@ -137,6 +139,7 @@ void VulkanRenderer_refac::Draw() {
     viewport.x = 0.0f;
     viewport.y = 0.0f;
     viewport.width = static_cast<float>(m_SwapChain->getSwapChainExtent().width);
+
     viewport.height = static_cast<float>(m_SwapChain->getSwapChainExtent().height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
@@ -148,34 +151,41 @@ void VulkanRenderer_refac::Draw() {
     vkCmdSetScissor(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, &scissor);
     VkDeviceSize offsets[] = {0};
 
-    if (!entities.empty()) {
-
+    if (!entities.empty() && !m_EntityUpdate) {
         VkBuffer vertexBuffers[] = {std::get<VkBuffer>(m_VertexBuffer->getBuffer())};
 
-        vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
-                             std::get<VkBuffer>(m_IndexBuffer->getBuffer()), 0, VK_INDEX_TYPE_UINT32);
-    }
-    for (const auto &entity : entities) {
-        auto graphicsPipeline = m_EntityPipelines[entity];
-        auto descriptorSet = m_EntityDescriptorSets[entity];
-        vkCmdBindPipeline(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          graphicsPipeline->getGraphicsPipeline());
-        VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity] * m_VertexBuffer->getDataSize();
-        VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
+        VkBuffer indexBuffer = std::get<VkBuffer>(m_IndexBuffer->getBuffer());
 
-        vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                graphicsPipeline->getPipelineLayout(), 0, 1,
-                                &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
-        vkCmdDrawIndexed(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
-                         entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, indexOffset,
-                         vertexOffset, 0);
+        vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], indexBuffer, 0,
+                             VK_INDEX_TYPE_UINT32);
+
+        for (const auto &entity : entities) {
+            auto graphicsPipeline = m_EntityPipelines[entity];
+            auto descriptorSet = m_EntityDescriptorSets[entity];
+            vkCmdBindPipeline(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              graphicsPipeline->getGraphicsPipeline());
+
+            // VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity] * m_VertexBuffer->getDataSize();
+            // VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
+            VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity];
+            VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity];
+
+            vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
+                                    VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,
+                                    &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
+            vkCmdDrawIndexed(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
+                             entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, indexOffset,
+                             vertexOffset, 0);
+        }
     }
 }
 
 void VulkanRenderer_refac::BeginRecord() {
+
     vkWaitForFences(m_Device->getLogicalDevice(), 1, &m_InFlightFences->getFence()[m_CurrentFrame], VK_TRUE,
                     UINT64_MAX);
+
     VkResult result =
         vkAcquireNextImageKHR(m_Device->getLogicalDevice(), m_SwapChain->getSwapChain(), UINT64_MAX,
                               m_ImageAvailableSemaphore->getSemaphore()[m_CurrentFrame], VK_NULL_HANDLE, &m_ImageIndex);
@@ -259,6 +269,10 @@ void VulkanRenderer_refac::EndRecord() {
     }
 
     m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    if (m_EntityUpdate) {
+        createEntityResources();
+        m_EntityUpdate = false;
+    }
 }
 
 void VulkanRenderer_refac::recreateSwapChain() {
@@ -284,7 +298,7 @@ void VulkanRenderer_refac::recreateSwapChain() {
 }
 
 void VulkanRenderer_refac::createEntityResources() {
-
+    ENGINE_WARN("Creating Entity Resources");
     uint32_t currentVertexOffset = 0;
     uint32_t currentIndexOffset = 0;
 
@@ -358,8 +372,7 @@ void VulkanRenderer_refac::createEntityResources() {
         indexOffsets[entity] = currentIndexOffset;
         currentVertexOffset += vertexCount;
         currentIndexOffset += indexCount;
-        VkImageView textureImageView;
-        VkSampler textureSampler;
+
         std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos;
         std::vector<VkDescriptorBufferInfo> bufferInfo;
 
@@ -387,10 +400,12 @@ void VulkanRenderer_refac::createEntityResources() {
             bufferInfos.push_back(bufferInfo);
         }
 
-        auto descriptorset = std::make_shared<VulkanDescriptorSet>(m_Device, m_EntityPipelines[entity],
-                                                                   m_TransferCommandBuffer, texture_data, bufferInfos);
+        if (m_EntityDescriptorSets.find(entity) == m_EntityDescriptorSets.end()) {
+            auto descriptorset = std::make_shared<VulkanDescriptorSet>(
+                m_Device, m_EntityPipelines[entity], m_TransferCommandBuffer, texture_data, bufferInfos);
 
-        m_EntityDescriptorSets[entity] = descriptorset;
+            m_EntityDescriptorSets[entity] = descriptorset;
+        }
     }
 
     m_VertexBuffer = std::make_shared<VulkanBuffer_refac<std::vector<VulkanVertex>>>(

@@ -18,6 +18,8 @@ class Renderer {
     virtual void SetWindow(GLFWwindow *window) = 0;
     virtual void SetWindowResized(bool resized) = 0;
     virtual void SetWindowMinimized(bool minimized) = 0;
+    virtual bool GetEntityUpdate() = 0;
+    virtual void SetEntityUpdate(bool update) = 0;
     static Renderer *Create();
     static Renderer *Create(GLFWwindow *window);
 
