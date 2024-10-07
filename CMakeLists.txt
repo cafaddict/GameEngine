@@ -32,7 +32,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES Linux)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   set(OS "mac")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-deprecated-copy-with-user-provided-copy -Wno-deprecated-copy -Wno-strict-prototypes)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-deprecated-copy -Wno-strict-prototypes)
   # set(ARCH "x86_64")
 # Set linker flags to use the GNU linker and enable the --allow-multiple-definition option
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=ld -Wl,-z,muldefs")
