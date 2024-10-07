@@ -33,6 +33,8 @@
 
 build/
 .vscode/
+.cache/
+.zed/
 
 #window project
 *.vcxproj

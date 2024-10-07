@@ -40,16 +40,16 @@ class ExampleLayer : public Engine::Layer {
 
         renderer->SetEntityManager(m_EntityManager);
 
-        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/build/xcode/resources/models/viking_room.obj";
+        std::string modelPah = "../../resources/models/viking_room.obj";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
         auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
 
-        std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/build/xcode/resources/models/viking_room.png";
+        std::string texturePath = "../../resources/models/viking_room.png";
         auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
-        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/build/xcode/resources/shaders/vert.spv";
-        std::string fragmentShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/build/xcode/resources/shaders/frag.spv";
+        std::string vertexShaderPath = "../../resources/shaders/vert.spv";
+        std::string fragmentShaderPath = "../../resources/shaders/frag.spv";
         auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);

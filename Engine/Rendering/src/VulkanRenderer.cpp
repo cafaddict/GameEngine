@@ -170,6 +170,8 @@ void VulkanRenderer_refac::Draw() {
             // VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
             VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity];
             VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity];
+            ENGINE_WARN("Vertex Offset: {0}", vertexOffset);
+            ENGINE_WARN("Index Offset: {0}", indexOffset);
 
             vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                                     VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,

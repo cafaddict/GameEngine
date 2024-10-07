@@ -9,8 +9,8 @@ layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 2) uniform sampler2D texSampler;
 
 void main() {
-    // vec4 texColor = texture(texSampler, fragTexCoord);
-    // outColor = texColor * fragColor; // Combine texture color with vertex color
-    outColor = {1.0, 0.0, 0.0, 1.0}; // Red
+    vec4 texColor = texture(texSampler, fragTexCoord);
+    outColor = texColor * fragColor; // Combine texture color with vertex color
+    // outColor = {1.0, 0.0, 0.0, 1.0}; // Red
     
 }

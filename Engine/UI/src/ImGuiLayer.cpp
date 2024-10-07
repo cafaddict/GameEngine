@@ -119,7 +119,7 @@ void ImGuiLayer::OnAttach() {
     pool_info.maxSets = 1000;
     pool_info.poolSizeCount = std::size(pool_sizes);
     pool_info.pPoolSizes = pool_sizes;
-    ENGINE_WARN("CreateDescriptorPool");
+
     vkCreateDescriptorPool(renderer->GetDevice()->getLogicalDevice(), &pool_info, nullptr, &imguiPool);
     // 2: initialize imgui library
 
