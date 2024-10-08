@@ -16,6 +16,7 @@ struct VulkanVertex : public VulkanBaseVertex {
         bindingDescription.binding = 0;
         bindingDescription.stride = sizeof(VulkanVertex);
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        ENGINE_WARN("VulkanVertex bindingDescription");
 
         return bindingDescription;
     }
@@ -40,6 +41,7 @@ struct VulkanVertex : public VulkanBaseVertex {
         attributeDescriptions[3].location = 3;
         attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[3].offset = offsetof(VulkanVertex, texCoord);
+        ENGINE_WARN("VulkanVertex getAttributeDescriptions");
         return attributeDescriptions;
     }
 

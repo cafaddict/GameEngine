@@ -61,6 +61,7 @@ bool hasStencilComponent(VkFormat format) {
 }
 void VulkanImage::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkFormat format,
                                         uint32_t mipLevels) {
+
     m_CommandBuffer->beginSingleTimeCommands();
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

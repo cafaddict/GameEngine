@@ -2,6 +2,7 @@
 #include "TextureData.hpp"
 #include "VulkanBuffer.hpp"
 #include "VulkanDescriptorSet.hpp"
+#include "VulkanShader.hpp"
 #include "VulkanVertex.hpp"
 #include "glm/fwd.hpp"
 #include <_types/_uint32_t.h>
@@ -62,15 +63,15 @@ class VulkanRenderer_refac : public Renderer {
     bool m_Resized = false;
     bool m_EntityUpdate = false;
 
-    std::shared_ptr<VulkanBuffer_refac<std::vector<VulkanVertex>>> m_VertexBuffer;
-    std::shared_ptr<VulkanBuffer_refac<std::vector<uint32_t>>> m_IndexBuffer;
-    std::shared_ptr<VulkanBuffer_refac<std::vector<glm::mat4>>> m_ModelStorageBuffer;
+    std::shared_ptr<VulkanVertexBuffer_refac> m_VertexBuffer;
+    std::shared_ptr<VulkanIndexBuffer_refac> m_IndexBuffer;
+    std::shared_ptr<VulkanShaderStorageBuffer_refac<glm::mat4>> m_ModelStorageBuffer;
+    std::shared_ptr<VulkanUniformBuffer_refac<VulkanCamera>> m_CameraUniformBuffer;
+    std::shared_ptr<VulkanUniformBuffer_refac<VulkanLight>> m_LightUniformBuffer;
 
     // TEMPORARY : Hardcoded camera and light data
-    VulkanCamera m_Camera;
-    VulkanLight m_Light;
-    std::shared_ptr<VulkanBuffer_refac<VulkanCamera>> m_CameraUniformBuffer;
-    std::shared_ptr<VulkanBuffer_refac<VulkanLight>> m_LightUniformBuffer;
+    std::shared_ptr<VulkanCamera> m_Camera;
+    std::shared_ptr<VulkanLight> m_Light;
 
     public:
     // Constructor that initializes the window and Vulkan objects

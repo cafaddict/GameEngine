@@ -178,18 +178,21 @@ queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &devic
         // Check for graphics queue family
         if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !indices.graphicsFamily.has_value()) {
             indices.graphicsFamily = i;
+            ENGINE_INFO("Found graphics queue family at index: {0}", i);
         }
 
         // Check for compute-only queue family
         if ((queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
             !indices.computeFamily.has_value()) {
             indices.computeFamily = i; // Dedicated compute queue
+            ENGINE_INFO("Found compute queue family at index: {0}", i);
         }
 
         // Check for transfer-only queue family
         if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
             !indices.transferFamily.has_value()) {
             indices.transferFamily = i; // Dedicated transfer queue
+            ENGINE_INFO("Found transfer queue family at index: {0}", i);
         }
 
         // Check for present support
@@ -197,6 +200,7 @@ queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &devic
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &presentSupport);
         if (presentSupport && !indices.presentFamily.has_value()) {
             indices.presentFamily = i;
+            ENGINE_INFO("Found present queue family at index: {0}", i);
         }
 
         i++;
@@ -207,6 +211,7 @@ queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &devic
         for (size_t j = 0; j < queueFamilies.size(); ++j) {
             if ((queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) && j != indices.graphicsFamily) {
                 indices.computeFamily = j;
+                ENGINE_INFO("Index of compute queue family: {0}", j);
                 break;
             }
         }
@@ -215,8 +220,10 @@ queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &devic
     // Attempt to find a dedicated transfer queue if one wasn't found initially
     if (!indices.transferFamily.has_value()) {
         for (size_t j = 0; j < queueFamilies.size(); ++j) {
-            if ((queueFamilies[j].queueFlags & VK_QUEUE_TRANSFER_BIT) && j != indices.graphicsFamily) {
+            if ((queueFamilies[j].queueFlags & VK_QUEUE_TRANSFER_BIT) && j != indices.graphicsFamily &&
+                j != indices.computeFamily) {
                 indices.transferFamily = j;
+                ENGINE_INFO("Index of transfer queue family: {0}", j);
                 break;
             }
         }
@@ -224,14 +231,17 @@ queueFamilyIndices VulkanDevice::findQueueFamilies(const VkPhysicalDevice &devic
 
     // If no dedicated compute or transfer queue was found, use the graphics queue as fallback
     if (!indices.computeFamily.has_value()) {
+        ENGINE_WARN("No dedicated compute queue found, using graphics queue instead");
         indices.computeFamily = indices.graphicsFamily; // Reuse graphics queue for compute
     }
     if (!indices.transferFamily.has_value()) {
+        ENGINE_WARN("No dedicated transfer queue found, using graphics queue instead");
         indices.transferFamily = indices.graphicsFamily; // Reuse graphics queue for transfer
     }
 
     // If no present queue was found, use the graphics queue as fallback (uncommon case)
     if (!indices.presentFamily.has_value()) {
+        ENGINE_WARN("No dedicated present queue found, using graphics queue instead");
         indices.presentFamily = indices.graphicsFamily; // Reuse graphics queue for present support
     }
 

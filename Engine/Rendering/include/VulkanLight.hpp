@@ -14,10 +14,11 @@ class VulkanLight {
     //     glm::vec3 color;
     //     float intensity;
     // } m_Data;
-    glm::vec3 m_Position;
-    glm::vec3 m_Color;
+    void *getData() { return &m_Position; }
 
     private:
+    glm::vec3 m_Position;
+    glm::vec3 m_Color;
     float m_Intensity;
 };
 } // namespace Engine

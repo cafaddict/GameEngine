@@ -58,7 +58,7 @@ class ExampleLayer : public Engine::Layer {
         transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
         transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+        transformComponent->SetScale(glm::vec3(10.0f, 10.0f, 10.0f));
 
         auto entity1 = m_EntityManager->CreateEntity("entity1");
         entity1->AddComponent(modelComponent);
