@@ -241,7 +241,7 @@ void VulkanRenderer::createEntityResources() {
         ENGINE_TRACE("model normal size: {0}", model_data->normals.size());
         ENGINE_TRACE("model uvs size: {0}", model_data->uvs.size());
 
-        for (size_t i = 0; i < model_data->indices.size(); i++) {
+        for (size_t i = 0; i < model_data->positions.size(); i++) {
             Vertex vertex{};
             vertex.pos = model_data->positions[i];
             vertex.normal = model_data->normals.size() > i ? model_data->normals[i] : glm::vec3(0.0f, 0.0f, 1.0f);
@@ -1302,7 +1302,7 @@ void VulkanRenderer::createGraphicsPipeline() {
 }
 
 void VulkanRenderer::createComputePipeline() {
-    auto computeShaderCode = readFile("../../resources/shaders/particlecompute.spv");
+    auto computeShaderCode = readFile("/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/particlecompute.spv");
 
     VkShaderModule computeShaderModule = createShaderModule(computeShaderCode);
 
