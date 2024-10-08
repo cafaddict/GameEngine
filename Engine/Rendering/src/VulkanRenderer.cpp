@@ -109,6 +109,12 @@ void VulkanRenderer_refac::Init() {
     m_ModelStorageBuffer = std::make_shared<VulkanBuffer_refac<std::vector<glm::mat4>>>(
         transformations, offsets, m_Device, m_TransferCommandBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        m_CameraUniformBuffer->updateData(m_Camera, i);
+        m_LightUniformBuffer->updateData(m_Light, i);
+        m_ModelStorageBuffer->updateData(transformations, i);
+    }
+
     // createEntityResources();
 
     ENGINE_INFO("Vulkan Camera and Light Uniform Buffers Created");
@@ -153,8 +159,12 @@ void VulkanRenderer_refac::Draw() {
 
     if (!entities.empty() && !m_EntityUpdate) {
         VkBuffer vertexBuffers[] = {std::get<VkBuffer>(m_VertexBuffer->getBuffer())};
+        std::cout << "vertexBuffer memory address: " << &vertexBuffers[0] << std::endl;
+        std::cout << "vertexBuffer value: " << vertexBuffers[0] << std::endl;
 
         VkBuffer indexBuffer = std::get<VkBuffer>(m_IndexBuffer->getBuffer());
+        std::cout << "indexBuffer memory address: " << &indexBuffer << std::endl;
+        std::cout << "indexBuffer value: " << indexBuffer << std::endl;
 
         vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], indexBuffer, 0,
@@ -170,7 +180,7 @@ void VulkanRenderer_refac::Draw() {
             // VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
             VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity];
             VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity];
-            std::cout << &descriptorSet->getDescriptorSets()[m_CurrentFrame] << std::endl;
+
             vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                                     VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,
                                     &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);

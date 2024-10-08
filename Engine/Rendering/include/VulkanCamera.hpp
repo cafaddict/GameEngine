@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/fwd.hpp"
 #include <vulkan/vulkan.h>
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -11,10 +12,14 @@ class VulkanCamera {
     ~VulkanCamera();
     glm::mat4 getView() { return m_View; }
     glm::mat4 getProjection() { return m_Projection; }
-
-    private:
+    // struct {
+    //     glm::mat4 view;
+    //     glm::mat4 proj;
+    // } m_Data;
     glm::mat4 m_View;
     glm::mat4 m_Projection;
+
+    private:
     // VulkanCamera(VkDevice device, VkExtent2D extent);
     // ~VulkanCamera();
     // void updateCamera();

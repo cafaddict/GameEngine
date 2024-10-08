@@ -23,6 +23,7 @@ class VulkanDescriptorSet {
 
     std::shared_ptr<const TextureData> m_TextureData;
     std::vector<std::vector<VkDescriptorBufferInfo>> m_BufferInfos;
+    int test;
 
     private:
     std::shared_ptr<VulkanDevice> m_Device;

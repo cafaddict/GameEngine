@@ -38,7 +38,7 @@ template <typename T> class VulkanBuffer_refac {
         if (m_Usage == VK_BUFFER_USAGE_VERTEX_BUFFER_BIT || m_Usage == VK_BUFFER_USAGE_INDEX_BUFFER_BIT) {
             return;
         }
-        memcpy(m_BuffersMapped[currentFrame], data.data(), sizeof(T) * data.size());
+        memcpy(m_BuffersMapped[currentFrame], &data, sizeof(T));
     }
 
     private:
@@ -142,6 +142,7 @@ VulkanBuffer_refac<T>::VulkanBuffer_refac(T &data, std::unordered_map<std::share
         VkDeviceMemory statingBufferMemory;
         using ElementType = typename T::value_type;
         VkDeviceSize bufferSize = sizeof(ElementType) * m_Data.size();
+
         m_DataSize = sizeof(ElementType);
         m_Buffers.resize(1);
         m_BuffersMemory.resize(1);
@@ -164,6 +165,7 @@ VulkanBuffer_refac<T>::VulkanBuffer_refac(T &data, std::unordered_map<std::share
             bufferSize = sizeof(T) * 1000;
         }
         m_DataSize = sizeof(T);
+
         m_Buffers.resize(MAX_FRAME_IN_FLIGHT);
         m_BuffersMemory.resize(MAX_FRAME_IN_FLIGHT);
         m_BuffersMapped.resize(MAX_FRAME_IN_FLIGHT);

@@ -9,10 +9,15 @@ class VulkanLight {
     VulkanLight() = default;
     VulkanLight(glm::vec3 position, glm::vec3 color, float intensity);
     ~VulkanLight();
-
-    private:
+    // struct {
+    //     glm::vec3 position;
+    //     glm::vec3 color;
+    //     float intensity;
+    // } m_Data;
     glm::vec3 m_Position;
     glm::vec3 m_Color;
+
+    private:
     float m_Intensity;
 };
 } // namespace Engine
