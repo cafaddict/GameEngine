@@ -33,7 +33,10 @@
 
 build/
 .vscode/
+.cache/
+.zed/
 
+.DS_Store
 #window project
 *.vcxproj
 *.vcxproj.filters
