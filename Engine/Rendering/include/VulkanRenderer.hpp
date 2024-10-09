@@ -1,8 +1,7 @@
 #pragma once
 #include "TextureData.hpp"
-#include "VulkanBuffer.hpp"
 #include "VulkanDescriptorSet.hpp"
-#include "VulkanShader.hpp"
+#include "VulkanBuffer.hpp"
 #include "VulkanVertex.hpp"
 #include "glm/fwd.hpp"
 #include <_types/_uint32_t.h>
@@ -14,7 +13,6 @@
 #include <vulkan/vulkan.h>
 
 #include "EntityManager.hpp"
-#include "VulkanBuffer_refac.hpp"
 #include "VulkanCamera.hpp"
 #include "VulkanCommandBuffer.hpp"
 #include "VulkanDevice.hpp"
@@ -32,7 +30,7 @@
 #include <memory>
 
 namespace Engine {
-class VulkanRenderer_refac : public Renderer {
+class VulkanRenderer : public Renderer {
     private:
     std::shared_ptr<EntityManager> m_EntityManager;
     std::unordered_map<VulkanShadersData, std::shared_ptr<VulkanGraphicsPipeline>, ShaderDataHash> m_PipelineCache;
@@ -65,11 +63,11 @@ class VulkanRenderer_refac : public Renderer {
 
     std::vector<glm::mat4> m_Transformations;
 
-    std::shared_ptr<VulkanVertexBuffer_refac> m_VertexBuffer;
-    std::shared_ptr<VulkanIndexBuffer_refac> m_IndexBuffer;
-    std::shared_ptr<VulkanShaderStorageBuffer_refac<glm::mat4>> m_ModelStorageBuffer;
-    std::shared_ptr<VulkanUniformBuffer_refac<VulkanCamera>> m_CameraUniformBuffer;
-    std::shared_ptr<VulkanUniformBuffer_refac<VulkanLight>> m_LightUniformBuffer;
+    std::shared_ptr<VulkanVertexBuffer> m_VertexBuffer;
+    std::shared_ptr<VulkanIndexBuffer> m_IndexBuffer;
+    std::shared_ptr<VulkanShaderStorageBuffer<glm::mat4>> m_ModelStorageBuffer;
+    std::shared_ptr<VulkanUniformBuffer<VulkanCamera>> m_CameraUniformBuffer;
+    std::shared_ptr<VulkanUniformBuffer<VulkanLight>> m_LightUniformBuffer;
 
     // TEMPORARY : Hardcoded camera and light data
     std::shared_ptr<VulkanCamera> m_Camera;
@@ -77,11 +75,11 @@ class VulkanRenderer_refac : public Renderer {
 
     public:
     // Constructor that initializes the window and Vulkan objects
-    VulkanRenderer_refac(GLFWwindow *window);
+    VulkanRenderer(GLFWwindow *window);
     void createEntityResources();
 
     // Destructor
-    virtual ~VulkanRenderer_refac();
+    virtual ~VulkanRenderer();
 
     // Pure virtual functions from Renderer that must be overridden
     virtual void Draw() override;

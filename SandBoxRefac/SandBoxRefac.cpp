@@ -27,7 +27,7 @@ class ExampleLayer : public Engine::Layer {
         : Layer("Example"), m_EntityManager(entityManager), m_AssetManager(assetManager) {}
     void OnUpdate() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
         renderer->Draw();
     }
     void OnEvent(Engine::Event &event) override {
@@ -36,7 +36,7 @@ class ExampleLayer : public Engine::Layer {
 
     void OnAttach() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
 
         renderer->SetEntityManager(m_EntityManager);
 

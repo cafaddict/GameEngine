@@ -4,13 +4,12 @@
 #include "TextureComponent.hpp"
 #include "TransformComponent.hpp"
 #include "VulkanBuffer.hpp"
-#include "VulkanBuffer_refac.hpp"
+#include "VulkanBuffer.hpp"
 #include "VulkanDebugMessenger.hpp"
 #include "VulkanDescriptorSet.hpp"
 #include "VulkanGraphicsPipeline.hpp"
 #include "VulkanInstance.hpp"
 #include "VulkanRenderPass.hpp"
-#include "VulkanShader.hpp"
 #include "VulkanSwapChain.hpp"
 #include "VulkanVertex.hpp"
 #include "glm/fwd.hpp"
@@ -25,23 +24,23 @@ namespace Engine {
 
 Renderer *Renderer::Create(GLFWwindow *window) {
     ENGINE_INFO("Vulkan Renderer Creation");
-    return new VulkanRenderer_refac(window);
+    return new VulkanRenderer(window);
 }
 
 // Constructor implementation
-VulkanRenderer_refac::VulkanRenderer_refac(GLFWwindow *window) {
+VulkanRenderer::VulkanRenderer(GLFWwindow *window) {
     SetWindow(window);
     Init(); // Initialize Vulkan instance and debug messenger
 }
 
 // Destructor implementation
-VulkanRenderer_refac::~VulkanRenderer_refac() {
+VulkanRenderer::~VulkanRenderer() {
     // Vulkan cleanup (if needed) happens automatically due to shared_ptr
     // destructors
 }
 
 // Init implementation to set up Vulkan instance and debug messenger
-void VulkanRenderer_refac::Init() {
+void VulkanRenderer::Init() {
     ENGINE_INFO("Vulkan Renderer Init");
 
     m_Instance = std::make_shared<VulkanInstance>();
@@ -105,37 +104,37 @@ void VulkanRenderer_refac::Init() {
     std::unordered_map<std::shared_ptr<Entity>, size_t> offsets;
 
     m_CameraUniformBuffer =
-        std::make_shared<VulkanUniformBuffer_refac<VulkanCamera>>(m_Camera, m_Device, m_TransferCommandBuffer);
+        std::make_shared<VulkanUniformBuffer<VulkanCamera>>(m_Camera, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Camera Uniform Buffer Created");
     m_LightUniformBuffer =
-        std::make_shared<VulkanUniformBuffer_refac<VulkanLight>>(m_Light, m_Device, m_TransferCommandBuffer);
+        std::make_shared<VulkanUniformBuffer<VulkanLight>>(m_Light, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Light Uniform Buffer Created");
     std::vector<glm::mat4> transformations;
-    m_ModelStorageBuffer = std::make_shared<VulkanShaderStorageBuffer_refac<glm::mat4>>(transformations, m_Device,
-                                                                                        m_TransferCommandBuffer);
+    m_ModelStorageBuffer =
+        std::make_shared<VulkanShaderStorageBuffer<glm::mat4>>(transformations, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Model Storage Buffer Created");
     // createEntityResources();
 }
 
 // Implement pure virtual function from Renderer
-void VulkanRenderer_refac::SetWindowResized(bool resized) {
+void VulkanRenderer::SetWindowResized(bool resized) {
     // Handle window resize
     m_Resized = resized;
 }
 
 // Implement pure virtual function from Renderer
-void VulkanRenderer_refac::SetWindowMinimized(bool minimized) {
+void VulkanRenderer::SetWindowMinimized(bool minimized) {
     // Handle window minimized logic
     m_Minimizied = minimized;
 }
 
 // Implement pure virtual function from Renderer
-void VulkanRenderer_refac::WaitIdle() {
+void VulkanRenderer::WaitIdle() {
     // Implement Vulkan logic to wait for GPU operations to finish
 }
 
 // Implement pure virtual function from Renderer
-void VulkanRenderer_refac::Draw() {
+void VulkanRenderer::Draw() {
 
     auto entities = m_EntityManager->GetAllEntities();
     VkViewport viewport{};
@@ -195,7 +194,7 @@ void VulkanRenderer_refac::Draw() {
     }
 }
 
-void VulkanRenderer_refac::BeginRecord() {
+void VulkanRenderer::BeginRecord() {
 
     vkWaitForFences(m_Device->getLogicalDevice(), 1, &m_InFlightFences->getFence()[m_CurrentFrame], VK_TRUE,
                     UINT64_MAX);
@@ -237,7 +236,7 @@ void VulkanRenderer_refac::BeginRecord() {
     vkCmdBeginRenderPass(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 }
-void VulkanRenderer_refac::EndRecord() {
+void VulkanRenderer::EndRecord() {
     vkCmdEndRenderPass(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame]);
     if (vkEndCommandBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");
@@ -289,7 +288,7 @@ void VulkanRenderer_refac::EndRecord() {
     }
 }
 
-void VulkanRenderer_refac::recreateSwapChain() {
+void VulkanRenderer::recreateSwapChain() {
     while (m_Minimizied) {
         ENGINE_WARN("Window is minimized. Waiting for restore...");
         glfwWaitEvents();
@@ -311,7 +310,7 @@ void VulkanRenderer_refac::recreateSwapChain() {
     ENGINE_INFO("Vulkan Frame Buffer ReCreated");
 }
 
-void VulkanRenderer_refac::createEntityResources() {
+void VulkanRenderer::createEntityResources() {
     ENGINE_WARN("Creating Entity Resources");
     uint32_t currentVertexOffset = 0;
     uint32_t currentIndexOffset = 0;
@@ -428,8 +427,8 @@ void VulkanRenderer_refac::createEntityResources() {
 
     m_Transformations = transformations;
 
-    m_VertexBuffer = std::make_shared<VulkanVertexBuffer_refac>(vertices, m_Device, m_TransferCommandBuffer);
-    m_IndexBuffer = std::make_shared<VulkanIndexBuffer_refac>(indices, m_Device, m_TransferCommandBuffer);
+    m_VertexBuffer = std::make_shared<VulkanVertexBuffer>(vertices, m_Device, m_TransferCommandBuffer);
+    m_IndexBuffer = std::make_shared<VulkanIndexBuffer>(indices, m_Device, m_TransferCommandBuffer);
 }
 
 } // namespace Engine

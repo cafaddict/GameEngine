@@ -1,10 +1,14 @@
 #include <ImGuiLayer.hpp>
 #include "Log.hpp"
 #include "VulkanRenderer.hpp"
-#include "VulkanRendering.hpp"
 #include "imgui.h"
 #include "imgui_impl_vulkan.cpp"
 #include <glm/gtc/type_ptr.hpp>
+
+#include "ModelComponent.hpp"
+#include "TextureComponent.hpp"
+#include "ShaderComponent.hpp"
+#include "TransformComponent.hpp"
 
 namespace Editor {
 #define BIND_EVENT_FN(x) std::bind(&ImGuiLayer::x, this, std::placeholders::_1)
@@ -96,7 +100,7 @@ ImGuiLayer::~ImGuiLayer() {}
 void ImGuiLayer::OnAttach() {
     ENGINE_WARN("ImGuiLayer");
     Engine::Application &app = Engine::Application::Get();
-    auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
+    auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
     // 1: create descriptor pool for IMGUI
     //  the size of the pool is very oversize, but it's copied from imgui demo
@@ -174,8 +178,7 @@ void ImGuiLayer::OnAttach() {
 void ImGuiLayer::OnDetach() {
     Engine::Application &app = Engine::Application::Get();
     auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
-    auto vulkandata = renderer->GetVulkanData();
-    vkDestroyDescriptorPool(vulkandata.device, imguiPool, nullptr);
+    vkDestroyDescriptorPool(renderer->GetDevice()->getLogicalDevice(), imguiPool, nullptr);
     ImGui_ImplVulkan_Shutdown();
 }
 
@@ -199,7 +202,7 @@ void ImGuiLayer::OnUpdate() {
 
     ImGuiIO &io = ImGui::GetIO();
     Engine::Application &app = Engine::Application::Get();
-    auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
+    auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
     io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
@@ -366,7 +369,7 @@ void ImGuiLayer::OnUpdate() {
 }
 void ImGuiLayer::FrameRender(ImDrawData *draw_data) {
     Engine::Application &app = Engine::Application::Get();
-    auto renderer = static_cast<Engine::VulkanRenderer_refac *>(app.GetRenderer());
+    auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
     auto window = static_cast<GLFWwindow *>(app.GetWindow().GetNativeWindow());
     VkResult err;
 
