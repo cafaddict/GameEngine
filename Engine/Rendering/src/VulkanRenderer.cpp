@@ -13,6 +13,7 @@
 #include "VulkanShader.hpp"
 #include "VulkanSwapChain.hpp"
 #include "VulkanVertex.hpp"
+#include "glm/fwd.hpp"
 #include "vulkan/vulkan_core.h"
 #include <VulkanRenderer.hpp>
 #include <cstddef>
@@ -162,6 +163,15 @@ void VulkanRenderer_refac::Draw() {
         vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], indexBuffer, 0,
                              VK_INDEX_TYPE_UINT32);
         int cnt = 0;
+        std::vector<glm::mat4> transformations;
+        for (const auto &entity : entities) {
+            auto transform = entity->GetComponent<TransformComponent>()->GetTransformMatrix();
+            transformations.push_back(transform);
+        }
+        for (int i = 0; i < MAX_FRAME_IN_FLIGHT; i++) {
+            m_ModelStorageBuffer->updateData(transformations, i);
+        }
+
         for (const auto &entity : entities) {
             auto graphicsPipeline = m_EntityPipelines[entity];
             auto descriptorSet = m_EntityDescriptorSets[entity];
@@ -416,11 +426,10 @@ void VulkanRenderer_refac::createEntityResources() {
         }
     }
 
+    m_Transformations = transformations;
+
     m_VertexBuffer = std::make_shared<VulkanVertexBuffer_refac>(vertices, m_Device, m_TransferCommandBuffer);
     m_IndexBuffer = std::make_shared<VulkanIndexBuffer_refac>(indices, m_Device, m_TransferCommandBuffer);
-    for (int i = 0; i < MAX_FRAME_IN_FLIGHT; i++) {
-        m_ModelStorageBuffer->updateData(transformations, i);
-    }
 }
 
 } // namespace Engine

@@ -63,6 +63,8 @@ class VulkanRenderer_refac : public Renderer {
     bool m_Resized = false;
     bool m_EntityUpdate = false;
 
+    std::vector<glm::mat4> m_Transformations;
+
     std::shared_ptr<VulkanVertexBuffer_refac> m_VertexBuffer;
     std::shared_ptr<VulkanIndexBuffer_refac> m_IndexBuffer;
     std::shared_ptr<VulkanShaderStorageBuffer_refac<glm::mat4>> m_ModelStorageBuffer;
