@@ -73,6 +73,8 @@ class ExampleLayer : public Engine::Layer {
 class SandboxRefac : public Engine::Application {
     public:
     SandboxRefac() {
+        SetWindow(Engine::RendererType::Vulkan);
+        SetRenderer(Engine::RendererType::Vulkan);
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
         PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));

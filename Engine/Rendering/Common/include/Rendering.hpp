@@ -1,4 +1,5 @@
 #pragma once
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 // #include <Particle.hpp>
@@ -6,6 +7,7 @@
 // #include <glad/glad.h>
 
 namespace Engine {
+enum class RendererType { OpenGL, Vulkan };
 class Renderer {
     public:
     virtual ~Renderer() {}
@@ -22,6 +24,7 @@ class Renderer {
     virtual void SetEntityUpdate(bool update) = 0;
     static Renderer *Create();
     static Renderer *Create(GLFWwindow *window);
+    static Renderer *Create(GLFWwindow *window, RendererType type);
 
     // for vulkan
     virtual void WaitIdle() = 0;

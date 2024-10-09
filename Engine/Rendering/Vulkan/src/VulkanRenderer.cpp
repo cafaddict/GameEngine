@@ -22,16 +22,18 @@
 #define MAX_FRAMES_IN_FLIGHT 2
 namespace Engine {
 
-Renderer *Renderer::Create(GLFWwindow *window) {
-    ENGINE_INFO("Vulkan Renderer Creation");
-    return new VulkanRenderer(window);
-}
+// Renderer *Renderer::Create(GLFWwindow *window) {
+//     ENGINE_INFO("Vulkan Renderer Creation");
+//     return new VulkanRenderer(window);
+// }
 
 // Constructor implementation
 VulkanRenderer::VulkanRenderer(GLFWwindow *window) {
     SetWindow(window);
     Init(); // Initialize Vulkan instance and debug messenger
 }
+
+VulkanRenderer *VulkanRenderer::Create(GLFWwindow *window) { return new VulkanRenderer(window); }
 
 // Destructor implementation
 VulkanRenderer::~VulkanRenderer() {

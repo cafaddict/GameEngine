@@ -1,4 +1,6 @@
-#include "VulkanRenderer.hpp"
+#include "Log.hpp"
+#include "OpenGLRenderer.hpp"
+#include "Rendering.hpp"
 #include <memory>
 #define GLFW_INCLUDE_NONE
 #include <AssetManager.hpp>
@@ -24,10 +26,10 @@ class ExampleLayer : public Engine::Layer {
     }
     ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager,
                  std::shared_ptr<Engine::AssetManager> assetManager)
-        : Layer("Example"), m_EntityManager(entityManager), m_AssetManager(assetManager) {}
+        : Layer("Example"), m_AssetManager(assetManager), m_EntityManager(entityManager) {}
     void OnUpdate() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::OpenGLRenderer *>(app.GetRenderer());
         renderer->Draw();
     }
     void OnEvent(Engine::Event &event) override {
@@ -36,7 +38,7 @@ class ExampleLayer : public Engine::Layer {
 
     void OnAttach() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::OpenGLRenderer *>(app.GetRenderer());
 
         renderer->SetEntityManager(m_EntityManager);
 
@@ -73,9 +75,12 @@ class ExampleLayer : public Engine::Layer {
 class SandboxRefac : public Engine::Application {
     public:
     SandboxRefac() {
+        SetWindow(Engine::RendererType::OpenGL);
+        SetRenderer(Engine::RendererType::OpenGL);
+        ENGINE_WARN("SandboxRefac");
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
-        PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
+        // PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());
     }

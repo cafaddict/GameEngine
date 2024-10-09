@@ -21,6 +21,8 @@
 #include <EntityManager.hpp>
 #include <AssetManager.hpp>
 
+#include <VulkanRenderer.hpp>
+
 #include <memory>
 
 #include <nfd.h>

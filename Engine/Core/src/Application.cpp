@@ -1,20 +1,42 @@
 #include "Application.hpp"
 #include "Input.hpp"
 #include "Log.hpp"
+#include "OpenGLRenderer.hpp"
+#include "VulkanRenderer.hpp"
 
 namespace Engine {
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 Application *Application::s_Instance = nullptr;
 Application::Application() {
+    ENGINE_WARN("Application");
     ENGINE_ASSERT(!s_Instance, "Application already exists!");
     s_Instance = this;
-    m_Window = std::unique_ptr<Window>(Window::Create());
-    m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+
+    // m_Window = std::unique_ptr<Window>(Window::Create());
+    // m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 
     // Renderer
+    // auto window = static_cast<GLFWwindow *>(m_Window->GetNativeWindow());
+    // m_Renderer = Renderer::Create(window);
+}
+
+void Application::SetWindow(RendererType rendertype) {
+    WindowProps props;
+    props.Title = "Initial Application";
+    props.Width = 1200;
+    props.Height = 800;
+    props.Renderer = rendertype;
+    m_Window = std::unique_ptr<Window>(Window::Create(props));
+    m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+}
+
+void Application::SetRenderer(RendererType rendertype) {
     auto window = static_cast<GLFWwindow *>(m_Window->GetNativeWindow());
-    // m_Renderer->SetWindow(window);
-    m_Renderer = Renderer::Create(window);
+    if (rendertype == RendererType::OpenGL) {
+        m_Renderer = OpenGLRenderer::Create(window);
+    } else if (rendertype == RendererType::Vulkan) {
+        m_Renderer = VulkanRenderer::Create(window);
+    }
 }
 
 Application::~Application() {}

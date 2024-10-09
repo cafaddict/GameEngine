@@ -5,6 +5,7 @@
 #include "KeyEvent.hpp"
 #include "Log.hpp"
 #include "MouseEvent.hpp"
+#include "Rendering.hpp"
 namespace Engine {
 
 static bool s_GLFWInitialized = false;
@@ -21,6 +22,7 @@ void GlfwWindow::Init(const WindowProps &props) {
     m_Data.Title = props.Title;
     m_Data.Width = props.Width;
     m_Data.Height = props.Height;
+    m_Data.Renderer = props.Renderer;
 
     ENGINE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
     if (!s_GLFWInitialized) {
@@ -30,9 +32,24 @@ void GlfwWindow::Init(const WindowProps &props) {
         }
 
         s_GLFWInitialized = true;
+        switch (props.Renderer) {
+        case RendererType::OpenGL:
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+            break;
+        case RendererType::Vulkan:
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+            glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+            break;
+        default:
+            ENGINE_ERROR("Renderer type not supported");
+            break;
+        }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwSetErrorCallback(GLFWErrorCallback);
     }
 
@@ -131,6 +148,8 @@ void GlfwWindow::Shutdown() {
 void GlfwWindow::OnUpdate() {
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // glClear(GL_COLOR_BUFFER_BIT);
+    if (m_Data.Renderer == RendererType::OpenGL)
+        glfwSwapBuffers(m_Window);
     glfwPollEvents();
     // glfwSwapBuffers(m_Window);
 }
