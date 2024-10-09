@@ -50,8 +50,9 @@ class ExampleLayer : public Engine::Layer {
         auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
-        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert.spv";
-        std::string fragmentShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag.spv";
+        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert_opengl.vert";
+        std::string fragmentShaderPath =
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag_opengl.frag";
         auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);

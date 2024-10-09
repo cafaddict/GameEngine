@@ -5,6 +5,7 @@
 #include "ShaderComponent.hpp"
 #include "ModelComponent.hpp"
 #include "TransformComponent.hpp"
+#include "OpenGLTexture.hpp"
 namespace Engine {
 // Renderer *Renderer::Create(GLFWwindow *window) {
 //     ENGINE_INFO("Vulkan Renderer Creation");
@@ -40,9 +41,25 @@ void OpenGLRenderer::Init() {
     glfwGetFramebufferSize(m_Window, &width, &height);
     glViewport(0, 0, width, height);
 }
-void OpenGLRenderer::Draw() {}
+void OpenGLRenderer::Draw() {
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    auto entities = m_EntityManager->GetAllEntities();
+    for (auto &entity : entities) {
+        auto program = m_EntityPrograms[entity];
+        auto mesh = m_EntityMeshes[entity];
+        auto texture = m_EntityTextures[entity];
+    }
+    glfwSwapBuffers(m_Window);
+    glfwPollEvents();
+}
 void OpenGLRenderer::BeginRecord() {}
-void OpenGLRenderer::EndRecord() {}
+void OpenGLRenderer::EndRecord() {
+    if (m_EntityUpdate) {
+        createEntityResources();
+        m_EntityUpdate = false;
+    }
+}
 void OpenGLRenderer::SetWindow(GLFWwindow *window) { m_Window = window; }
 void OpenGLRenderer::SetWindowResized(bool resized) { m_Resized = resized; }
 void OpenGLRenderer::SetWindowMinimized(bool minimized) { m_Minimizied = minimized; }
@@ -51,15 +68,11 @@ void OpenGLRenderer::SetEntityUpdate(bool update) { m_EntityUpdate = update; }
 void OpenGLRenderer::WaitIdle() {}
 
 void OpenGLRenderer::createEntityResources() {
-    uint32_t currentVertexOffset = 0;
-    uint32_t currentIndexOffset = 0;
 
     auto entities = m_EntityManager->GetAllEntities();
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
     std::vector<glm::mat4> transformations;
-    std::unordered_map<std::shared_ptr<Entity>, size_t> vertexOffsets;
-    std::unordered_map<std::shared_ptr<Entity>, size_t> indexOffsets;
 
     for (auto &entity : entities) {
         auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
@@ -74,21 +87,33 @@ void OpenGLRenderer::createEntityResources() {
 
         auto transform = entity->GetComponent<TransformComponent>()->GetTransformMatrix();
 
-        size_t vertexCount = model_data->positions.size();
-        size_t indexCount = model_data->indices.size();
+        auto vertexShaderCode =
+            vertex_shader_data ? std::make_optional(vertex_shader_data->GetShaderCode()) : std::nullopt;
+        auto fragmentShaderCode =
+            fragment_shader_data ? std::make_optional(fragment_shader_data->GetShaderCode()) : std::nullopt;
+        auto computeShaderCode =
+            compute_shader_data ? std::make_optional(compute_shader_data->GetShaderCode()) : std::nullopt;
+
+        if (computeShaderCode) {
+            std::shared_ptr<OpenGLProgram> program = std::make_shared<OpenGLProgram>(
+                vertexShaderCode.value(), fragmentShaderCode.value(), computeShaderCode.value());
+            m_EntityPrograms[entity] = program;
+
+        } else {
+            std::shared_ptr<OpenGLProgram> program =
+                std::make_shared<OpenGLProgram>(vertexShaderCode.value(), fragmentShaderCode.value());
+            m_EntityPrograms[entity] = program;
+        }
 
         ENGINE_TRACE("model_data->positions.size() = {0}", model_data->positions.size());
         ENGINE_TRACE("model_data->normals.size() = {0}", model_data->normals.size());
         ENGINE_TRACE("model_data->uvs.size() = {0}", model_data->uvs.size());
 
-        for (size_t i = 0; i < vertexCount; i++) {
-            Vertex vertex;
-            vertex.pos = model_data->positions[i];
-            vertex.normal = model_data->normals.size() > i ? model_data->normals[i] : glm::vec3(0.0f, 0.0f, 1.0f);
-            vertex.texCoord = model_data->uvs.size() > i ? model_data->uvs[i] : glm::vec2(0.0f);
-            vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
-            vertices.push_back(vertex);
-        }
+        std::shared_ptr<OpenGLMesh> mesh = std::make_shared<OpenGLMesh>(model_data);
+        m_EntityMeshes[entity] = mesh;
+
+        std::shared_ptr<OpenGLTexture> texture = std::make_shared<OpenGLTexture>(texture_data);
+        m_EntityTextures[entity] = texture;
     }
 }
 

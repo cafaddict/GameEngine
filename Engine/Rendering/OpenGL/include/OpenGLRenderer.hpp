@@ -1,16 +1,15 @@
 #pragma once
 #include "EntityManager.hpp"
+#include "OpenGLTexture.hpp"
 #include "Rendering.hpp"
 #include "Log.hpp"
 #include "Camera.hpp"
+#include "OpenGLMesh.hpp"
+#include "OpenGLProgram.hpp"
+#include <unordered_map>
 
 namespace Engine {
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 normal;
-    glm::vec4 color;
-    glm::vec2 texCoord;
-};
+
 class OpenGLRenderer : public Renderer {
     public:
     static OpenGLRenderer *Create(GLFWwindow *window);
@@ -36,7 +35,8 @@ class OpenGLRenderer : public Renderer {
     bool m_Minimizied = false;
     bool m_Resized = false;
     bool m_EntityUpdate = false;
-    std::vector<GLuint> m_VBOs;
-    std::unordered_map<std::shared_ptr<Entity>, GLuint> m_EntityVAOs;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<OpenGLMesh>> m_EntityMeshes;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<OpenGLProgram>> m_EntityPrograms;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<OpenGLTexture>> m_EntityTextures;
 };
 } // namespace Engine
