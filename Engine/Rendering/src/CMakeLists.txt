@@ -1,4 +1,4 @@
-include_directories(../include)
+include_directories(../include ../src)
 
 file(GLOB SRC "*.hpp" "*.cpp" "*.tpp")
 find_package(Vulkan REQUIRED)

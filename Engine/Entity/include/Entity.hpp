@@ -2,6 +2,7 @@
 #include "Component.hpp"
 #include <vector>
 #include <memory>
+#include <string>
 namespace Engine {
     class Entity
         {

@@ -6,6 +6,7 @@ add_executable(SandBox SandBox.cpp)
 
 # target_link_libraries(SandBox PUBLIC EDITOR ENGINE glfw TINY_OBJ_LOADER STB_IMAGE)
 # target_include_directories(SandBox PUBLIC ../Engine ../EngineEditor ../external)
+
 target_link_libraries(SandBox PUBLIC STB_IMAGE ENGINE)
 # target_include_directories(SandBox PUBLIC ../EngineEditor)
 

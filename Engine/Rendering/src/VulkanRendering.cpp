@@ -42,10 +42,10 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 }
 
 // With window
-Renderer *Renderer::Create(GLFWwindow *window) {
-    ENGINE_WARN("Vulkan Renderer Creation");
-    return new VulkanRenderer(window);
-}
+// Renderer *Renderer::Create(GLFWwindow *window) {
+//     ENGINE_WARN("Vulkan Renderer Creation");
+//     return new VulkanRenderer(window);
+// }
 
 VulkanRenderer::VulkanRenderer(GLFWwindow *window) {
     SetWindow(window);
@@ -121,9 +121,9 @@ void VulkanRenderer::recreateSwapChain() {
     createFramebuffer();
     createGUIFramebuffer();
 }
-
+void VulkanRenderer::EndRecord() {}
 void VulkanRenderer::BeginRecord() {
-   
+
     vkWaitForFences(m_VulkanData.device, 1, &m_VulkanData.inFlightFences[m_VulkanData.currentFrame], VK_TRUE,
                     UINT64_MAX);
 
@@ -151,9 +151,6 @@ void VulkanRenderer::BeginRecord() {
         transformations_in.push_back(transform);
     }
 
-
-
-
     dynamic_cast<VulkanShaderStorageBuffer<glm::mat4> *>(m_ShaderStorageBuffers.get())
         ->Update(m_VulkanData.currentFrame, transformations_in);
 
@@ -173,7 +170,6 @@ void VulkanRenderer::BeginRecord() {
     }
 
     recordCommandBuffer(m_VulkanData.commandBuffers[m_VulkanData.currentFrame], m_VulkanData.image_index);
-
 
     // VkSubmitInfo submitInfo{};
     // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -834,11 +830,12 @@ void VulkanRenderer::createSwapChain() {
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     QueueFamilyIndices indices = findQueueFamilies(m_VulkanData.physicalDevice);
-    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value(),
+                                     indices.computeFamily.value()};
 
-    if (indices.graphicsFamily != indices.presentFamily) {
+    if (indices.graphicsFamily != indices.presentFamily || indices.computeFamily != indices.graphicsFamily) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
+        createInfo.queueFamilyIndexCount = 3;
         createInfo.pQueueFamilyIndices = queueFamilyIndices;
     } else {
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -1064,13 +1061,16 @@ void VulkanRenderer::createDescriptorSetLayout() {
     // samplerLayoutBinding.pImmutableSamplers = nullptr;
     // samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    // std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding,
-    //                                                         samplerLayoutBinding };
+    // std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+    // uboLayoutBinding,
+    //                                                         samplerLayoutBinding
+    //                                                         };
     // VkDescriptorSetLayoutCreateInfo layoutInfo{};
     // layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     // layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     // layoutInfo.pBindings = bindings.data();
-    // if (vkCreateDescriptorSetLayout(m_VulkanData.device, &layoutInfo, nullptr,
+    // if (vkCreateDescriptorSetLayout(m_VulkanData.device, &layoutInfo,
+    // nullptr,
     //     &m_VulkanData.descriptorSetLayout) !=
     //     VK_SUCCESS)
     //     {
@@ -1833,29 +1833,45 @@ VulkanRenderer::QueueFamilyIndices VulkanRenderer::findQueueFamilies(VkPhysicalD
 
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
     int i = 0;
     for (const auto &queueFamily : queueFamilies) {
+        // Find graphics queue
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
         }
-        if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-            // Prefer a separate compute queue, but fall back to the same as graphics queue if necessary
-            if (!indices.computeFamily.has_value() ||
-                !(queueFamilies[indices.computeFamily.value()].queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
-                indices.computeFamily = i;
-            }
+
+        // Find dedicated compute queue (skip queues that also have
+        // VK_QUEUE_GRAPHICS_BIT)
+        if ((queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+            indices.computeFamily = i;
         }
+
+        // Find present queue
         VkBool32 presentSupport = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_VulkanData.surface, &presentSupport);
-
         if (presentSupport) {
             indices.presentFamily = i;
         }
+
+        // Check if we've found all required queue families
         if (indices.isComplete()) {
             break;
         }
         i++;
     }
+
+    // Fallback: If no dedicated compute queue was found, use the graphics queue
+    // for compute
+    if (!indices.computeFamily.has_value()) {
+        for (size_t j = 0; j < queueFamilies.size(); ++j) {
+            if (queueFamilies[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+                indices.computeFamily = j;
+                break;
+            }
+        }
+    }
+
     return indices;
 }
 
@@ -1954,7 +1970,8 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
     // if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
     //     {
-    //     throw std::runtime_error("failed to begin recording command buffer!");
+    //     throw std::runtime_error("failed to begin recording command
+    //     buffer!");
     //     }
 
     VkRenderPassBeginInfo renderPassInfo{};
@@ -1992,7 +2009,7 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     VkDeviceSize offsets[] = {0};
 
-    if(entities.size() > 0) {
+    if (entities.size() > 0) {
         VkBuffer vertexBuffers[] = {m_VertexBuffer->GetVertexBuffer()};
         VkBuffer indexBuffers = m_IndexBuffer->GetIndexBuffer();
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
@@ -2017,8 +2034,10 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
         const EntityBufferInfo &bufferInfo = entityBufferInfo_it->second;
         const PipelineData &pipelineData = entityPipelineInfo_it->second;
 
-        // ENGINE_TRACE("Rendering entity with vertexOffset: {0}, indexOffset: {1}, vertexCount: {2}, indexCount: {3}",
-        //     bufferInfo.vertexOffset, bufferInfo.indexOffset, bufferInfo.vertexCount, bufferInfo.indexCount);
+        // ENGINE_TRACE("Rendering entity with vertexOffset: {0}, indexOffset:
+        // {1}, vertexCount: {2}, indexCount: {3}",
+        //     bufferInfo.vertexOffset, bufferInfo.indexOffset,
+        //     bufferInfo.vertexCount, bufferInfo.indexCount);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineData.graphicsPipeline);
 
@@ -2037,19 +2056,21 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
         // vkCmdBindDescriptorSets(
         //     commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
         //     pipelineData.pipelineLayout, 0, 1,
-        //     &m_VulkanData.descriptorSets[m_VulkanData.currentFrame], 0, nullptr);
+        //     &m_VulkanData.descriptorSets[m_VulkanData.currentFrame], 0,
+        //     nullptr);
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineData.pipelineLayout, 0, 1,
                                 &entityDescriptorSets[entity][m_VulkanData.currentFrame], 0, nullptr);
 
-        // vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0,
+        // vkCmdDrawIndexed(commandBuffer,
+        // static_cast<uint32_t>(indices.size()), 1, 0,
         //     0, 0);
         vkCmdDrawIndexed(commandBuffer, bufferInfo.indexCount, 1, bufferInfo.indexOffset, bufferInfo.vertexOffset, cnt);
-        // vkCmdDrawIndexed(commandBuffer, bufferInfo.indexCount, 1, bufferInfo.indexOffset, 0, 0);
-        // vkCmdDrawIndexed(commandBuffer, bufferInfo.indexCount, 1, 0, 0, 0);
+        // vkCmdDrawIndexed(commandBuffer, bufferInfo.indexCount, 1,
+        // bufferInfo.indexOffset, 0, 0); vkCmdDrawIndexed(commandBuffer,
+        // bufferInfo.indexCount, 1, 0, 0, 0);
         cnt++;
     }
-
 }
 
 void VulkanRenderer::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,
