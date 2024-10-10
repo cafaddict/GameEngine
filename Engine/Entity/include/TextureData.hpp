@@ -6,8 +6,12 @@
 namespace Engine {
 class TextureData : public AssetData {
     private:
+    GraphicsAPI graphicsAPI;
+
     public:
     TextureData();
+    TextureData(GraphicsAPI api) : graphicsAPI(api) {}
+
     ~TextureData();
     bool Load(const std::string &path) override;
     std::shared_ptr<void> pixels;

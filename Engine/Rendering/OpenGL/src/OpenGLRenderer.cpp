@@ -60,7 +60,7 @@ void OpenGLRenderer::Draw() {
     for (auto &entity : entities) {
         auto program = m_EntityPrograms[entity];
         auto mesh = m_EntityMeshes[entity];
-        auto texture = m_EntityTextures[entity];
+        auto textures = m_EntityTextures[entity];
         glUseProgram(program->GetProgram());
 
         GLuint cameraUBO, lightUBO, transformUBO;
@@ -102,9 +102,14 @@ void OpenGLRenderer::Draw() {
         glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightUBO);
         glBindBufferBase(GL_UNIFORM_BUFFER, 2, transformUBO);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture->GetTexture());
-        glUniform1i(glGetUniformLocation(program->GetProgram(), "texSampler"), 0);
+        int textureUnit = 0;
+        for (auto &texture : textures) {
+            glActiveTexture(GL_TEXTURE0 + textureUnit);
+            glBindTexture(GL_TEXTURE_2D, texture->GetTexture());
+            std::string samplerName = "textures[" + std::to_string(textureUnit) + "]";
+            glUniform1i(glGetUniformLocation(program->GetProgram(), samplerName.c_str()), textureUnit);
+            textureUnit++;
+        }
 
         glBindVertexArray(mesh->GetVertexArray());
         glDrawElements(GL_TRIANGLES, mesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
@@ -135,7 +140,7 @@ void OpenGLRenderer::createEntityResources() {
     for (auto &entity : entities) {
         auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
 
-        auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+        auto texture_data = entity->GetComponents<TextureComponent>();
 
         auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
 
@@ -170,8 +175,12 @@ void OpenGLRenderer::createEntityResources() {
         std::shared_ptr<OpenGLMesh> mesh = std::make_shared<OpenGLMesh>(model_data);
         m_EntityMeshes[entity] = mesh;
 
-        std::shared_ptr<OpenGLTexture> texture = std::make_shared<OpenGLTexture>(texture_data);
-        m_EntityTextures[entity] = texture;
+        std::vector<std::shared_ptr<OpenGLTexture>> textures;
+        for (auto &texture_component : texture_data) {
+            auto texture_data = texture_component->GetTextureData();
+            textures.push_back(std::make_shared<OpenGLTexture>(texture_data));
+        }
+        m_EntityTextures[entity] = textures;
 
         transformations.push_back(transform);
     }

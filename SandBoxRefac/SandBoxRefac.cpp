@@ -22,6 +22,7 @@ class ExampleLayer : public Engine::Layer {
     std::shared_ptr<Engine::EntityManager> m_EntityManager;
     ExampleLayer() : Layer("Example") {
         m_AssetManager = std::make_shared<Engine::AssetManager>();
+        m_AssetManager->SetGraphicsAPI(Engine::GraphicsAPI::OpenGL);
         m_EntityManager = std::make_shared<Engine::EntityManager>();
     }
     ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager,
@@ -42,13 +43,9 @@ class ExampleLayer : public Engine::Layer {
 
         renderer->SetEntityManager(m_EntityManager);
 
-        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny.obj";
+        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Cactus1.fbx";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
         auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
-
-        std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny-atlas.jpg";
-        auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
-        auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
         std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert_opengl.vert";
         std::string fragmentShaderPath =
@@ -61,11 +58,37 @@ class ExampleLayer : public Engine::Layer {
         transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
         transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+        transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
         auto entity1 = m_EntityManager->CreateEntity("entity1");
         entity1->AddComponent(modelComponent);
-        entity1->AddComponent(textureComponent);
+
+        if (modelData->texturePaths.empty()) {
+            // std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny-atlas.jpg";
+            // auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
+            // auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+            // entity1->AddComponent(textureComponent);
+            std::string texturePath =
+                "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Base_Color.png";
+            auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
+            auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+            entity1->AddComponent(textureComponent);
+            CLIENT_WARN("Texture Path: {0}", texturePath);
+        } else {
+            for (auto &texturePath : modelData->texturePaths) {
+
+#ifndef _WIN32
+                std::replace(texturePath.begin(), texturePath.end(), '\\', '/');
+#endif
+                std::string trueTexturePath =
+                    "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/" + texturePath;
+                CLIENT_WARN("Texture Path: {0}", trueTexturePath);
+                auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(trueTexturePath);
+                auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
+                entity1->AddComponent(textureComponent);
+            }
+        }
+
         entity1->AddComponent(shaderComponent);
         entity1->AddComponent(transformComponent);
 

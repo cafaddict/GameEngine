@@ -1,3 +1,4 @@
+#include "Log.hpp"
 #include "VulkanRenderer.hpp"
 #include <memory>
 #define GLFW_INCLUDE_NONE
@@ -77,6 +78,7 @@ class SandboxRefac : public Engine::Application {
         SetRenderer(Engine::RendererType::Vulkan);
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
+        AssetManager->SetGraphicsAPI(Engine::GraphicsAPI::Vulkan);
         PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());
