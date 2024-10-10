@@ -10,6 +10,7 @@ class OpenGLProgram {
     public:
     OpenGLProgram() {};
     OpenGLProgram(std::vector<char> vertexShaderCode, std::vector<char> fragmentShaderCode) {
+
         std::string vertexShaderString(vertexShaderCode.begin(), vertexShaderCode.end());
 
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -55,6 +56,7 @@ class OpenGLProgram {
     }
     OpenGLProgram(std::vector<char> vertexShaderCode, std::vector<char> fragmentShaderCode,
                   std::vector<char> computeShaderCode) {
+        ENGINE_WARN("OpenGL Program Created");
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         const char *vertexShaderCodePtr = vertexShaderCode.data();
         glShaderSource(vertexShader, 1, &vertexShaderCodePtr, nullptr);

@@ -42,4 +42,5 @@ void main() {
     }
 
     fragNormal = mat3(model) * normal;
+    fragUV = inTexCoord;
 }

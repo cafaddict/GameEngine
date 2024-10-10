@@ -19,6 +19,8 @@ class OpenGLMesh {
             vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
             vertices.push_back(vertex);
         }
+        m_IndexCount = static_cast<GLsizei>(modelData->indices.size());
+
         glGenVertexArrays(1, &m_VertexArray);
         glGenBuffers(1, &m_VertexBuffer);
         glGenBuffers(1, &m_IndexBuffer);
@@ -45,6 +47,9 @@ class OpenGLMesh {
 
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, stride, (void *)offsetof(Vertex, texCoord));
         glEnableVertexAttribArray(3);
+
+        // Unbind the VAO to prevent accidental changes
+        glBindVertexArray(0);
     }
     ~OpenGLMesh() {
         glDeleteVertexArrays(1, &m_VertexArray);
@@ -55,10 +60,12 @@ class OpenGLMesh {
     GLuint GetVertexArray() const { return m_VertexArray; }
     GLuint GetIndexBuffer() const { return m_IndexBuffer; }
     GLuint GetVertexBuffer() const { return m_VertexBuffer; }
+    GLsizei GetIndexCount() const { return m_IndexCount; }
 
     private:
     GLuint m_VertexArray;
     GLuint m_VertexBuffer;
     GLuint m_IndexBuffer;
+    GLsizei m_IndexCount;
 };
 } // namespace Engine

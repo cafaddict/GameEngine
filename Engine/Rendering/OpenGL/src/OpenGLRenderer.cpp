@@ -6,6 +6,7 @@
 #include "ModelComponent.hpp"
 #include "TransformComponent.hpp"
 #include "OpenGLTexture.hpp"
+#include "glm/fwd.hpp"
 namespace Engine {
 // Renderer *Renderer::Create(GLFWwindow *window) {
 //     ENGINE_INFO("Vulkan Renderer Creation");
@@ -28,7 +29,7 @@ void OpenGLRenderer::Init() {
     ENGINE_INFO("OpenGL Version: {0}", glGetString(GL_VERSION));
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glEnable(GL_LESS);
+    // glEnable(GL_LESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glEnable(GL_TEXTURE_2D);
@@ -40,18 +41,75 @@ void OpenGLRenderer::Init() {
     int height;
     glfwGetFramebufferSize(m_Window, &width, &height);
     glViewport(0, 0, width, height);
+    m_Camera = std::make_shared<Camera>(
+        glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.01f, 1000.0f));
+
+    m_Light = std::make_shared<Light>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+    ENGINE_INFO("OpenGL Renderer Initialized");
 }
+
 void OpenGLRenderer::Draw() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     auto entities = m_EntityManager->GetAllEntities();
+    if (entities.empty() || m_EntityUpdate) {
+        return;
+    }
     for (auto &entity : entities) {
         auto program = m_EntityPrograms[entity];
         auto mesh = m_EntityMeshes[entity];
         auto texture = m_EntityTextures[entity];
+        glUseProgram(program->GetProgram());
+
+        GLuint cameraUBO, lightUBO, transformUBO;
+        glGenBuffers(1, &cameraUBO);
+        glGenBuffers(1, &lightUBO);
+        glGenBuffers(1, &transformUBO);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(Camera), nullptr, GL_STATIC_DRAW);
+        glm::mat4 viewMatrix = m_Camera->getView();
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &viewMatrix);
+        glm::mat4 projectionMatrix = m_Camera->getProjection();
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), &projectionMatrix);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, lightUBO);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(Light), nullptr, GL_STATIC_DRAW);
+        glm::vec3 lightPosition = m_Light->getPosition();
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec3), &lightPosition);
+        glm::vec3 lightColor = m_Light->getColor();
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec3), sizeof(glm::vec3), &lightColor);
+        float lightIntensity = m_Light->getIntensity();
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec3) * 2, sizeof(float), &lightIntensity);
+
+        glBindBuffer(GL_UNIFORM_BUFFER, transformUBO);
+        glBufferData(GL_UNIFORM_BUFFER, m_Transformations.size() * sizeof(glm::mat4), m_Transformations.data(),
+                     GL_STATIC_DRAW);
+
+        // Get the indices of each uniform block in the program
+        GLuint cameraIndex = glGetUniformBlockIndex(program->GetProgram(), "CameraUBO");
+        GLuint lightIndex = glGetUniformBlockIndex(program->GetProgram(), "LightUBO");
+        GLuint transformIndex = glGetUniformBlockIndex(program->GetProgram(), "TransformUBO");
+
+        // Bind the uniform blocks to binding points
+        glUniformBlockBinding(program->GetProgram(), cameraIndex, 0);
+        glUniformBlockBinding(program->GetProgram(), lightIndex, 1);
+        glUniformBlockBinding(program->GetProgram(), transformIndex, 2);
+
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightUBO);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 2, transformUBO);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->GetTexture());
+        glUniform1i(glGetUniformLocation(program->GetProgram(), "texSampler"), 0);
+
+        glBindVertexArray(mesh->GetVertexArray());
+        glDrawElements(GL_TRIANGLES, mesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
     }
-    glfwSwapBuffers(m_Window);
-    glfwPollEvents();
 }
 void OpenGLRenderer::BeginRecord() {}
 void OpenGLRenderer::EndRecord() {
@@ -114,7 +172,10 @@ void OpenGLRenderer::createEntityResources() {
 
         std::shared_ptr<OpenGLTexture> texture = std::make_shared<OpenGLTexture>(texture_data);
         m_EntityTextures[entity] = texture;
+
+        transformations.push_back(transform);
     }
+    m_Transformations = transformations;
 }
 
 } // namespace Engine

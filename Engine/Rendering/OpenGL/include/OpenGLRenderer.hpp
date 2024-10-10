@@ -4,8 +4,11 @@
 #include "Rendering.hpp"
 #include "Log.hpp"
 #include "Camera.hpp"
+#include "Light.hpp"
 #include "OpenGLMesh.hpp"
 #include "OpenGLProgram.hpp"
+#include "glm/fwd.hpp"
+#include <memory>
 #include <unordered_map>
 
 namespace Engine {
@@ -38,5 +41,9 @@ class OpenGLRenderer : public Renderer {
     std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<OpenGLMesh>> m_EntityMeshes;
     std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<OpenGLProgram>> m_EntityPrograms;
     std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<OpenGLTexture>> m_EntityTextures;
+    std::vector<glm::mat4> m_Transformations;
+
+    std::shared_ptr<Camera> m_Camera;
+    std::shared_ptr<Light> m_Light;
 };
 } // namespace Engine

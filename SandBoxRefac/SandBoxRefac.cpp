@@ -42,11 +42,11 @@ class ExampleLayer : public Engine::Layer {
 
         renderer->SetEntityManager(m_EntityManager);
 
-        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/viking_room.obj";
+        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny.obj";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
         auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
 
-        std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/viking_room.png";
+        std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny-atlas.jpg";
         auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
@@ -61,7 +61,7 @@ class ExampleLayer : public Engine::Layer {
         transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
         transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent->SetScale(glm::vec3(10.0f, 10.0f, 10.0f));
+        transformComponent->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
         auto entity1 = m_EntityManager->CreateEntity("entity1");
         entity1->AddComponent(modelComponent);
