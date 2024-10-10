@@ -5,6 +5,7 @@ Game Engine development using vulkan API
 ## Features (Implemented)
 
 - Basic rendering with Vulkan API
+- Basic rendering with OpenGL (4.1)
 - basic logging
 - Entity Component System to manage entities
 - Asset Manager to managed assets (model, texuture, shaders)
