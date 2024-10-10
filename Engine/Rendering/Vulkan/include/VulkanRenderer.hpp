@@ -75,6 +75,7 @@ class VulkanRenderer : public Renderer {
 
     public:
     // Constructor that initializes the window and Vulkan objects
+    static VulkanRenderer *Create(GLFWwindow *window);
     VulkanRenderer(GLFWwindow *window);
     void createEntityResources();
 

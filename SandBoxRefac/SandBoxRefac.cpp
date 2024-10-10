@@ -1,4 +1,6 @@
-#include "VulkanRenderer.hpp"
+#include "Log.hpp"
+#include "OpenGLRenderer.hpp"
+#include "Rendering.hpp"
 #include <memory>
 #define GLFW_INCLUDE_NONE
 #include <AssetManager.hpp>
@@ -24,10 +26,10 @@ class ExampleLayer : public Engine::Layer {
     }
     ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager,
                  std::shared_ptr<Engine::AssetManager> assetManager)
-        : Layer("Example"), m_EntityManager(entityManager), m_AssetManager(assetManager) {}
+        : Layer("Example"), m_AssetManager(assetManager), m_EntityManager(entityManager) {}
     void OnUpdate() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::OpenGLRenderer *>(app.GetRenderer());
         renderer->Draw();
     }
     void OnEvent(Engine::Event &event) override {
@@ -36,20 +38,21 @@ class ExampleLayer : public Engine::Layer {
 
     void OnAttach() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::OpenGLRenderer *>(app.GetRenderer());
 
         renderer->SetEntityManager(m_EntityManager);
 
-        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/viking_room.obj";
+        std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny.obj";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
         auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
 
-        std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/viking_room.png";
+        std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/bunny-atlas.jpg";
         auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
-        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert.spv";
-        std::string fragmentShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag.spv";
+        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert_opengl.vert";
+        std::string fragmentShaderPath =
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag_opengl.frag";
         auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
@@ -58,7 +61,7 @@ class ExampleLayer : public Engine::Layer {
         transformComponent->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
         // transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, glm::radians(45.0f), 0.0f)));
         transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
-        transformComponent->SetScale(glm::vec3(10.0f, 10.0f, 10.0f));
+        transformComponent->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
         auto entity1 = m_EntityManager->CreateEntity("entity1");
         entity1->AddComponent(modelComponent);
@@ -73,9 +76,12 @@ class ExampleLayer : public Engine::Layer {
 class SandboxRefac : public Engine::Application {
     public:
     SandboxRefac() {
+        SetWindow(Engine::RendererType::OpenGL);
+        SetRenderer(Engine::RendererType::OpenGL);
+        ENGINE_WARN("SandboxRefac");
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
-        PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
+        // PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-// #include <glad/glad.h>
+#include <glad/glad.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -11,7 +11,11 @@
 #include "Log.hpp"
 #include "Window.hpp"
 #include "Rendering.hpp"
+#include "VulkanRenderer.hpp"
+#include "OpenGLRenderer.hpp"
+
 namespace Engine {
+
 class Application {
     public:
     Application();
@@ -23,6 +27,9 @@ class Application {
 
     void PushLayer(Layer *layer);
     void PushOverlay(Layer *overlay);
+
+    void SetWindow(RendererType rendertype); // Later add window type
+    void SetRenderer(RendererType rendertype);
 
     inline static Application &Get() { return *s_Instance; }
     inline Window &GetWindow() const { return *m_Window; }
