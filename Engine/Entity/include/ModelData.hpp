@@ -83,6 +83,7 @@ class ModelData : public AssetData {
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> uvs;
+    std::vector<glm::vec3> tangents;
     std::vector<uint32_t> indices;
 
     // Animation data

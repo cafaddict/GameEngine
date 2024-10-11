@@ -32,6 +32,7 @@ bool ModelData::Load(const std::string &path) {
     positions.clear();
     normals.clear();
     uvs.clear();
+    tangents.clear();
     indices.clear();
     bones.clear();
     animations.clear();
@@ -106,6 +107,18 @@ void ModelData::ProcessMesh(aiMesh *mesh) {
         }
     } else {
         ENGINE_WARN("Mesh does not contain UV coordinates.");
+    }
+
+    // Process tangents
+    if (mesh->HasTangentsAndBitangents()) {
+        tangents.reserve(startIndex + mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+            const aiVector3D &tangent = mesh->mTangents[i];
+            glm::vec3 vertexTangent = {tangent.x, tangent.y, tangent.z};
+            tangents.push_back(vertexTangent);
+        }
+    } else {
+        ENGINE_WARN("Mesh does not contain tangents.");
     }
 
     // Process mesh indices (assuming triangles)

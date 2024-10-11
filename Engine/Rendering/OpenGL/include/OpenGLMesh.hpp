@@ -17,6 +17,7 @@ class OpenGLMesh {
             vertex.normal = modelData->normals.size() > i ? modelData->normals[i] : glm::vec3(0.0f, 0.0f, 1.0f);
             vertex.texCoord = modelData->uvs.size() > i ? modelData->uvs[i] : glm::vec2(0.0f);
             vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
+            vertex.tangent = modelData->tangents.size() > i ? modelData->tangents[i] : glm::vec3(0.0f);
             vertices.push_back(vertex);
         }
         m_IndexCount = static_cast<GLsizei>(modelData->indices.size());
@@ -47,6 +48,9 @@ class OpenGLMesh {
 
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, stride, (void *)offsetof(Vertex, texCoord));
         glEnableVertexAttribArray(3);
+
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, (void *)offsetof(Vertex, tangent));
+        glEnableVertexAttribArray(4);
 
         // Unbind the VAO to prevent accidental changes
         glBindVertexArray(0);
