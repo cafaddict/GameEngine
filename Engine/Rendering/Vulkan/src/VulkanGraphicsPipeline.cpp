@@ -233,6 +233,51 @@ void VulkanGraphicsPipeline::createDescriptorSetLayout() {
     }
 }
 
+void VulkanGraphicsPipeline::createPBRDescriptorSetLayout() {
+    // Binding 0: Uniform buffer: Camera
+    VkDescriptorSetLayoutBinding cameraUboLayoutBinding{};
+    cameraUboLayoutBinding.binding = 0;
+    cameraUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    cameraUboLayoutBinding.descriptorCount = 1;
+    cameraUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    cameraUboLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Binding 1: Uniform buffer: Light
+    VkDescriptorSetLayoutBinding lightUboLayoutBinding{};
+    lightUboLayoutBinding.binding = 1;
+    lightUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    lightUboLayoutBinding.descriptorCount = 1;
+    lightUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    lightUboLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Binding 2: Texture sampler
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.binding = 2;
+    samplerLayoutBinding.descriptorCount = 1;
+    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // Binding 3: SSBO for transformations
+    VkDescriptorSetLayoutBinding storageBufferBinding{};
+    storageBufferBinding.binding = 3;
+    storageBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    storageBufferBinding.descriptorCount = 1;
+    storageBufferBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    storageBufferBinding.pImmutableSamplers = nullptr;
+
+    std::array<VkDescriptorSetLayoutBinding, 4> bindings = {cameraUboLayoutBinding, lightUboLayoutBinding,
+                                                            samplerLayoutBinding, storageBufferBinding};
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings = bindings.data();
+    if (vkCreateDescriptorSetLayout(m_Device->getLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorsetLayout) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
+}
+
 void VulkanGraphicsPipeline::createComputeDescriptorSetLayout() {
 
     // Binding 0: Uniform buffer

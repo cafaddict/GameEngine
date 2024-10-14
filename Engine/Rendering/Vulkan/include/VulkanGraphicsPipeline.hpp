@@ -73,6 +73,7 @@ class VulkanGraphicsPipeline {
     VkShaderModule createShaderModule(const std::vector<char> &code);
     void createPipelineLayout(VkDescriptorSetLayout &descriptorSetLayout);
     void createDescriptorSetLayout();
+    void createPBRDescriptorSetLayout();
 
     void createComputeDescriptorSetLayout();
 };

@@ -1,5 +1,6 @@
-#version 410
+#version 450
 
+// Input from vertex shader
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec4 fragColor;
@@ -7,22 +8,25 @@ layout(location = 3) in vec2 fragTexCoord;
 layout(location = 4) in vec3 fragTangent;
 layout(location = 5) in vec3 fragBitangent;
 
+// Output to framebuffer
 layout(location = 0) out vec4 outColor;
 
-// Uniforms for PBR materials
-uniform sampler2D albedoMap;    // Albedo
-uniform sampler2D normalMap;    // Normal map
-uniform sampler2D metalicMap;   // Metallic map
-uniform sampler2D roughnessMap; // Roughness map
-uniform sampler2D aoMap;        // Ambient occlusion map
+// Uniform samplers for PBR materials
+layout(set = 1, binding = 0) uniform sampler2D albedoMap;
+layout(set = 1, binding = 1) uniform sampler2D normalMap;
+layout(set = 1, binding = 2) uniform sampler2D metallicMap;
+layout(set = 1, binding = 3) uniform sampler2D roughnessMap;
+layout(set = 1, binding = 4) uniform sampler2D aoMap;
 
-layout(std140) uniform CameraUBO {
+// UBO for camera matrices
+layout(set = 0, binding = 0, std140) uniform CameraUBO {
     mat4 view;
     mat4 proj;
     vec3 cameraPos;
 };
 
-layout(std140) uniform LightUBO {
+// UBO for lighting parameters
+layout(set = 0, binding = 1, std140) uniform LightUBO {
     vec3 lightPos;
     vec3 lightColor;
     float lightIntensity;
@@ -83,7 +87,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) { return F0 + (1.0 - F0) * pow(1.0 
 
 void main() {
     vec3 albedo = pow(texture(albedoMap, fragTexCoord).rgb, vec3(2.2)); // Gamma correction
-    float metallic = texture(metalicMap, fragTexCoord).r;
+    float metallic = texture(metallicMap, fragTexCoord).r;
     float roughness = texture(roughnessMap, fragTexCoord).r;
     float ao = texture(aoMap, fragTexCoord).r;
 
@@ -122,7 +126,5 @@ void main() {
     // Ensure each component of the color vector is non-negative for gamma correction
     color = pow(max(color, 0.0), vec3(1.0 / 2.2)); // Gamma correction
 
-    // outColor = vec4(color, 1.0); // Assign the final color to the output
-    // outColor = vec4(albedo, 1.0); // Assign the albedo color to the output
-
+    outColor = vec4(color, 1.0); // Assign the final color to the output
 }
