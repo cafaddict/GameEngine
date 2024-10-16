@@ -3,6 +3,7 @@
 #include <Log.hpp>
 
 #include <chrono>
+#include <string>
 namespace Engine {
 class TextureData : public AssetData {
     private:
@@ -14,11 +15,12 @@ class TextureData : public AssetData {
 
     ~TextureData();
     bool Load(const std::string &path) override;
-    std::shared_ptr<void> pixels;
-    // void* pixels;
+    // std::shared_ptr<void> pixels;
+    void *pixels;
     int width;
     int height;
     int channels;
+    std::string path;
 };
 
 } // namespace Engine

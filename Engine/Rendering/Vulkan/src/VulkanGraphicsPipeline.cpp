@@ -18,6 +18,19 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> dev
     createPipelineLayout(m_DescriptorsetLayout);
     createGraphicsPipeline(shaders, inputStruct);
 }
+
+VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device,
+                                               std::shared_ptr<VulkanRenderPass> renderPass, VulkanShadersData shaders,
+                                               VulkanBaseVertex &inputStruct, bool isPBR)
+    : m_Device(device), m_RenderPass(renderPass), m_Shaders(shaders) {
+    if (!isPBR) {
+        VulkanGraphicsPipeline(device, renderPass, shaders, inputStruct);
+    } else {
+        createPBRDescriptorSetLayout();
+        createPipelineLayout(m_PBRDescriptorsetLayout);
+        createGraphicsPipeline(shaders, inputStruct);
+    }
+}
 VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
     ENGINE_INFO("VulaknGraphicsPipeline is destroyed");
     vkDestroyPipeline(m_Device->getLogicalDevice(), m_GraphicsPipeline, nullptr);
@@ -26,6 +39,122 @@ VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
 }
 
 void VulkanGraphicsPipeline::createGraphicsPipeline(VulkanShadersData shaders, VulkanBaseVertex &inputStruct) {
+    auto vertShaderCode = shaders.vertexShader.value();
+    auto fragShaderCode = shaders.fragShader.value();
+    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.pName = "main";
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+    auto bindingDescription = inputStruct.getBindingDescription();
+    auto attributeDescriptions = inputStruct.getAttributeDescriptions();
+    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.scissorCount = 1;
+
+    VkPipelineRasterizationStateCreateInfo rasterizer{};
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.lineWidth = 1.0f;
+    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.depthBiasEnable = VK_FALSE;
+
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_TRUE; // enable sample shading in the pipeline
+    multisampling.minSampleShading = .2f;        // min fraction for sample shading; closer to one is smoother
+    multisampling.rasterizationSamples = m_Device->getMsaaSamples();
+
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.minDepthBounds = 0.0f; // Optional
+    depthStencil.maxDepthBounds = 1.0f; // Optional
+    depthStencil.stencilTestEnable = VK_FALSE;
+    depthStencil.front = {}; // Optional
+    depthStencil.back = {};  // Optional
+
+    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    colorBlendAttachment.colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo colorBlending{};
+    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlending.logicOpEnable = VK_FALSE;
+    colorBlending.logicOp = VK_LOGIC_OP_COPY;
+    colorBlending.attachmentCount = 1;
+    colorBlending.pAttachments = &colorBlendAttachment;
+    colorBlending.blendConstants[0] = 0.0f;
+    colorBlending.blendConstants[1] = 0.0f;
+    colorBlending.blendConstants[2] = 0.0f;
+    colorBlending.blendConstants[3] = 0.0f;
+
+    std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+    dynamicState.pDynamicStates = dynamicStates.data();
+
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &dynamicState;
+    pipelineInfo.layout = m_PipelineLayout;
+    pipelineInfo.renderPass = m_RenderPass->getRenderPass();
+    pipelineInfo.subpass = 0;
+
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+    pipelineInfo.basePipelineIndex = -1;              // Optional
+
+    if (vkCreateGraphicsPipelines(m_Device->getLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+                                  &m_GraphicsPipeline) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics pipeline!");
+    }
+
+    vkDestroyShaderModule(m_Device->getLogicalDevice(), fragShaderModule, nullptr);
+    vkDestroyShaderModule(m_Device->getLogicalDevice(), vertShaderModule, nullptr);
+}
+void VulkanGraphicsPipeline::createPBRRPipeline(VulkanShadersData shaders, VulkanBaseVertex &inputStruct) {
     auto vertShaderCode = shaders.vertexShader.value();
     auto fragShaderCode = shaders.fragShader.value();
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
@@ -234,48 +363,89 @@ void VulkanGraphicsPipeline::createDescriptorSetLayout() {
 }
 
 void VulkanGraphicsPipeline::createPBRDescriptorSetLayout() {
-    // Binding 0: Uniform buffer: Camera
+    // Binding 0: Uniform buffer: Camera (used in both vertex and fragment stages)
     VkDescriptorSetLayoutBinding cameraUboLayoutBinding{};
     cameraUboLayoutBinding.binding = 0;
     cameraUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     cameraUboLayoutBinding.descriptorCount = 1;
-    cameraUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    cameraUboLayoutBinding.pImmutableSamplers = nullptr;
+    cameraUboLayoutBinding.stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // Used in both stages
+    cameraUboLayoutBinding.pImmutableSamplers = nullptr;           // No samplers in UBO
 
-    // Binding 1: Uniform buffer: Light
+    // Binding 1: Uniform buffer: Light (used in both vertex and fragment stages)
     VkDescriptorSetLayoutBinding lightUboLayoutBinding{};
     lightUboLayoutBinding.binding = 1;
     lightUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     lightUboLayoutBinding.descriptorCount = 1;
-    lightUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    lightUboLayoutBinding.pImmutableSamplers = nullptr;
+    lightUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // Used in both stages
+    lightUboLayoutBinding.pImmutableSamplers = nullptr;                                           // No samplers in UBO
 
-    // Binding 2: Texture sampler
-    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-    samplerLayoutBinding.binding = 2;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    // Binding 3: SSBO for transformations
+    // Binding 7: SSBO for transformations (used in vertex stage)
     VkDescriptorSetLayoutBinding storageBufferBinding{};
-    storageBufferBinding.binding = 3;
+    storageBufferBinding.binding = 2;
     storageBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     storageBufferBinding.descriptorCount = 1;
     storageBufferBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     storageBufferBinding.pImmutableSamplers = nullptr;
 
-    std::array<VkDescriptorSetLayoutBinding, 4> bindings = {cameraUboLayoutBinding, lightUboLayoutBinding,
-                                                            samplerLayoutBinding, storageBufferBinding};
+    // Binding 2: Texture sampler for albedo map (used in fragment stage)
+    VkDescriptorSetLayoutBinding albedoSamplerLayoutBinding{};
+    albedoSamplerLayoutBinding.binding = 3;
+    albedoSamplerLayoutBinding.descriptorCount = 1;
+    albedoSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    albedoSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    albedoSamplerLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Binding 3: Texture sampler for normal map (used in fragment stage)
+    VkDescriptorSetLayoutBinding normalSamplerLayoutBinding{};
+    normalSamplerLayoutBinding.binding = 4;
+    normalSamplerLayoutBinding.descriptorCount = 1;
+    normalSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    normalSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    normalSamplerLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Binding 4: Texture sampler for metallic map (used in fragment stage)
+    VkDescriptorSetLayoutBinding metallicSamplerLayoutBinding{};
+    metallicSamplerLayoutBinding.binding = 5;
+    metallicSamplerLayoutBinding.descriptorCount = 1;
+    metallicSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    metallicSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    metallicSamplerLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Binding 5: Texture sampler for roughness map (used in fragment stage)
+    VkDescriptorSetLayoutBinding roughnessSamplerLayoutBinding{};
+    roughnessSamplerLayoutBinding.binding = 6;
+    roughnessSamplerLayoutBinding.descriptorCount = 1;
+    roughnessSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    roughnessSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    roughnessSamplerLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Binding 6: Texture sampler for AO map (used in fragment stage)
+    VkDescriptorSetLayoutBinding aoSamplerLayoutBinding{};
+    aoSamplerLayoutBinding.binding = 7;
+    aoSamplerLayoutBinding.descriptorCount = 1;
+    aoSamplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    aoSamplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    aoSamplerLayoutBinding.pImmutableSamplers = nullptr;
+
+    // Collect all bindings
+    std::array<VkDescriptorSetLayoutBinding, 8> bindings = {cameraUboLayoutBinding,        lightUboLayoutBinding,
+                                                            storageBufferBinding,          albedoSamplerLayoutBinding,
+                                                            normalSamplerLayoutBinding,    metallicSamplerLayoutBinding,
+                                                            roughnessSamplerLayoutBinding, aoSamplerLayoutBinding};
+
+    // Create descriptor set layout
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     layoutInfo.pBindings = bindings.data();
-    if (vkCreateDescriptorSetLayout(m_Device->getLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorsetLayout) !=
+
+    // Handle descriptor set layout creation
+    if (vkCreateDescriptorSetLayout(m_Device->getLogicalDevice(), &layoutInfo, nullptr, &m_PBRDescriptorsetLayout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
+    ENGINE_WARN("PBR Descriptor Set Layout created");
 }
 
 void VulkanGraphicsPipeline::createComputeDescriptorSetLayout() {

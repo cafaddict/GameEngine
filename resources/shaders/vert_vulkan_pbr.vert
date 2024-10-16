@@ -1,22 +1,23 @@
 #version 450
 
 // UBO for camera matrices
-layout(set = 0, binding = 0, std140) uniform CameraUBO {
+layout(set = 0, binding = 0) uniform CameraUBO {
     mat4 view;
     mat4 proj;
     vec3 cameraPos;
-};
+}
+camera;
 
 // UBO for lighting parameters
-layout(set = 0, binding = 1, std140) uniform LightUBO {
+layout(set = 0, binding = 1) uniform LightUBO {
     vec3 lightPos;
     vec3 lightColor;
     float lightIntensity;
-};
+}
+light;
 
 // SSBO for transformation matrices
-layout(set = 0, binding = 2 readonly buffer StorageBufferObject {
-    mat4 transformations[]; }
+layout(set = 0, binding = 2) readonly buffer StorageBufferObject { mat4 transformations[]; }
 ssbo;
 
 // Input attributes from vertex buffer
@@ -36,7 +37,7 @@ layout(location = 5) out vec3 fragBitangent;
 
 void main() {
     uint instanceIndex = gl_InstanceIndex; // Use gl_InstanceIndex in Vulkan (not gl_InstanceID)
-    mat4 model = transformations[instanceIndex];
+    mat4 model = ssbo.transformations[instanceIndex];
 
     fragPos = vec3(model * vec4(inPosition, 1.0));
     fragNormal = normalize(mat3(transpose(inverse(model))) * inNormal);
@@ -45,5 +46,5 @@ void main() {
     fragTangent = mat3(model) * inTangent;
     fragBitangent = cross(fragNormal, fragTangent);
 
-    gl_Position = proj * view * vec4(fragPos, 1.0);
+    gl_Position = camera.proj * camera.view * vec4(fragPos, 1.0);
 }

@@ -186,7 +186,7 @@ void VulkanRenderer::Draw() {
 
             vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                                     VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,
-                                    &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
+                                    &descriptorSet->getPBRDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
             vkCmdDrawIndexed(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                              entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, indexOffset,
@@ -327,7 +327,12 @@ void VulkanRenderer::createEntityResources() {
     for (auto &entity : entities) {
         auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
 
-        auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+        auto textureComponent = entity->GetComponents<TextureComponent>();
+        std::vector<std::shared_ptr<const TextureData>> texture_data;
+        for (auto &texture : textureComponent) {
+            texture_data.push_back(texture->GetTextureData());
+        }
+        // auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
 
         auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
 
@@ -370,7 +375,7 @@ void VulkanRenderer::createEntityResources() {
         } else {
             VulkanVertex vertex;
             // Create a shared pointer for the new pipeline
-            auto pipeline = std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex);
+            auto pipeline = std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex, true);
 
             // Store the pipeline in both maps
             m_EntityPipelines[entity] = pipeline;

@@ -16,14 +16,21 @@ class VulkanDescriptorSet {
                         std::shared_ptr<VulkanCommandBuffer> commandBuffer,
                         std::shared_ptr<const TextureData> textureData,
                         std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos);
+    VulkanDescriptorSet(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanGraphicsPipeline> graphicsPipeline,
+                        std::shared_ptr<VulkanCommandBuffer> commandBuffer,
+                        std::vector<std::shared_ptr<const TextureData>> textureData,
+                        std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos);
     ~VulkanDescriptorSet();
 
     std::vector<VkDescriptorSet> getDescriptorSets() { return m_DescriptorSets; }
     VkDescriptorPool getDescriptorPool() { return m_DescriptorPool; }
+    std::vector<VkDescriptorSet> getPBRDescriptorSets() { return m_PBRDescriptorSets; }
 
     std::shared_ptr<const TextureData> m_TextureData;
+    std::vector<std::shared_ptr<const TextureData>> m_TextureDatas;
     std::vector<std::vector<VkDescriptorBufferInfo>> m_BufferInfos;
-    int test;
+
+    std::vector<std::shared_ptr<const TextureData>> testData;
 
     private:
     std::shared_ptr<VulkanDevice> m_Device;
@@ -31,12 +38,17 @@ class VulkanDescriptorSet {
     std::shared_ptr<VulkanCommandBuffer> m_CommandBuffer;
     VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> m_DescriptorSets;
+    std::vector<VkDescriptorSet> m_PBRDescriptorSets;
 
     std::shared_ptr<VulkanImage> m_Image;
+    std::vector<std::shared_ptr<VulkanImage>> m_Images;
     VkImageView createTextureImageView(std::shared_ptr<const TextureData> textureData);
     VkSampler createTextureSampler(std::shared_ptr<const TextureData> textureData);
     void createDescriptorPool();
+    void createDescriptorPool(int size);
     void createDescriptorSet(VkImageView &textureImageView, VkSampler &textureSampler,
+                             std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos);
+    void createDescriptorSet(std::vector<VkImageView> &textureImageViews, std::vector<VkSampler> &textureSamplers,
                              std::vector<std::vector<VkDescriptorBufferInfo>> bufferInfos);
 };
 

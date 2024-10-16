@@ -12,25 +12,27 @@ layout(location = 5) in vec3 fragBitangent;
 layout(location = 0) out vec4 outColor;
 
 // Uniform samplers for PBR materials
-layout(set = 1, binding = 0) uniform sampler2D albedoMap;
-layout(set = 1, binding = 1) uniform sampler2D normalMap;
-layout(set = 1, binding = 2) uniform sampler2D metallicMap;
-layout(set = 1, binding = 3) uniform sampler2D roughnessMap;
-layout(set = 1, binding = 4) uniform sampler2D aoMap;
+layout(set = 0, binding = 3) uniform sampler2D albedoMap;
+layout(set = 0, binding = 4) uniform sampler2D normalMap;
+layout(set = 0, binding = 5) uniform sampler2D metallicMap;
+layout(set = 0, binding = 6) uniform sampler2D roughnessMap;
+layout(set = 0, binding = 7) uniform sampler2D aoMap;
 
 // UBO for camera matrices
-layout(set = 0, binding = 0, std140) uniform CameraUBO {
+layout(set = 0, binding = 0) uniform CameraUBO {
     mat4 view;
     mat4 proj;
     vec3 cameraPos;
-};
+}
+camera;
 
 // UBO for lighting parameters
-layout(set = 0, binding = 1, std140) uniform LightUBO {
+layout(set = 0, binding = 1) uniform LightUBO {
     vec3 lightPos;
     vec3 lightColor;
     float lightIntensity;
-};
+}
+light;
 
 const float PI = 3.14159265359;
 
@@ -92,8 +94,8 @@ void main() {
     float ao = texture(aoMap, fragTexCoord).r;
 
     vec3 N = getNormalFromMap();
-    vec3 V = normalize(cameraPos - fragPos);
-    vec3 L = normalize(lightPos - fragPos);
+    vec3 V = normalize(camera.cameraPos - fragPos);
+    vec3 L = normalize(light.lightPos - fragPos);
     vec3 H = normalize(V + L);
 
     // Cook-Torrance BRDF
@@ -112,7 +114,7 @@ void main() {
     kD *= 1.0 - metallic;
 
     float NdotL = max(dot(N, L), 0.0);
-    vec3 irradiance = lightColor * lightIntensity * NdotL;
+    vec3 irradiance = light.lightColor * light.lightIntensity * NdotL;
 
     vec3 diffuse = irradiance * albedo / PI;
     vec3 ambient = ao * albedo;
@@ -127,4 +129,6 @@ void main() {
     color = pow(max(color, 0.0), vec3(1.0 / 2.2)); // Gamma correction
 
     outColor = vec4(color, 1.0); // Assign the final color to the output
+
+    outColor = vec4(texture(normalMap, fragTexCoord).rgb, 1.0);
 }

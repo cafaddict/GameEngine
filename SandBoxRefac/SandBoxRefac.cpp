@@ -1,6 +1,7 @@
 #include "Log.hpp"
 #include "OpenGLRenderer.hpp"
 #include "Rendering.hpp"
+#include "VulkanRenderer.hpp"
 #include <memory>
 #define GLFW_INCLUDE_NONE
 #include <AssetManager.hpp>
@@ -22,7 +23,7 @@ class ExampleLayer : public Engine::Layer {
     std::shared_ptr<Engine::EntityManager> m_EntityManager;
     ExampleLayer() : Layer("Example") {
         m_AssetManager = std::make_shared<Engine::AssetManager>();
-        m_AssetManager->SetGraphicsAPI(Engine::GraphicsAPI::OpenGL);
+        m_AssetManager->SetGraphicsAPI(Engine::GraphicsAPI::Vulkan);
         m_EntityManager = std::make_shared<Engine::EntityManager>();
     }
     ExampleLayer(std::shared_ptr<Engine::EntityManager> entityManager,
@@ -30,7 +31,7 @@ class ExampleLayer : public Engine::Layer {
         : Layer("Example"), m_AssetManager(assetManager), m_EntityManager(entityManager) {}
     void OnUpdate() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::OpenGLRenderer *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
         renderer->Draw();
     }
     void OnEvent(Engine::Event &event) override {
@@ -39,7 +40,7 @@ class ExampleLayer : public Engine::Layer {
 
     void OnAttach() override {
         Engine::Application &app = Engine::Application::Get();
-        auto renderer = static_cast<Engine::OpenGLRenderer *>(app.GetRenderer());
+        auto renderer = static_cast<Engine::VulkanRenderer *>(app.GetRenderer());
 
         renderer->SetEntityManager(m_EntityManager);
 
@@ -47,8 +48,10 @@ class ExampleLayer : public Engine::Layer {
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
         auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
 
-        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert_pbr.vert";
-        std::string fragmentShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag_pbr.frag";
+        std::string vertexShaderPath =
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert_vulkan_pbr.spv";
+        std::string fragmentShaderPath =
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag_vulkan_pbr.spv";
         auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
@@ -72,7 +75,6 @@ class ExampleLayer : public Engine::Layer {
             auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
             auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
             entity1->AddComponent(textureComponent);
-            CLIENT_WARN("Texture Path: {0}", texturePath);
 
             std::string texturePath2 =
                 "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Normal_OpenGL.png";
@@ -93,12 +95,14 @@ class ExampleLayer : public Engine::Layer {
             entity1->AddComponent(textureComponent4);
 
             std::string texturePath5 =
-                "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Mixed_AO.png";
+                "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Base_Color.png";
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Mixed_AO.png";
             auto textureData5 = m_AssetManager->GetAsset<Engine::TextureData>(texturePath5);
             auto textureComponent5 = std::make_shared<Engine::TextureComponent>(textureData5);
             entity1->AddComponent(textureComponent5);
 
         } else {
+            ENGINE_WARN("Model contains {0} textures.", modelData->texturePaths.size());
             for (auto &texturePath : modelData->texturePaths) {
 
 #ifndef _WIN32
@@ -106,7 +110,6 @@ class ExampleLayer : public Engine::Layer {
 #endif
                 std::string trueTexturePath =
                     "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/" + texturePath;
-                CLIENT_WARN("Texture Path: {0}", trueTexturePath);
                 auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(trueTexturePath);
                 auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
                 entity1->AddComponent(textureComponent);
@@ -123,11 +126,12 @@ class ExampleLayer : public Engine::Layer {
 class SandboxRefac : public Engine::Application {
     public:
     SandboxRefac() {
-        SetWindow(Engine::RendererType::OpenGL);
-        SetRenderer(Engine::RendererType::OpenGL);
+        SetWindow(Engine::RendererType::Vulkan);
+        SetRenderer(Engine::RendererType::Vulkan);
         ENGINE_WARN("SandboxRefac");
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
+        AssetManager->SetGraphicsAPI(Engine::GraphicsAPI::Vulkan);
         // PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());
