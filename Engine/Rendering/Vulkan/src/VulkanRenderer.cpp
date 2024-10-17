@@ -1,3 +1,5 @@
+#include "Camera.hpp"
+#include "Light.hpp"
 #include "Log.hpp"
 #include "ModelComponent.hpp"
 #include "ShaderComponent.hpp"
@@ -94,22 +96,21 @@ void VulkanRenderer::Init() {
     ENGINE_INFO("Vulkan Compute Fences Created");
 
     // TEMPORARY : Hardcoded camera and light data
-    m_Camera = std::make_shared<VulkanCamera>(
+    m_Camera = std::make_shared<Camera>(
         glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
         glm::perspective(glm::radians(45.0f),
                          (float)m_SwapChain->getSwapChainExtent().width /
                              (float)m_SwapChain->getSwapChainExtent().height,
-                         0.01f, 1000.0f));
+                         0.01f, 1000.0f),
+        glm::vec3(200.0f, 200.0f, 200.0f));
 
-    m_Light = std::make_shared<VulkanLight>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+    m_Light = std::make_shared<Light>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
 
     std::unordered_map<std::shared_ptr<Entity>, size_t> offsets;
 
-    m_CameraUniformBuffer =
-        std::make_shared<VulkanUniformBuffer<VulkanCamera>>(m_Camera, m_Device, m_TransferCommandBuffer);
+    m_CameraUniformBuffer = std::make_shared<VulkanUniformBuffer<Camera>>(m_Camera, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Camera Uniform Buffer Created");
-    m_LightUniformBuffer =
-        std::make_shared<VulkanUniformBuffer<VulkanLight>>(m_Light, m_Device, m_TransferCommandBuffer);
+    m_LightUniformBuffer = std::make_shared<VulkanUniformBuffer<Light>>(m_Light, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Light Uniform Buffer Created");
     std::vector<glm::mat4> transformations;
     m_ModelStorageBuffer =

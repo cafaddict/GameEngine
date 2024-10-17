@@ -130,5 +130,5 @@ void main() {
 
     outColor = vec4(color, 1.0); // Assign the final color to the output
 
-    outColor = vec4(texture(normalMap, fragTexCoord).rgb, 1.0);
+
 }

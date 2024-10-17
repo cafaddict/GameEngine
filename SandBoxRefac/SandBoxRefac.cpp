@@ -95,8 +95,7 @@ class ExampleLayer : public Engine::Layer {
             entity1->AddComponent(textureComponent4);
 
             std::string texturePath5 =
-                "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Base_Color.png";
-            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Mixed_AO.png";
+                "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Cactus/Default_Mixed_AO.png";
             auto textureData5 = m_AssetManager->GetAsset<Engine::TextureData>(texturePath5);
             auto textureComponent5 = std::make_shared<Engine::TextureComponent>(textureData5);
             entity1->AddComponent(textureComponent5);

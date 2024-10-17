@@ -1,4 +1,6 @@
 #pragma once
+#include "Camera.hpp"
+#include "Light.hpp"
 #include "TextureData.hpp"
 #include "VulkanDescriptorSet.hpp"
 #include "VulkanBuffer.hpp"
@@ -66,12 +68,12 @@ class VulkanRenderer : public Renderer {
     std::shared_ptr<VulkanVertexBuffer> m_VertexBuffer;
     std::shared_ptr<VulkanIndexBuffer> m_IndexBuffer;
     std::shared_ptr<VulkanShaderStorageBuffer<glm::mat4>> m_ModelStorageBuffer;
-    std::shared_ptr<VulkanUniformBuffer<VulkanCamera>> m_CameraUniformBuffer;
-    std::shared_ptr<VulkanUniformBuffer<VulkanLight>> m_LightUniformBuffer;
+    std::shared_ptr<VulkanUniformBuffer<Camera>> m_CameraUniformBuffer;
+    std::shared_ptr<VulkanUniformBuffer<Light>> m_LightUniformBuffer;
 
     // TEMPORARY : Hardcoded camera and light data
-    std::shared_ptr<VulkanCamera> m_Camera;
-    std::shared_ptr<VulkanLight> m_Light;
+    std::shared_ptr<Camera> m_Camera;
+    std::shared_ptr<Light> m_Light;
 
     public:
     // Constructor that initializes the window and Vulkan objects

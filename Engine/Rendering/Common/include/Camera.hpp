@@ -8,6 +8,7 @@ class Camera {
     public:
     Camera() = default;
     Camera(glm::mat4 view, glm::mat4 projection);
+    Camera(glm::mat4 view, glm::mat4 projection, glm::vec3 position);
     ~Camera();
     glm::mat4 getView() { return m_View; }
     glm::mat4 getProjection() { return m_Projection; }
