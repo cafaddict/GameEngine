@@ -72,8 +72,8 @@ class ExampleLayer : public Engine::Layer {
         auto entity1 = m_EntityManager->CreateEntity("entity1");
         entity1->AddComponent(modelComponents[0]);
 
-        // auto entity2 = m_EntityManager->CreateEntity("entity2");
-        // entity2->AddComponent(modelComponents[1]);
+        auto entity2 = m_EntityManager->CreateEntity("entity2");
+        entity2->AddComponent(modelComponents[1]);
 
         std::string texturePathAlbedo =
             "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/Raptor/Textures/Raptor_PatternA_Albedo.png";
@@ -101,25 +101,25 @@ class ExampleLayer : public Engine::Layer {
         auto textureComponentAO = std::make_shared<Engine::TextureComponent>(textureDataAO);
         entity1->AddComponent(textureComponentAO);
 
-        // auto textureDataOtherAlbedo = m_AssetManager->GetAsset<Engine::TextureData>(texturePathOtherAlbedo);
-        // auto textureComponentOtherAlbedo = std::make_shared<Engine::TextureComponent>(textureDataOtherAlbedo);
-        // entity2->AddComponent(textureComponentOtherAlbedo);
+        auto textureDataOtherAlbedo = m_AssetManager->GetAsset<Engine::TextureData>(texturePathOtherAlbedo);
+        auto textureComponentOtherAlbedo = std::make_shared<Engine::TextureComponent>(textureDataOtherAlbedo);
+        entity2->AddComponent(textureComponentOtherAlbedo);
 
-        // auto textureDataOtherNormal = m_AssetManager->GetAsset<Engine::TextureData>(texturePathOtherNormal);
-        // auto textureComponentOtherNormal = std::make_shared<Engine::TextureComponent>(textureDataOtherNormal);
-        // entity2->AddComponent(textureComponentOtherNormal);
+        auto textureDataOtherNormal = m_AssetManager->GetAsset<Engine::TextureData>(texturePathOtherNormal);
+        auto textureComponentOtherNormal = std::make_shared<Engine::TextureComponent>(textureDataOtherNormal);
+        entity2->AddComponent(textureComponentOtherNormal);
 
-        // auto textureDataOtherAO = m_AssetManager->GetAsset<Engine::TextureData>(textureOtherAO);
-        // auto textureComponentOtherAO = std::make_shared<Engine::TextureComponent>(textureDataOtherAO);
-        // entity2->AddComponent(textureComponentOtherAO);
+        auto textureDataOtherAO = m_AssetManager->GetAsset<Engine::TextureData>(textureOtherAO);
+        auto textureComponentOtherAO = std::make_shared<Engine::TextureComponent>(textureDataOtherAO);
+        entity2->AddComponent(textureComponentOtherAO);
 
         entity1->AddComponent(shaderComponent);
         entity1->AddComponent(transformComponent);
 
-        // entity2->AddComponent(shaderComponent);
+        entity2->AddComponent(shaderComponent);
         // auto transformComponent2 = std::make_shared<Engine::TransformComponent>();
 
-        // entity2->AddComponent(transformComponent2);
+        entity2->AddComponent(transformComponent);
 
         renderer->SetEntityUpdate(true);
     }

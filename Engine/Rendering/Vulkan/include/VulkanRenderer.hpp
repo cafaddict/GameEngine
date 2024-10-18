@@ -66,7 +66,9 @@ class VulkanRenderer : public Renderer {
     std::vector<glm::mat4> m_Transformations;
 
     std::shared_ptr<VulkanVertexBuffer> m_VertexBuffer;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanVertexBuffer>> m_EntityVertexBuffers;
     std::shared_ptr<VulkanIndexBuffer> m_IndexBuffer;
+    std::unordered_map<std::shared_ptr<Entity>, std::shared_ptr<VulkanIndexBuffer>> m_EntityIndexBuffers;
     std::shared_ptr<VulkanShaderStorageBuffer<glm::mat4>> m_ModelStorageBuffer;
     std::shared_ptr<VulkanUniformBuffer<Camera>> m_CameraUniformBuffer;
     std::shared_ptr<VulkanUniformBuffer<Light>> m_LightUniformBuffer;
