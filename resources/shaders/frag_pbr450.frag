@@ -28,9 +28,9 @@ layout(set = 0, binding = 1) uniform LightUBO {
 light;
 
 // Samplers for material textures
-layout(set = 1, binding = 0) uniform sampler2D albedoMap;
-layout(set = 1, binding = 1) uniform sampler2D normalMap;
-layout(set = 1, binding = 2) uniform sampler2D aoMap;
+layout(set = 0, binding = 3) uniform sampler2D albedoMap;
+layout(set = 0, binding = 4) uniform sampler2D normalMap;
+layout(set = 0, binding = 5) uniform sampler2D aoMap;
 
 // Calculate normal from the normal map, transformed into world space
 vec3 calculateNormal() {
@@ -69,11 +69,14 @@ void main() {
     vec3 specular = kS * light.lightColor * light.lightIntensity;
 
     // Ambient lighting, modulated by the AO map
-    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 ambient = albedo * ao;
 
     // Final color combining ambient, diffuse, and specular lighting
     vec3 finalColor = ambient + diffuse + specular;
 
     // Output the final color, modulated by vertex color
     outColor = vec4(finalColor * fragColor.rgb, fragColor.a);
+    // outColor = vec4(texture(normalMap, fragTexCoord), 1.0);
+    outColor = vec4(ambient, 1.0);
+    
 }

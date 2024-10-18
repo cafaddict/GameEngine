@@ -286,7 +286,7 @@ void ImGuiLayer::OnUpdate() {
             transformComponent->SetRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
             transformComponent->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
-            auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
+            auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData->meshes[0]);
             auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
             auto shaderComponent =
                 std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);

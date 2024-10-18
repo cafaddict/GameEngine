@@ -2,6 +2,8 @@
 #include "Log.hpp"
 #include "vulkan/vulkan_core.h"
 #include <array>
+#include <cstddef>
+#include <iostream>
 #define MAX_FRAMES_IN_FLIGHT 2
 namespace Engine {
 
@@ -14,7 +16,23 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> dev
         createPipelineLayout(m_ComputeDescriptorsetLayout);
         createComputePipeline(shaders);
     }
+
     createDescriptorSetLayout();
+    createPipelineLayout(m_DescriptorsetLayout);
+    createGraphicsPipeline(shaders, inputStruct);
+}
+
+VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device,
+                                               std::shared_ptr<VulkanRenderPass> renderPass, VulkanShadersData shaders,
+                                               VulkanBaseVertex &inputStruct, size_t numTextures)
+    : m_Device(device), m_RenderPass(renderPass), m_Shaders(shaders) {
+    if (shaders.computeShader.has_value()) {
+        createComputeDescriptorSetLayout();
+        createPipelineLayout(m_ComputeDescriptorsetLayout);
+        createComputePipeline(shaders);
+    }
+
+    createDescriptorSetLayout(numTextures);
     createPipelineLayout(m_DescriptorsetLayout);
     createGraphicsPipeline(shaders, inputStruct);
 }
@@ -23,6 +41,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> dev
                                                std::shared_ptr<VulkanRenderPass> renderPass, VulkanShadersData shaders,
                                                VulkanBaseVertex &inputStruct, bool isPBR)
     : m_Device(device), m_RenderPass(renderPass), m_Shaders(shaders) {
+
     if (!isPBR) {
         VulkanGraphicsPipeline(device, renderPass, shaders, inputStruct);
     } else {
@@ -304,7 +323,7 @@ VkShaderModule VulkanGraphicsPipeline::createShaderModule(const std::vector<char
     return shaderModule;
 }
 void VulkanGraphicsPipeline::createPipelineLayout(VkDescriptorSetLayout &descriptorSetLayout) {
-    createDescriptorSetLayout();
+    ;
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
@@ -446,6 +465,63 @@ void VulkanGraphicsPipeline::createPBRDescriptorSetLayout() {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
     ENGINE_WARN("PBR Descriptor Set Layout created");
+}
+
+void VulkanGraphicsPipeline::createDescriptorSetLayout(size_t numTextures) {
+    // Binding 0: Uniform buffer: Camera (used in both vertex and fragment stages)
+    VkDescriptorSetLayoutBinding cameraUboLayoutBinding{};
+    cameraUboLayoutBinding.binding = 0;
+    cameraUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    cameraUboLayoutBinding.descriptorCount = 1;
+    cameraUboLayoutBinding.stageFlags =
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // Used in both stages
+    cameraUboLayoutBinding.pImmutableSamplers = nullptr;           // No samplers in UBO
+
+    // Binding 1: Uniform buffer: Light (used in both vertex and fragment stages)
+    VkDescriptorSetLayoutBinding lightUboLayoutBinding{};
+    lightUboLayoutBinding.binding = 1;
+    lightUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    lightUboLayoutBinding.descriptorCount = 1;
+    lightUboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT; // Used in both stages
+    lightUboLayoutBinding.pImmutableSamplers = nullptr;                                           // No samplers in UBO
+
+    // Binding 2: SSBO for transformations (used in vertex stage)
+    VkDescriptorSetLayoutBinding storageBufferBinding{};
+    storageBufferBinding.binding = 2;
+    storageBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    storageBufferBinding.descriptorCount = 1;
+    storageBufferBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    storageBufferBinding.pImmutableSamplers = nullptr;
+
+    std::vector<VkDescriptorSetLayoutBinding> textureBindings(numTextures);
+    for (size_t i = 0; i < numTextures; i++) {
+        textureBindings[i].binding = static_cast<uint32_t>(i + 3);
+        textureBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        textureBindings[i].descriptorCount = 1;
+        textureBindings[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        textureBindings[i].pImmutableSamplers = nullptr;
+    }
+
+    // Collect all bindings
+    std::vector<VkDescriptorSetLayoutBinding> bindings = {cameraUboLayoutBinding, lightUboLayoutBinding,
+                                                          storageBufferBinding};
+    bindings.insert(bindings.end(), textureBindings.begin(), textureBindings.end());
+    for (int i = 0; i < bindings.size(); i++) {
+        ENGINE_WARN("Binding: {}", bindings[i].binding);
+        ENGINE_WARN("Descriptor Type: {}", bindings[i].descriptorType);
+    }
+
+    // Create descriptor set layout
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings = bindings.data();
+
+    // Handle descriptor set layout creation
+    if (vkCreateDescriptorSetLayout(m_Device->getLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorsetLayout) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
 }
 
 void VulkanGraphicsPipeline::createComputeDescriptorSetLayout() {

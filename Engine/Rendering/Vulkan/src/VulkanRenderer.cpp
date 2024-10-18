@@ -97,12 +97,12 @@ void VulkanRenderer::Init() {
 
     // TEMPORARY : Hardcoded camera and light data
     m_Camera = std::make_shared<Camera>(
-        glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 450.0f, 350.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
         glm::perspective(glm::radians(45.0f),
                          (float)m_SwapChain->getSwapChainExtent().width /
                              (float)m_SwapChain->getSwapChainExtent().height,
                          0.01f, 1000.0f),
-        glm::vec3(200.0f, 200.0f, 200.0f));
+        glm::vec3(0.0f, 450.0f, 350.0f));
 
     m_Light = std::make_shared<Light>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
 
@@ -187,7 +187,7 @@ void VulkanRenderer::Draw() {
 
             vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                                     VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,
-                                    &descriptorSet->getPBRDescriptorSets()[m_CurrentFrame], 0, nullptr);
+                                    &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
             vkCmdDrawIndexed(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                              entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, indexOffset,
@@ -376,7 +376,8 @@ void VulkanRenderer::createEntityResources() {
         } else {
             VulkanVertex vertex;
             // Create a shared pointer for the new pipeline
-            auto pipeline = std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex, true);
+            auto pipeline =
+                std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex, texture_data.size());
 
             // Store the pipeline in both maps
             m_EntityPipelines[entity] = pipeline;

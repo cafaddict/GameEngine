@@ -37,7 +37,8 @@ ssbo;
 
 void main() {
     // Assume the first transformation matrix in the SSBO corresponds to the current object
-    mat4 model = ssbo.transformations[gl_InstanceID]; // Using instanced rendering
+    uint instanceIndex = gl_InstanceIndex;            // Use gl_InstanceIndex in Vulkan (not gl_InstanceID)
+    mat4 model = ssbo.transformations[instanceIndex]; // Using instanced rendering
     vec4 worldPosition = model * vec4(inPosition, 1.0);
 
     // Pass transformed position to fragment shader

@@ -9,7 +9,7 @@ namespace Engine {
 class OpenGLMesh {
     public:
     OpenGLMesh() = default;
-    OpenGLMesh(std::shared_ptr<const ModelData> modelData) {
+    OpenGLMesh(std::shared_ptr<const Mesh> modelData) {
         std::vector<Vertex> vertices;
         for (size_t i = 0; i < modelData->positions.size(); i++) {
             Vertex vertex;

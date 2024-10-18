@@ -49,6 +49,8 @@ class VulkanGraphicsPipeline {
     VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
                            VulkanShadersData shaders, VulkanBaseVertex &vertexType);
     VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
+                           VulkanShadersData shaders, VulkanBaseVertex &vertexType, size_t numTextures);
+    VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
                            VulkanShadersData shaders, VulkanBaseVertex &vertexType, bool isPBR);
     ~VulkanGraphicsPipeline();
     VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorsetLayout; }
@@ -80,6 +82,8 @@ class VulkanGraphicsPipeline {
     void createPipelineLayout(VkDescriptorSetLayout &descriptorSetLayout);
     void createDescriptorSetLayout();
     void createPBRDescriptorSetLayout();
+
+    void createDescriptorSetLayout(size_t numTextures);
 
     void createComputeDescriptorSetLayout();
 };
