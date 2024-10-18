@@ -199,7 +199,7 @@ void VulkanRenderer::Draw() {
                                     &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
             vkCmdDrawIndexed(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
-                             entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, 0, 0, cnt);
+                             entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, 0, 0, 0);
             cnt++;
         }
     }
