@@ -6,14 +6,16 @@ VulkanImage::VulkanImage(std::shared_ptr<VulkanDevice> device, VkImageCreateInfo
                          VkMemoryPropertyFlags property, VkImageAspectFlags aspectFlags)
     : m_Device(device) {
     createImage(imageInfo, property);
-    m_ImageView = createImageView(m_Image, imageInfo.format, aspectFlags, imageInfo.mipLevels);
+    createImageView(m_Image, imageInfo.format, aspectFlags, imageInfo.mipLevels);
 }
 
 VulkanImage::VulkanImage(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanCommandBuffer> commandBuffer,
                          VkImageCreateInfo imageInfo, VkMemoryPropertyFlags property, VkImageAspectFlags aspectFlags)
     : m_Device(device), m_CommandBuffer(commandBuffer) {
     createImage(imageInfo, property);
-    m_ImageView = createImageView(m_Image, imageInfo.format, aspectFlags, imageInfo.mipLevels);
+    m_Format = imageInfo.format;
+    ENGINE_WARN("Vulkan Image Created");
+    createImageView(m_Image, imageInfo.format, aspectFlags, imageInfo.mipLevels);
 }
 VulkanImage::~VulkanImage() {
     ENGINE_INFO("Vulkan Image Destroyted");
@@ -35,10 +37,33 @@ void VulkanImage::createImage(VkImageCreateInfo imageInfo, VkMemoryPropertyFlags
     if (vkAllocateMemory(m_Device->getLogicalDevice(), &allocInfo, nullptr, &m_ImageMemory) != VK_SUCCESS) {
         throw std::runtime_error("Failed to allocate image memory!");
     }
-    vkBindImageMemory(m_Device->getLogicalDevice(), m_Image, m_ImageMemory, 0);
+    if (vkBindImageMemory(m_Device->getLogicalDevice(), m_Image, m_ImageMemory, 0) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to bind image memory!");
+    }
 }
+
+void VulkanImage::createImageView() {
+    ENGINE_WARN("Creating Image View");
+
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = m_Image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = m_Format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(m_Device->getLogicalDevice(), &viewInfo, nullptr, &m_ImageView) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create image view!");
+    }
+}
+
 VkImageView VulkanImage::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags,
                                          uint32_t mipLevels) {
+
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = image;
@@ -50,7 +75,7 @@ VkImageView VulkanImage::createImageView(VkImage image, VkFormat format, VkImage
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = 1;
     VkImageView imageView;
-    if (vkCreateImageView(m_Device->getLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+    if (vkCreateImageView(m_Device->getLogicalDevice(), &viewInfo, nullptr, &m_ImageView) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create image view!");
     }
 

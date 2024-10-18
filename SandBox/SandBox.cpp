@@ -1,3 +1,4 @@
+#include "Log.hpp"
 #include "VulkanRenderer.hpp"
 #include <memory>
 #define GLFW_INCLUDE_NONE
@@ -42,14 +43,18 @@ class ExampleLayer : public Engine::Layer {
 
         std::string modelPah = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/viking_room.obj";
         auto modelData = m_AssetManager->GetAsset<Engine::ModelData>(modelPah);
-        auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData);
+        auto modelComponent = std::make_shared<Engine::ModelComponent>(modelData->meshes[0]);
 
         std::string texturePath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/models/viking_room.png";
         auto textureData = m_AssetManager->GetAsset<Engine::TextureData>(texturePath);
         auto textureComponent = std::make_shared<Engine::TextureComponent>(textureData);
 
-        std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert.spv";
-        std::string fragmentShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag.spv";
+        // std::string vertexShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert.spv";
+        // std::string fragmentShaderPath = "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag.spv";
+        std::string vertexShaderPath =
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/vert_vulkan_pbr.spv";
+        std::string fragmentShaderPath =
+            "/Users/hyunyul-cho/Documents/git/GameEngine/resources/shaders/frag_vulkan_pbr.spv";
         auto vertexShaderData = m_AssetManager->GetAsset<Engine::VertexShaderData>(vertexShaderPath);
         auto fragmentShaderData = m_AssetManager->GetAsset<Engine::FragmentShaderData>(fragmentShaderPath);
         auto shaderComponent = std::make_shared<Engine::ShaderComponent>(vertexShaderData, fragmentShaderData, nullptr);
@@ -77,6 +82,7 @@ class SandboxRefac : public Engine::Application {
         SetRenderer(Engine::RendererType::Vulkan);
         auto EntityManager = std::make_shared<Engine::EntityManager>();
         auto AssetManager = std::make_shared<Engine::AssetManager>();
+        AssetManager->SetGraphicsAPI(Engine::GraphicsAPI::Vulkan);
         PushLayer(new Editor::ImGuiLayer(EntityManager, AssetManager));
         PushLayer(new ExampleLayer(EntityManager, AssetManager));
         // PushOverlay(new Editor::ImGuiLayer());

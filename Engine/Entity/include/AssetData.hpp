@@ -9,6 +9,9 @@
 #include <sstream>
 
 namespace Engine {
+
+enum class GraphicsAPI { OpenGL, Vulkan };
+
 class AssetData {
     public:
     virtual ~AssetData() = default;

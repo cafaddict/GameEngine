@@ -8,9 +8,12 @@ class Camera {
     public:
     Camera() = default;
     Camera(glm::mat4 view, glm::mat4 projection);
+    Camera(glm::mat4 view, glm::mat4 projection, glm::vec3 position);
     ~Camera();
     glm::mat4 getView() { return m_View; }
     glm::mat4 getProjection() { return m_Projection; }
+    glm::vec3 getPosition() { return m_Position; }
+    glm::vec3 setPosition(glm::vec3 position) { m_Position = position; }
     void *getData() { return &m_View; }
     // struct {
     //     glm::mat4 view;
@@ -20,6 +23,7 @@ class Camera {
     private:
     glm::mat4 m_View;
     glm::mat4 m_Projection;
+    glm::vec3 m_Position;
     // Camera(VkDevice device, VkExtent2D extent);
     // ~Camera();
     // void updateCamera();

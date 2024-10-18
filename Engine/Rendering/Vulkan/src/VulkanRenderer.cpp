@@ -1,3 +1,5 @@
+#include "Camera.hpp"
+#include "Light.hpp"
 #include "Log.hpp"
 #include "ModelComponent.hpp"
 #include "ShaderComponent.hpp"
@@ -94,22 +96,21 @@ void VulkanRenderer::Init() {
     ENGINE_INFO("Vulkan Compute Fences Created");
 
     // TEMPORARY : Hardcoded camera and light data
-    m_Camera = std::make_shared<VulkanCamera>(
-        glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+    m_Camera = std::make_shared<Camera>(
+        glm::lookAt(glm::vec3(0.0f, 450.0f, 350.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
         glm::perspective(glm::radians(45.0f),
                          (float)m_SwapChain->getSwapChainExtent().width /
                              (float)m_SwapChain->getSwapChainExtent().height,
-                         0.01f, 1000.0f));
+                         0.01f, 1000.0f),
+        glm::vec3(0.0f, 450.0f, 350.0f));
 
-    m_Light = std::make_shared<VulkanLight>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+    m_Light = std::make_shared<Light>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
 
     std::unordered_map<std::shared_ptr<Entity>, size_t> offsets;
 
-    m_CameraUniformBuffer =
-        std::make_shared<VulkanUniformBuffer<VulkanCamera>>(m_Camera, m_Device, m_TransferCommandBuffer);
+    m_CameraUniformBuffer = std::make_shared<VulkanUniformBuffer<Camera>>(m_Camera, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Camera Uniform Buffer Created");
-    m_LightUniformBuffer =
-        std::make_shared<VulkanUniformBuffer<VulkanLight>>(m_Light, m_Device, m_TransferCommandBuffer);
+    m_LightUniformBuffer = std::make_shared<VulkanUniformBuffer<Light>>(m_Light, m_Device, m_TransferCommandBuffer);
     ENGINE_INFO("Vulkan Light Uniform Buffer Created");
     std::vector<glm::mat4> transformations;
     m_ModelStorageBuffer =
@@ -156,13 +157,13 @@ void VulkanRenderer::Draw() {
     VkDeviceSize offsets[] = {0};
 
     if (!entities.empty() && !m_EntityUpdate) {
-        VkBuffer vertexBuffers[] = {m_VertexBuffer->getBuffer()[0]};
+        // VkBuffer vertexBuffers[] = {m_VertexBuffer->getBuffer()[0]};
 
-        VkBuffer indexBuffer = m_IndexBuffer->getBuffer()[0];
+        // VkBuffer indexBuffer = m_IndexBuffer->getBuffer()[0];
 
-        vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], indexBuffer, 0,
-                             VK_INDEX_TYPE_UINT32);
+        // vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
+        // vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], indexBuffer, 0,
+        //                      VK_INDEX_TYPE_UINT32);
         int cnt = 0;
         std::vector<glm::mat4> transformations;
         for (const auto &entity : entities) {
@@ -174,6 +175,15 @@ void VulkanRenderer::Draw() {
         }
 
         for (const auto &entity : entities) {
+            auto VulkanVertexBuffer = m_EntityVertexBuffers[entity];
+            auto VulkanIndexBuffer = m_EntityIndexBuffers[entity];
+            VkBuffer vertexBuffers[] = {VulkanVertexBuffer->getBuffer()[0]};
+            VkBuffer indexBuffer = VulkanIndexBuffer->getBuffer()[0];
+
+            vkCmdBindVertexBuffers(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], indexBuffer, 0,
+                                 VK_INDEX_TYPE_UINT32);
+
             auto graphicsPipeline = m_EntityPipelines[entity];
             auto descriptorSet = m_EntityDescriptorSets[entity];
             vkCmdBindPipeline(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -181,16 +191,15 @@ void VulkanRenderer::Draw() {
 
             // VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity] * m_VertexBuffer->getDataSize();
             // VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity] * m_IndexBuffer->getDataSize();
-            VkDeviceSize vertexOffset = m_VertexBuffer->getOffsets()[entity];
-            VkDeviceSize indexOffset = m_IndexBuffer->getOffsets()[entity];
+            VkDeviceSize vertexOffset = VulkanVertexBuffer->getOffsets()[entity];
+            VkDeviceSize indexOffset = VulkanIndexBuffer->getOffsets()[entity];
 
             vkCmdBindDescriptorSets(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
                                     VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1,
                                     &descriptorSet->getDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
             vkCmdDrawIndexed(m_CommandBuffer->getCommandBuffers()[m_CurrentFrame],
-                             entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, indexOffset,
-                             vertexOffset, cnt);
+                             entity->GetComponent<ModelComponent>()->GetModelData()->indices.size(), 1, 0, 0, 0);
             cnt++;
         }
     }
@@ -318,16 +327,22 @@ void VulkanRenderer::createEntityResources() {
     uint32_t currentIndexOffset = 0;
 
     auto entities = m_EntityManager->GetAllEntities();
-    std::vector<VulkanVertex> vertices;
-    std::vector<uint32_t> indices;
+
     std::vector<glm::mat4> transformations;
-    std::unordered_map<std::shared_ptr<Entity>, size_t> vertexOffsets;
-    std::unordered_map<std::shared_ptr<Entity>, size_t> indexOffsets;
 
     for (auto &entity : entities) {
+        std::vector<VulkanVertex> vertices;
+        std::vector<uint32_t> indices;
+        std::unordered_map<std::shared_ptr<Entity>, size_t> vertexOffsets;
+        std::unordered_map<std::shared_ptr<Entity>, size_t> indexOffsets;
         auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
 
-        auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+        auto textureComponent = entity->GetComponents<TextureComponent>();
+        std::vector<std::shared_ptr<const TextureData>> texture_data;
+        for (auto &texture : textureComponent) {
+            texture_data.push_back(texture->GetTextureData());
+        }
+        // auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
 
         auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
 
@@ -370,7 +385,8 @@ void VulkanRenderer::createEntityResources() {
         } else {
             VulkanVertex vertex;
             // Create a shared pointer for the new pipeline
-            auto pipeline = std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex);
+            auto pipeline =
+                std::make_shared<VulkanGraphicsPipeline>(m_Device, m_RenderPass, shaders, vertex, texture_data.size());
 
             // Store the pipeline in both maps
             m_EntityPipelines[entity] = pipeline;
@@ -425,12 +441,17 @@ void VulkanRenderer::createEntityResources() {
 
             m_EntityDescriptorSets[entity] = descriptorset;
         }
+        auto vertexBuffer = std::make_shared<VulkanVertexBuffer>(vertices, m_Device, m_TransferCommandBuffer);
+        auto indexBuffer = std::make_shared<VulkanIndexBuffer>(indices, m_Device, m_TransferCommandBuffer);
+
+        m_EntityVertexBuffers[entity] = vertexBuffer;
+        m_EntityIndexBuffers[entity] = indexBuffer;
     }
 
     m_Transformations = transformations;
 
-    m_VertexBuffer = std::make_shared<VulkanVertexBuffer>(vertices, m_Device, m_TransferCommandBuffer);
-    m_IndexBuffer = std::make_shared<VulkanIndexBuffer>(indices, m_Device, m_TransferCommandBuffer);
+    // m_VertexBuffer = std::make_shared<VulkanVertexBuffer>(vertices, m_Device, m_TransferCommandBuffer);
+    // m_IndexBuffer = std::make_shared<VulkanIndexBuffer>(indices, m_Device, m_TransferCommandBuffer);
 }
 
 } // namespace Engine

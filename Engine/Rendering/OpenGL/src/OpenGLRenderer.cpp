@@ -7,6 +7,7 @@
 #include "TransformComponent.hpp"
 #include "OpenGLTexture.hpp"
 #include "glm/fwd.hpp"
+#include "glm/gtc/type_ptr.hpp"
 namespace Engine {
 // Renderer *Renderer::Create(GLFWwindow *window) {
 //     ENGINE_INFO("Vulkan Renderer Creation");
@@ -44,8 +45,9 @@ void OpenGLRenderer::Init() {
     m_Camera = std::make_shared<Camera>(
         glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
         glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.01f, 1000.0f));
+    m_Camera->setPosition(glm::vec3(200.0f, 200.0f, 200.0f));
 
-    m_Light = std::make_shared<Light>(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+    m_Light = std::make_shared<Light>(glm::vec3(300.0f, 200.0f, 200.0f), glm::vec3(1.0f, 1.0f, 1.0f), 0.5f);
     ENGINE_INFO("OpenGL Renderer Initialized");
 }
 
@@ -60,7 +62,7 @@ void OpenGLRenderer::Draw() {
     for (auto &entity : entities) {
         auto program = m_EntityPrograms[entity];
         auto mesh = m_EntityMeshes[entity];
-        auto texture = m_EntityTextures[entity];
+        auto textures = m_EntityTextures[entity];
         glUseProgram(program->GetProgram());
 
         GLuint cameraUBO, lightUBO, transformUBO;
@@ -69,11 +71,23 @@ void OpenGLRenderer::Draw() {
         glGenBuffers(1, &transformUBO);
 
         glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(Camera), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2 + sizeof(glm::vec4), nullptr, GL_STATIC_DRAW);
+
+        // Upload the view matrix (64 bytes)
         glm::mat4 viewMatrix = m_Camera->getView();
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &viewMatrix);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(viewMatrix));
+
+        // Upload the projection matrix (64 bytes)
         glm::mat4 projectionMatrix = m_Camera->getProjection();
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), &projectionMatrix);
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projectionMatrix));
+
+        // Upload the camera position (as a vec4 to match alignment)
+        glm::vec3 cameraPosition = m_Camera->getPosition();
+        glm::vec4 cameraPositionPadded = glm::vec4(cameraPosition, 1.0f);
+        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4) * 2, sizeof(glm::vec4),
+                        glm::value_ptr(cameraPositionPadded));
+
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         glBindBuffer(GL_UNIFORM_BUFFER, lightUBO);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(Light), nullptr, GL_STATIC_DRAW);
@@ -102,9 +116,29 @@ void OpenGLRenderer::Draw() {
         glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightUBO);
         glBindBufferBase(GL_UNIFORM_BUFFER, 2, transformUBO);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture->GetTexture());
-        glUniform1i(glGetUniformLocation(program->GetProgram(), "texSampler"), 0);
+        int textureUnit = 0;
+        std::string samplerNames[] = {"albedoMap", "normalMap", "metallicMap", "roughnessMap", "aoMap"};
+        for (auto &texture : textures) {
+            // Activate texture unit and bind the texture
+            glActiveTexture(GL_TEXTURE0 + textureUnit);
+            glBindTexture(GL_TEXTURE_2D, texture->GetTexture());
+
+            // Generate the correct uniform name based on the texture unit
+            std::string samplerName = samplerNames[textureUnit];
+
+            // Get the location of the uniform in the shader program
+            GLint location = glGetUniformLocation(program->GetProgram(), samplerName.c_str());
+
+            // Check if the uniform location is valid
+            if (location != -1) {
+                // Set the uniform to use the correct texture unit
+                glUniform1i(location, textureUnit);
+            } else {
+                // std::cerr << "Warning: Uniform " << samplerName << " not found in shader program." << std::endl;
+            }
+
+            textureUnit++;
+        }
 
         glBindVertexArray(mesh->GetVertexArray());
         glDrawElements(GL_TRIANGLES, mesh->GetIndexCount(), GL_UNSIGNED_INT, 0);
@@ -126,6 +160,7 @@ void OpenGLRenderer::SetEntityUpdate(bool update) { m_EntityUpdate = update; }
 void OpenGLRenderer::WaitIdle() {}
 
 void OpenGLRenderer::createEntityResources() {
+    ENGINE_WARN("Creating Entity Resources");
 
     auto entities = m_EntityManager->GetAllEntities();
     std::vector<Vertex> vertices;
@@ -135,7 +170,7 @@ void OpenGLRenderer::createEntityResources() {
     for (auto &entity : entities) {
         auto model_data = entity->GetComponent<ModelComponent>()->GetModelData();
 
-        auto texture_data = entity->GetComponent<TextureComponent>()->GetTextureData();
+        auto texture_data = entity->GetComponents<TextureComponent>();
 
         auto vertex_shader_data = entity->GetComponent<ShaderComponent>()->GetVertexShader();
 
@@ -170,8 +205,12 @@ void OpenGLRenderer::createEntityResources() {
         std::shared_ptr<OpenGLMesh> mesh = std::make_shared<OpenGLMesh>(model_data);
         m_EntityMeshes[entity] = mesh;
 
-        std::shared_ptr<OpenGLTexture> texture = std::make_shared<OpenGLTexture>(texture_data);
-        m_EntityTextures[entity] = texture;
+        std::vector<std::shared_ptr<OpenGLTexture>> textures;
+        for (auto &texture_component : texture_data) {
+            auto texture_data = texture_component->GetTextureData();
+            textures.push_back(std::make_shared<OpenGLTexture>(texture_data));
+        }
+        m_EntityTextures[entity] = textures;
 
         transformations.push_back(transform);
     }

@@ -7,8 +7,7 @@
 
 #define MAX_FRAMES_IN_FLIGHT 2
 namespace Engine {
-VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<VulkanDevice> device,
-                                         uint32_t queueFamiliyValue)
+VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<VulkanDevice> device, uint32_t queueFamiliyValue)
     : m_Device(device) {
     createCommandPool(m_Device, queueFamiliyValue);
 
@@ -17,19 +16,16 @@ VulkanCommandBuffer::VulkanCommandBuffer(std::shared_ptr<VulkanDevice> device,
 VulkanCommandBuffer::~VulkanCommandBuffer() {
     ENGINE_TRACE("VulkanCommandBuffer destroyed");
     vkDestroyCommandPool(m_Device->getLogicalDevice(), m_CommandPool, nullptr);
-    vkFreeCommandBuffers(m_Device->getLogicalDevice(), m_CommandPool,
-                         static_cast<uint32_t>(m_CommandBuffers.size()),
+    vkFreeCommandBuffers(m_Device->getLogicalDevice(), m_CommandPool, static_cast<uint32_t>(m_CommandBuffers.size()),
                          m_CommandBuffers.data());
 }
-void VulkanCommandBuffer::createCommandPool(
-    std::shared_ptr<VulkanDevice> device, uint32_t queueFamiliyValue) {
+void VulkanCommandBuffer::createCommandPool(std::shared_ptr<VulkanDevice> device, uint32_t queueFamiliyValue) {
     queueFamilyIndices queueFamilyIndices = device->getQueueFamilyIndices();
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.queueFamilyIndex = queueFamiliyValue;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    if (vkCreateCommandPool(m_Device->getLogicalDevice(), &poolInfo, nullptr,
-                            &m_CommandPool) != VK_SUCCESS) {
+    if (vkCreateCommandPool(m_Device->getLogicalDevice(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
     }
 }
@@ -40,11 +36,9 @@ void VulkanCommandBuffer::createCommandBuffers(uint32_t max_frames_in_flight) {
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandPool = m_CommandPool;
-    allocInfo.commandBufferCount =
-        static_cast<uint32_t>(m_CommandBuffers.size());
+    allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-    if (vkAllocateCommandBuffers(m_Device->getLogicalDevice(), &allocInfo,
-                                 m_CommandBuffers.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(m_Device->getLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
@@ -59,21 +53,55 @@ void VulkanCommandBuffer::beginSingleTimeCommands() {
     }
 }
 void VulkanCommandBuffer::endSingleTimeCommands() {
+    // if (vkEndCommandBuffer(m_CommandBuffers[0]) != VK_SUCCESS) {
+    //     throw std::runtime_error("failed to record command buffer!");
+    // }
+
+    // VkSubmitInfo submitInfo{};
+    // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    // submitInfo.commandBufferCount = 1;
+    // submitInfo.pCommandBuffers = &m_CommandBuffers[0];
+
+    // if (vkQueueSubmit(m_Device->getTransferQueue(), 1, &submitInfo,
+    //                   VK_NULL_HANDLE) != VK_SUCCESS) {
+    //     throw std::runtime_error("failed to submit draw command buffer!");
+    // }
+
+    // vkQueueWaitIdle(m_Device->getTransferQueue());
+    // vkResetCommandBuffer(m_CommandBuffers[0], 0);
     if (vkEndCommandBuffer(m_CommandBuffers[0]) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     }
 
+    // Create a fence to wait for the command buffer execution to complete
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = 0;
+
+    VkFence commandFence;
+    if (vkCreateFence(m_Device->getLogicalDevice(), &fenceInfo, nullptr, &commandFence) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create synchronization fence!");
+    }
+
+    // Submit the command buffer to the queue
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &m_CommandBuffers[0];
 
-    if (vkQueueSubmit(m_Device->getTransferQueue(), 1, &submitInfo,
-                      VK_NULL_HANDLE) != VK_SUCCESS) {
+    if (vkQueueSubmit(m_Device->getTransferQueue(), 1, &submitInfo, commandFence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
-    vkQueueWaitIdle(m_Device->getTransferQueue());
+    // Wait for the fence to signal that command buffer execution is finished
+    if (vkWaitForFences(m_Device->getLogicalDevice(), 1, &commandFence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+        throw std::runtime_error("failed to wait for fence!");
+    }
+
+    // Clean up the fence
+    vkDestroyFence(m_Device->getLogicalDevice(), commandFence, nullptr);
+
+    // Reset the command buffer so it can be reused
     vkResetCommandBuffer(m_CommandBuffers[0], 0);
 }
 } // namespace Engine

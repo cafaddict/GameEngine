@@ -48,8 +48,14 @@ class VulkanGraphicsPipeline {
 
     VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
                            VulkanShadersData shaders, VulkanBaseVertex &vertexType);
+    VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
+                           VulkanShadersData shaders, VulkanBaseVertex &vertexType, size_t numTextures);
+    VulkanGraphicsPipeline(std::shared_ptr<VulkanDevice> device, std::shared_ptr<VulkanRenderPass> renderPass,
+                           VulkanShadersData shaders, VulkanBaseVertex &vertexType, bool isPBR);
     ~VulkanGraphicsPipeline();
     VkDescriptorSetLayout getDescriptorSetLayout() { return m_DescriptorsetLayout; }
+    VkDescriptorSetLayout getComputeDescriptorSetLayout() { return m_ComputeDescriptorsetLayout; }
+    VkDescriptorSetLayout getPBRDescriptorSetLayout() { return m_PBRDescriptorsetLayout; }
 
     VkPipeline getGraphicsPipeline() { return m_GraphicsPipeline; }
     VkPipelineLayout getPipelineLayout() { return m_PipelineLayout; }
@@ -65,14 +71,19 @@ class VulkanGraphicsPipeline {
     VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
     VkPipelineLayout m_ComputePipelineLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_DescriptorsetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout m_PBRDescriptorsetLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout m_ComputeDescriptorsetLayout = VK_NULL_HANDLE;
 
     void createGraphicsPipeline(VulkanShadersData shaders, VulkanBaseVertex &vertexType);
     void createComputePipeline(VulkanShadersData shaders);
+    void createPBRRPipeline(VulkanShadersData shaders, VulkanBaseVertex &vertexType);
 
     VkShaderModule createShaderModule(const std::vector<char> &code);
     void createPipelineLayout(VkDescriptorSetLayout &descriptorSetLayout);
     void createDescriptorSetLayout();
+    void createPBRDescriptorSetLayout();
+
+    void createDescriptorSetLayout(size_t numTextures);
 
     void createComputeDescriptorSetLayout();
 };

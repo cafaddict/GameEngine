@@ -10,6 +10,7 @@ struct VulkanVertex : public VulkanBaseVertex {
     glm::vec3 normal;
     glm::vec4 color;
     glm::vec2 texCoord;
+    glm::vec3 tangent;
 
     VkVertexInputBindingDescription getBindingDescription() const override {
         VkVertexInputBindingDescription bindingDescription{};
@@ -21,7 +22,7 @@ struct VulkanVertex : public VulkanBaseVertex {
         return bindingDescription;
     }
     std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() const override {
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(4);
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(5);
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -41,12 +42,18 @@ struct VulkanVertex : public VulkanBaseVertex {
         attributeDescriptions[3].location = 3;
         attributeDescriptions[3].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[3].offset = offsetof(VulkanVertex, texCoord);
+
+        attributeDescriptions[4].binding = 0;
+        attributeDescriptions[4].location = 4;
+        attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[4].offset = offsetof(VulkanVertex, tangent);
         ENGINE_WARN("VulkanVertex getAttributeDescriptions");
         return attributeDescriptions;
     }
 
     bool operator==(const VulkanVertex &other) const {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord && normal == other.normal;
+        return pos == other.pos && color == other.color && texCoord == other.texCoord && normal == other.normal &&
+               tangent == other.tangent;
     }
 };
 } // namespace Engine
