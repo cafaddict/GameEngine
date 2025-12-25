@@ -56,6 +56,8 @@ void Application::OnEvent(Event &e) {
 }
 
 void Application::run() {
+    ENGINE_ASSERT(m_Window, "SetWindow must be called before run()");
+    ENGINE_ASSERT(m_Renderer, "SetRenderer must be called before run()");
     while (m_Running) {
         m_Renderer->BeginRecord();
         for (Layer *layer : m_LayerStack)

@@ -2,7 +2,8 @@
 #include "Log.hpp"
 
 #include "imgui.h"
-#include "imgui_impl_vulkan.cpp"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "ModelComponent.hpp"
@@ -387,13 +388,6 @@ void ImGuiLayer::FrameRender(ImDrawData *draw_data) {
         clearValues[1].depthStencil = {1.0f, 0};
         info.clearValueCount = static_cast<uint32_t>(clearValues.size());
         info.pClearValues = clearValues.data();
-
-        ImGui_ImplVulkan_Data *gui_vulkandata = ImGui_ImplVulkan_GetBackendData();
-        // vkCmdBindPipeline(vulkandata.commandBuffers[vulkandata.currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
-        //                   gui_vulkandata->Pipeline);
-
-        vkCmdBindPipeline(renderer->GetCommandBuffer()->getCommandBuffers()[renderer->GetCurrentFrame()],
-                          VK_PIPELINE_BIND_POINT_GRAPHICS, gui_vulkandata->Pipeline);
 
         // vkCmdBeginRenderPass(vulkandata.commandBuffers[vulkandata.currentFrame],
         //     &info, VK_SUBPASS_CONTENTS_INLINE);

@@ -1,7 +1,24 @@
 cmake_minimum_required(VERSION 3.13)
 
+if(APPLE)
+  # Ensure we link against an existing macOS SDK instead of a stale versioned path (e.g., MacOSX26.0.sdk).
+  if(NOT DEFINED CMAKE_OSX_SYSROOT OR NOT EXISTS "${CMAKE_OSX_SYSROOT}")
+    execute_process(
+      COMMAND xcrun --show-sdk-path
+      OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(CMAKE_OSX_SYSROOT)
+      set(CMAKE_OSX_SYSROOT "${CMAKE_OSX_SYSROOT}" CACHE PATH "macOS SDK path" FORCE)
+      # Also export SDKROOT so compiler detection uses the valid sysroot during configuration.
+      set(ENV{SDKROOT} "${CMAKE_OSX_SYSROOT}")
+    endif()
+  endif()
+endif()
+
 # set the project name and version
 project(VulkanEngine)
+enable_testing()
 set(ENGINE_VERSION_MAJOR 1)
 set(ENGINE_VERSION_MINOR 0)
 
@@ -51,11 +68,11 @@ add_subdirectory("external/glm")
 add_subdirectory("external/stb_image")
 add_subdirectory("external/tinyobjloader")
 add_subdirectory("external/nativefiledialog")
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Disable assimp unit tests" FORCE)
 add_subdirectory("external/assimp")
 add_subdirectory(Engine)
 add_subdirectory(SandBox)
-add_subdirectory(SandBoxRefac)
-add_subdirectory(ParticleSandBox)
+add_subdirectory(tests)
 
 # add_subdirectory(ScriptingLanguage)
 
@@ -98,4 +115,3 @@ include_directories(external)
 include_directories(Engine)
 include_directories(EngineEditor)
 include_directories(SandBox)
-include_directories(ParticleSandBox)

@@ -1,12 +1,9 @@
-project(Sandbox)
-
-
+project(SandBox)
 
 add_executable(SandBox SandBox.cpp)
 
 # target_link_libraries(SandBox PUBLIC EDITOR ENGINE glfw TINY_OBJ_LOADER STB_IMAGE)
 # target_include_directories(SandBox PUBLIC ../Engine ../EngineEditor ../external)
-
 target_link_libraries(SandBox PUBLIC STB_IMAGE ENGINE)
 # target_include_directories(SandBox PUBLIC ../EngineEditor)
 
@@ -22,8 +19,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
     set(ARCH "x64")
     set(WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     set_target_properties(SandBox
-PROPERTIES 
-RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR})
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR})
     target_compile_options(SandBox PRIVATE /W4)
   else()
     set(ARCH "Win32")

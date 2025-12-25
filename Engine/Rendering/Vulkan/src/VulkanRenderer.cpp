@@ -139,6 +139,7 @@ void VulkanRenderer::WaitIdle() {
 // Implement pure virtual function from Renderer
 void VulkanRenderer::Draw() {
 
+    ENGINE_ASSERT(m_EntityManager, "EntityManager must be set before drawing");
     auto entities = m_EntityManager->GetAllEntities();
     VkViewport viewport{};
     viewport.x = 0.0f;
@@ -170,7 +171,7 @@ void VulkanRenderer::Draw() {
             auto transform = entity->GetComponent<TransformComponent>()->GetTransformMatrix();
             transformations.push_back(transform);
         }
-        for (int i = 0; i < MAX_FRAME_IN_FLIGHT; i++) {
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             m_ModelStorageBuffer->updateData(transformations, i);
         }
 

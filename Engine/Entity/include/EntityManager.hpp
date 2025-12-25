@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <memory>
 #include <string>
-#define MAX_ENTITIES = 1000;
+#define MAX_ENTITIES 1000
 namespace Engine {
 class EntityManager {
     private:
